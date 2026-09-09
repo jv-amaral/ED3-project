@@ -5,6 +5,146 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "funcoes.h"
+
+
+
+void leitura_e_gravacao() 
+{
+    // Função para ler o arquivo CSV e gravar os registros no arquivo binário
+
+    char arquivo_csv[50];
+    char arquivo_binario[50];
+
+    // le o nome dos arquivos CSV e binário
+    scanf("%s", arquivo_csv); 
+    scanf("%s", arquivo_binario); 
+
+
+    RegCabecalho cabecalho;
+    Registro Reg;
+
+    // abre os arquivos para leitura e escrita
+    
+    FILE *csv = fopen(arquivo_csv, "r");
+    FILE *binario = fopen(arquivo_binario, "wb"); 
+    // verifica se os arquivos nao sao nulos
+    if (csv == NULL || binario == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+
+        if (csv != NULL) // se apenas um deles for nulo, o outro é fechado
+        {
+            fclose(csv);
+        }
+        if (binario != NULL) 
+        {
+            fclose(binario);
+        }
+        return;
+    }
+
+    //escreve o registro de cabeçalho no arquivo binário
+    cabecalho.status = '0';
+    cabecalho.topo_pilha = -1;
+    cabecalho.proxRRN = 0;
+    cabecalho.nroRegRem = 0;
+    cabecalho.nroPares = 0;
+    fwrite(&cabecalho.status, sizeof(char), 1, binario);
+    fwrite(&cabecalho.topo_pilha , sizeof(int), 1,binario);
+    fwrite(&cabecalho.proxRRN , sizeof(int), 1, binario);
+    fwrite(&cabecalho.nroRegRem , sizeof(int), 1, binario);
+    fwrite(&cabecalho.nroPares , sizeof(int), 1, binario);
+
+    Reg.removido = '0';
+    Reg.encadeamento = -1;
+    char linha_csv[40];
+        fgets(linha_csv, sizeof(linha_csv),csv );
+
+    while((fgets(linha_csv, sizeof(linha_csv),csv )) != NULL)
+    {    
+        
+        //atribui os valores do csv para os campos do registro
+        Reg.idPoPs = atoi(strtok(linha_csv, ","));
+        Reg.idPoPsConectado = atoi(strtok(NULL, ","));
+
+
+        char *velocidade_ptr = strtok(NULL, ",");
+        // verifica se o campo velocidade é nulo e atribui -1 se for o caso, caso contrário, o valor lido do csv é copiado para a variável Reg.velocidade
+        if (velocidade_ptr == NULL || velocidade_ptr[0] == ' ')
+         {
+            Reg.velocidade = -1; // atribui -1 se o campo for nulo
+        } else {
+            Reg.velocidade = atoi(velocidade_ptr);
+        }
+
+
+        char *unidade_medida_ptr = strtok(NULL, ",\n\r");
+        // verifica se o campo de unidade de medida é nulo e atribui '$' para ser usado como lixo 
+        if (unidade_medida_ptr == NULL || unidade_medida_ptr[0] == ' ')
+        {
+            Reg.unidade_medida = '$'; 
+        } else {
+            Reg.unidade_medida = unidade_medida_ptr[0];
+        }
+    
+
+
+        //escreve os campos do registro no arquivo binário
+
+        fwrite(&Reg.removido , sizeof(char), 1, binario);
+        fwrite(&Reg.encadeamento, sizeof(int), 1, binario);
+        fwrite(&Reg.idPoPs, sizeof(int), 1, binario);
+        fwrite(&Reg.idPoPsConectado, sizeof(int), 1, binario);
+        fwrite(&Reg.velocidade, sizeof(int), 1, binario);
+        fwrite(&Reg.unidade_medida, sizeof(char), 1, binario);
+
+        //atualiza os valores do cabeçalho do proxRRN e do numero de pares
+        cabecalho.proxRRN++;
+        cabecalho.nroPares++;
+        
+    }
+    // atualiza o status para 1 e grava no byteoffset 0 do arquivo binario
+    cabecalho.status = '1';
+    fseek(binario,0,SEEK_SET); 
+    fwrite(&cabecalho.status , sizeof(char), 1, binario);
+
+
+
+    // grava no byteoffset 5 o valor atualizado do proxRRN
+    fseek(binario,5,SEEK_SET);
+    fwrite(&cabecalho.proxRRN , sizeof(int), 1, binario);
+
+    // grava no byteoffset 13 o valor atualizado do nroPares
+    fseek(binario,13,SEEK_SET);
+    fwrite(&cabecalho.nroPares , sizeof(int), 1, binario);
+
+    fclose(csv);
+    fclose(binario);
+    BinarioNaTela(arquivo_binario);
+    
+
+
+
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*
  * Você não precisa entender o código dessa função.
