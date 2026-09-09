@@ -7,5 +7,6 @@
 
 int main() {
     leitura_e_gravacao();
+    recuperacao_dados();
     return 0;
 }
