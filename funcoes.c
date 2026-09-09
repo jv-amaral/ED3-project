@@ -157,7 +157,7 @@ void recuperacao_dados() //funcao para recuperar os dados do arquivo binario e i
 
      int registros_lidos = 0; // contador para verificar se algum registro foi lido
 
-    while(fread(&Reg.removido, sizeof(char), 1, binario) == 1) // se o registro nao estiver removido, ele sera lido
+    while(fread(&Reg.removido, sizeof(char), 1, binario) == 1) // se o registro existir ele será lido
     {
         if (Reg.removido == '1') // se o registro estiver removido, ele é ignorado
         {
@@ -196,10 +196,145 @@ void recuperacao_dados() //funcao para recuperar os dados do arquivo binario e i
 
 
 
+void insercao()
+
+{
+    // declara a variavel para armazenar o nome do arquivo e ler
+    char arquivo_binario[50];
+    scanf("%s", arquivo_binario);
+
+    RegCabecalho cabecalho; // definicao das structs para a sexta funcao
+    Registro Reg; 
+
+    // abre o arquivo para leitura e escrita
+    FILE *binario = fopen(arquivo_binario, "rb+");
+    if (binario == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+    fread(&cabecalho.status, sizeof(char), 1, binario);
+    if (cabecalho.status != '1') 
+    {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(binario);
+        return;
+    }
+   
+    
+
+    // Le do arquivo os valores dos campos do cabeçalho
+    fread(&cabecalho.topo_pilha,sizeof(int),1,binario);
+    fread(&cabecalho.proxRRN,sizeof(int),1,binario);
+    fread(&cabecalho.nroRegRem,sizeof(int),1,binario);
+    fread(&cabecalho.nroPares,sizeof(int),1,binario);
+
+    cabecalho.status = '0'; // como vamos escrever no arquivo, o status deve estar inconsistente
+    fseek(binario,0,SEEK_SET);
+    fwrite(&cabecalho.status,sizeof(char),1,binario);
+
+    // le do teclado os valores dos campos a serem inseridos
+   
+
+    // cria strings temporarias para utilizar a funcao scanQuoteString para trabalhar com valores nulos e caracteres entre aspas
+    // dos campos de velocidade e unidade de medida
+    char temp_velocidade[20];
+    char temp_unidade_medida[20];
+    int n;
+    scanf("%d", &n); // le o numero de registros a serem inseridos
+   
+    
+
+   
+    
+   
+        for(int i = 0; i < n; i++)
+        {   // le os valores passados pelo teclado para os campos do registro
+            scanf("%d", &Reg.idPoPs);
+            scanf("%d", &Reg.idPoPsConectado);
+            ScanQuoteString(temp_velocidade);
+            ScanQuoteString(temp_unidade_medida);
+             // faz a comparação das strings temporarias com o valor nulo, se for verdadeiro atribui -1 a velocidade e $ a unidade
+            // de medida, se for falso, ele atribui o valor lido do teclado para velocidade e o caractere lido sem aspas 
+            if (strcmp(temp_velocidade, "") == 0) 
+            {
+             Reg.velocidade = -1; // atribui -1 se o campo for nulo
+            } else 
+            {
+             Reg.velocidade = atoi(temp_velocidade);
+            }
+            if (strcmp(temp_unidade_medida, "") == 0) {
+             Reg.unidade_medida = '$'; // atribui '$' se o campo for nulo
+             } else 
+            {
+            Reg.unidade_medida = temp_unidade_medida[0];    
+             }
+    if (cabecalho.topo_pilha == -1) // verifica se há registros removidos pelo topo da pilha
+    {
+        
+            fseek(binario, 17 + cabecalho.proxRRN*18, SEEK_SET);
+            Reg.removido = '0';
+            Reg.encadeamento = -1;
+            fwrite(&Reg.removido,sizeof(char),1,binario);
+            fwrite(&Reg.encadeamento,sizeof(int),1,binario);
+            fwrite(&Reg.idPoPs,sizeof(int),1,binario);
+            fwrite(&Reg.idPoPsConectado,sizeof(int),1,binario);
+            fwrite(&Reg.velocidade,sizeof(int),1,binario);
+            fwrite(&Reg.unidade_medida,sizeof(char),1,binario);
+            cabecalho.proxRRN++;
+            cabecalho.nroPares++;
+       
+
+    
+    // Atualiza os valores do cabecalho que foram alterados dentro da condicional
+    
 
 
 
 
+    }
+ else
+{
+            int proximo_registro;
+            
+           
+            fseek(binario, 17 + cabecalho.topo_pilha*18 + 1, SEEK_SET); 
+            fread(&proximo_registro,sizeof(int),1,binario);// verifica qual o proximo registro 
+            int temp = cabecalho.topo_pilha; // guarda o valor do topo da pilha em uma variavel temporaria
+            cabecalho.topo_pilha = proximo_registro;                 //removido e atualiza o topo da pilha para esse valor
+            Reg.encadeamento = -1; // atualiza o encadeamento para -1 indicando que o registro não está mais removido
+
+            fseek(binario, 17 + temp*18, SEEK_SET);
+             Reg.removido = '0'; // atribui o valor 0 ao novo registro inserido e escreve no arquivo
+            fwrite(&Reg.removido,sizeof(char),1,binario);
+            fwrite(&Reg.encadeamento,sizeof(int),1,binario); // escreve no arquivo o valor do encadeamento
+            fwrite(&Reg.idPoPs,sizeof(int),1,binario);           // escreve no arquivo os campos lidos do teclado
+            fwrite(&Reg.idPoPsConectado,sizeof(int),1,binario);
+            fwrite(&Reg.velocidade,sizeof(int),1,binario);
+            fwrite(&Reg.unidade_medida,sizeof(char),1,binario);
+            cabecalho.nroRegRem--; // atualiza o numero de registros removidos no cabecalho
+            cabecalho.nroPares++;  // atualiza o numero de pares no cabecalho
+
+         }
+           
+
+}
+ // Atualiza os valores do cabecalho que foram alterados 
+            cabecalho.status = '1';
+            fseek(binario,0,SEEK_SET); 
+            fwrite(&cabecalho.status , sizeof(char), 1, binario);
+            fwrite(&cabecalho.topo_pilha , sizeof(int), 1, binario);
+            fwrite(&cabecalho.proxRRN , sizeof(int), 1, binario);
+            fwrite(&cabecalho.nroRegRem , sizeof(int), 1, binario);
+            fwrite(&cabecalho.nroPares , sizeof(int), 1, binario);
+           
+  
+            fclose(binario);
+            BinarioNaTela(arquivo_binario); // chama a funcao para imprimir o arquivo binario na tela
+   
+    }
+    
+
+   
 
 
 

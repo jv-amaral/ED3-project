@@ -26,6 +26,7 @@ typedef struct
 
 void leitura_e_gravacao();
 void recuperacao_dados();
+void insercao();
 void BinarioNaTela(char *arquivo_binario);
 void ScanQuoteString(char *str);
 #endif

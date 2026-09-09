@@ -6,7 +6,20 @@
 
 
 int main() {
-    leitura_e_gravacao();
-    recuperacao_dados();
+    int funcionalidade;
+    scanf("%d", &funcionalidade);
+
+    switch (funcionalidade)
+    {
+        case 1: 
+                leitura_e_gravacao();
+                break;
+        case 2: recuperacao_dados();
+                break;
+        case 6: insercao();     
+                break;
+    }
+    
+    
     return 0;
 }
