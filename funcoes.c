@@ -8,7 +8,6 @@
 #include "funcoes.h"
 
 
-
 void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registros no arquivo binário
 {
     

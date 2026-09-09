@@ -1,7 +1,10 @@
 //arquivo de cabecalho para as funcoes do projeto
-#ifndef FUNCOES_H
+
+//evita que o conteudo do arquivo seja incluido mais de uma vez no programa
+#ifndef FUNCOES_H   
 #define FUNCOES_H
 
+//definicao do registro do cabecalho
 typedef struct {
     char status;
     int topo_pilha;
@@ -11,6 +14,7 @@ typedef struct {
 
 }RegCabecalho;
 
+//struct de registro de dados
 typedef struct 
 {
     char removido;
@@ -23,7 +27,7 @@ typedef struct
 }Registro;
 
 
-
+//assinaturas de funcao
 void leitura_e_gravacao();
 void recuperacao_dados();
 void insercao();
