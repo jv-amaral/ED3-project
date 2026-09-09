@@ -9,10 +9,10 @@
 
 
 
-void leitura_e_gravacao() 
+void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registros no arquivo binário
 {
-    // Função para ler o arquivo CSV e gravar os registros no arquivo binário
-
+    
+    // declara as variáveis para armazenar os nomes dos arquivos CSV e binário
     char arquivo_csv[50];
     char arquivo_binario[50];
 
@@ -43,7 +43,7 @@ void leitura_e_gravacao()
         return;
     }
 
-    //escreve o registro de cabeçalho no arquivo binário
+    // atribui valores iniciais aos campos do cabeçalho e escreve o registro de cabeçalho no arquivo binário
     cabecalho.status = '0';
     cabecalho.topo_pilha = -1;
     cabecalho.proxRRN = 0;
@@ -55,10 +55,12 @@ void leitura_e_gravacao()
     fwrite(&cabecalho.nroRegRem , sizeof(int), 1, binario);
     fwrite(&cabecalho.nroPares , sizeof(int), 1, binario);
 
+
+    // atribuicao inicial de valores aos campos do registro
     Reg.removido = '0';
     Reg.encadeamento = -1;
-    char linha_csv[40];
-        fgets(linha_csv, sizeof(linha_csv),csv );
+    char linha_csv[100];
+        fgets(linha_csv, sizeof(linha_csv),csv ); // le a primeira linha do arquivo csv e descarta, porque é so os titulos dos campos
 
     while((fgets(linha_csv, sizeof(linha_csv),csv )) != NULL)
     {    
@@ -73,7 +75,8 @@ void leitura_e_gravacao()
         if (velocidade_ptr == NULL || velocidade_ptr[0] == ' ')
          {
             Reg.velocidade = -1; // atribui -1 se o campo for nulo
-        } else {
+        } else 
+        {
             Reg.velocidade = atoi(velocidade_ptr);
         }
 
@@ -83,7 +86,8 @@ void leitura_e_gravacao()
         if (unidade_medida_ptr == NULL || unidade_medida_ptr[0] == ' ')
         {
             Reg.unidade_medida = '$'; 
-        } else {
+        } else 
+        {
             Reg.unidade_medida = unidade_medida_ptr[0];
         }
     
@@ -122,18 +126,73 @@ void leitura_e_gravacao()
     fclose(binario);
     BinarioNaTela(arquivo_binario);
     
-
-
-
-
 }
 
 
+void recuperacao_dados() //funcao para recuperar os dados do arquivo binario e imprimir na tela
+{
+    // declara a variavel para armazenar o nome do arquivo e o lê
+    char arquivo_binario[50];
+    scanf("%s", arquivo_binario);
+
+    RegCabecalho cabecalho; // definicao das structs  para a segunda funcao
+    Registro Reg; 
+
+    // abre o arquivo para leitura
+    FILE *binario = fopen(arquivo_binario, "rb");
+    if (binario == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+    fread(&cabecalho.status, sizeof(char), 1, binario);
+    if (cabecalho.status != '1') // verifica se o arquivo está consistente
+    {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(binario);
+        return;
+    }
+
+    // pula para o byteoffset 17 do arquivo (pois é onde começam os registros) e os lê
+    fseek(binario, 17, SEEK_SET);
+
+     int registros_lidos = 0; // contador para verificar se algum registro foi lido
+
+    while(fread(&Reg.removido, sizeof(char), 1, binario) == 1) // se o registro nao estiver removido, ele sera lido
+    {
+        if (Reg.removido == '1') // se o registro estiver removido, ele é ignorado
+        {
+            fseek(binario, 17, SEEK_CUR); // pula para o proximo registro
+            continue;
+        }
+        registros_lidos++;
+        // leitura dos bytes do arquivo binario para os campos do registro
+        fread(&Reg.encadeamento, sizeof(int),1,binario);
+        fread(&Reg.idPoPs, sizeof(int),1,binario);
+        fread(&Reg.idPoPsConectado, sizeof(int),1,binario);
+        fread(&Reg.velocidade, sizeof(int),1,binario);
+        fread(&Reg.unidade_medida, sizeof(char),1,binario);
+        // atribuicao dos valores nulos na hora de printar na tela 
+        if( Reg.velocidade == -1)
+        {
+            printf("%d  %d  %s  \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, "NULO", Reg.unidade_medida);
+        }
+        else if(Reg.unidade_medida == '$')
+        {
+            printf("%d  %d  %d  \"%s\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade, "NULO");
+        }
+        else{// caso nao seja nenhum valor nulo, printa normalmente
+        printf("%d  %d  %d  \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade, Reg.unidade_medida);
+        }
+
+}
+        if(registros_lidos == 0) // printa na tela caso nenhum registro tenha sido lido
+        {
+            printf("Registro inexistente.\n");
+        }
+    fclose(binario);
 
 
-
-
-
+    }
 
 
 
