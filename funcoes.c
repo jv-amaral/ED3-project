@@ -1,4 +1,4 @@
-//arquivo funcoes
+//arquivo das funcoes
 
 
 #include <ctype.h>
@@ -23,7 +23,7 @@ void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registr
     RegCabecalho cabecalho;
     Registro Reg;
 
-    // abre os arquivos para leitura e escrita
+    // abre os arquivos para leitura e escrita, respectivamente
     
     FILE *csv = fopen(arquivo_csv, "r");
     FILE *binario = fopen(arquivo_binario, "wb"); 
@@ -48,6 +48,7 @@ void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registr
     cabecalho.proxRRN = 0;
     cabecalho.nroRegRem = 0;
     cabecalho.nroPares = 0;
+
     fwrite(&cabecalho.status, sizeof(char), 1, binario);
     fwrite(&cabecalho.topo_pilha , sizeof(int), 1,binario);
     fwrite(&cabecalho.proxRRN , sizeof(int), 1, binario);
@@ -60,7 +61,8 @@ void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registr
     Reg.encadeamento = -1;
     char linha_csv[100];
         fgets(linha_csv, sizeof(linha_csv),csv ); // le a primeira linha do arquivo csv e descarta, porque é so os titulos dos campos
-
+    
+    //inicia o loop, fazendo a verificação de nulo
     while((fgets(linha_csv, sizeof(linha_csv),csv )) != NULL)
     {    
         
