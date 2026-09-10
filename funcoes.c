@@ -401,3 +401,98 @@ void ScanQuoteString(char *str)
 }
 
 
+//______________________
+//teste da funcionalidade 3
+
+void busca_condicional() {
+    char arquivo_binario[50];
+    int n;
+    scanf("%s %d", arquivo_binario, &n);
+
+    FILE *binario = fopen(arquivo_binario, "rb");
+    if (binario == NULL) {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    RegCabecalho cabecalho;
+    fread(&cabecalho.status, sizeof(char), 1, binario);
+    if (cabecalho.status != '1') {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(binario);
+        return;
+    }
+
+    for (int i = 0; i < n; i++) {
+        int m;
+        scanf("%d", &m);
+
+        int c_idPoPs = -2;
+        int c_idPoPsConectado = -2;
+        int c_velocidade = -2;
+        char c_unidade = -2;
+
+        for (int j = 0; j < m; j++) {
+            char campo[30];
+            char valor[30];
+            scanf("%s", campo);
+
+            if (strcmp(campo, "idPoPs") == 0) {
+                scanf("%s", valor);
+                if (strcmp(valor, "NULO") == 0) c_idPoPs = -1;
+                else c_idPoPs = atoi(valor);
+            } else if (strcmp(campo, "idPoPsConectado") == 0) {
+                scanf("%s", valor);
+                if (strcmp(valor, "NULO") == 0) c_idPoPsConectado = -1;
+                else c_idPoPsConectado = atoi(valor);
+            } else if (strcmp(campo, "velocidade") == 0) {
+                scanf("%s", valor);
+                if (strcmp(valor, "NULO") == 0) c_velocidade = -1;
+                else c_velocidade = atoi(valor);
+            } else if (strcmp(campo, "unidadeMedida") == 0) {
+                ScanQuoteString(valor);
+                if (strcmp(valor, "") == 0) c_unidade = '$';
+                else c_unidade = valor[0];
+            }
+        }
+
+        fseek(binario, 17, SEEK_SET);
+        Registro Reg;
+        int matches_found = 0;
+
+        while (fread(&Reg.removido, sizeof(char), 1, binario) == 1) {
+            fread(&Reg.encadeamento, sizeof(int), 1, binario);
+            fread(&Reg.idPoPs, sizeof(int), 1, binario);
+            fread(&Reg.idPoPsConectado, sizeof(int), 1, binario);
+            fread(&Reg.velocidade, sizeof(int), 1, binario);
+            fread(&Reg.unidade_medida, sizeof(char), 1, binario);
+
+            if (Reg.removido == '1') continue;
+
+            int match = 1;
+            if (c_idPoPs != -2 && Reg.idPoPs != c_idPoPs) match = 0;
+            if (c_idPoPsConectado != -2 && Reg.idPoPsConectado != c_idPoPsConectado) match = 0;
+            if (c_velocidade != -2 && Reg.velocidade != c_velocidade) match = 0;
+            if (c_unidade != -2 && Reg.unidade_medida != c_unidade) match = 0;
+
+            if (match) {
+                matches_found++;
+                if (Reg.velocidade == -1 && Reg.unidade_medida == '$') {
+                    printf("%d %d NULO NULO\n", Reg.idPoPs, Reg.idPoPsConectado);
+                } else if (Reg.velocidade == -1) {
+                    printf("%d %d NULO \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.unidade_medida);
+                } else if (Reg.unidade_medida == '$') {
+                    printf("%d %d %d NULO\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade);
+                } else {
+                    printf("%d %d %d \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade, Reg.unidade_medida);
+                }
+            }
+        }
+
+        if (matches_found == 0) {
+            printf("Registro inexistente.\n");
+        }
+    }
+
+    fclose(binario);
+}

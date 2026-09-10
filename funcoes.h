@@ -33,4 +33,5 @@ void recuperacao_dados();
 void insercao();
 void BinarioNaTela(char *arquivo_binario);
 void ScanQuoteString(char *str);
+void busca_condicional();
 #endif
