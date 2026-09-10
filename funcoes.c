@@ -67,6 +67,7 @@ void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registr
     {    
         
         //atribui os valores do csv para os campos do registro
+        //strtok é usada para procurar a virgula, e atoi converte o texto para o numero inteiro correspondente
         Reg.idPoPs = atoi(strtok(linha_csv, ","));
         Reg.idPoPsConectado = atoi(strtok(NULL, ","));
 
@@ -74,9 +75,10 @@ void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registr
         char *velocidade_ptr = strtok(NULL, ",");
         // verifica se o campo velocidade é nulo e atribui -1 se for o caso, caso contrário, o valor lido do csv é copiado para a variável Reg.velocidade
         if (velocidade_ptr == NULL || velocidade_ptr[0] == ' ')
-         {
+        {
             Reg.velocidade = -1; // atribui -1 se o campo for nulo
-        } else 
+        } 
+        else 
         {
             Reg.velocidade = atoi(velocidade_ptr);
         }
