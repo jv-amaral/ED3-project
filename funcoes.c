@@ -6,6 +6,7 @@
 #include <string.h>
 #include "funcoes.h"
 
+//Funcionalidade 1
 void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registros no arquivo binário
 {
 
@@ -125,6 +126,8 @@ void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registr
 //aqui se encerra a funcionalidade 1 / Create Table
 //_______________________________
 
+
+//Funcionalidade 2
 void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e imprimir na tela
 {
     // declara a variavel para armazenar o nome do arquivo e o lê
@@ -189,6 +192,10 @@ void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e 
     fclose(binario);
 }
 
+//aqui se encerra a funcionalidade 2
+//_______________________________
+
+//Funcionalidade 6
 void insercao()
 
 {
@@ -309,96 +316,9 @@ void insercao()
     BinarioNaTela(arquivo_binario); // chama a funcao para imprimir o arquivo binario na tela
 }
 
-//_____________________________________
-//funcoes dadas:
-/*
- * Você não precisa entender o código dessa função.
- *
- * Use essa função para comparação no run.codes.
- * Lembre-se de ter fechado (fclose) o arquivo anteriormente.
- *
- * Ela vai abrir de novo para leitura e depois fechar
- * (você não vai perder pontos por isso se usar ela).
- */
-void BinarioNaTela(char *arquivo)
-{
-    FILE *fs;
-    if (arquivo == NULL || !(fs = fopen(arquivo, "rb")))
-    {
-        fprintf(stderr,
-                "ERRO AO ESCREVER O BINARIO NA TELA (função binarioNaTela): "
-                "não foi possível abrir o arquivo que me passou para leitura. "
-                "Ele existe e você tá passando o nome certo? Você lembrou de "
-                "fechar ele com fclose depois de usar?\n");
-        return;
-    }
 
-    fseek(fs, 0, SEEK_END);
-    size_t fl = ftell(fs);
-
-    fseek(fs, 0, SEEK_SET);
-    unsigned char *mb = (unsigned char *)malloc(fl);
-    fread(mb, 1, fl, fs);
-
-    unsigned long cs = 0;
-    for (unsigned long i = 0; i < fl; i++)
-    {
-        cs += (unsigned long)mb[i];
-    }
-
-    printf("%lf\n", (cs / (double)100));
-
-    free(mb);
-    fclose(fs);
-}
-
-/*
- *	Use essa função para ler um campo string delimitado entre aspas (").
- *	Chame ela na hora que for ler tal campo. Por exemplo:
- *
- *	A entrada está da seguinte forma:
- *		nomeDoCampo "MARIA DA SILVA"
- *
- *	Para ler isso para as strings já alocadas str1 e str2 do seu programa,
- * você faz: scanf("%s", str1); // Vai salvar nomeDoCampo em str1
- *		scan_quote_string(str2); // Vai salvar MARIA DA SILVA em str2
- * (sem as aspas)
- *
- */
-void ScanQuoteString(char *str)
-{
-    char R;
-
-    while ((R = getchar()) != EOF && isspace(R))
-        ; // ignorar espaços, \r, \n...
-
-    if (R == 'N' || R == 'n')
-    { // campo NULO
-        getchar();
-        getchar();
-        getchar();       // ignorar o "ULO" de NULO.
-        strcpy(str, ""); // copia string vazia
-    }
-    else if (R == '\"')
-    {
-        if (scanf("%[^\"]", str) != 1)
-        { // ler até o fechamento das aspas
-            strcpy(str, "");
-        }
-        getchar(); // ignorar aspas fechando
-    }
-    else if (R != EOF)
-    { // vc tá tentando ler uma string que não tá entre
-      // aspas! Fazer leitura normal %s então, pois deve
-      // ser algum inteiro ou algo assim...
-        str[0] = R;
-        scanf("%s", &str[1]);
-    }
-    else
-    { // EOF
-        strcpy(str, "");
-    }
-}
+//aqui se encerra a funcionalidade 6
+//_______________________________
 
 
 //______________________
@@ -458,7 +378,7 @@ void busca_condicional() {
 
         fseek(binario, 17, SEEK_SET);
         Registro Reg;
-        int matches_found = 0;
+        int matches_found = 0; //mudar
 
         while (fread(&Reg.removido, sizeof(char), 1, binario) == 1) {
             fread(&Reg.encadeamento, sizeof(int), 1, binario);
