@@ -1,5 +1,5 @@
-#ifndef FUNCOES_DADAS_H   
-#define FUNCOES_DADAS_H
+#ifndef FUNCOES_BASE_H   
+#define FUNCOES_BASE_H
 
 void BinarioNaTela(char *arquivo_binario);
 void ScanQuoteString(char *str);

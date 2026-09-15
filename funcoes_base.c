@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include "funcoes.h"
 #include "funcoes_base.h"
+#include <string.h>
+#include <ctype.h>
 
 // funcoes dadas:
 /*
@@ -88,12 +90,12 @@ void ScanQuoteString(char *str)
     }
 
     // acho interessante colocar funcoes bases aqui
-
+    
 
 
     
 
-    
+
     FILE *verificar_arquivo(char *arquivo_binario, RegCabecalho *cabecalho, char *modo_de_leitura)
     {
 
