@@ -137,6 +137,8 @@ Registro Leitura_Registro(FILE *binario, int RRN)
     // ira fazer a leitura se houver um paramentro de RRN
     if (RRN != -1)
     {
+        
+        fseek(binario,17 + RRN*18,SEEK_SET);
         if (fread(&Reg.removido, sizeof(char), 1, binario) != 1)
         {
             // não conseguiu ler nada então RRN não existe no arquivo
@@ -148,7 +150,6 @@ Registro Leitura_Registro(FILE *binario, int RRN)
         // faz a leitura normalmente
         else
         {   
-            fseek(binario,17 + RRN*18,SEEK_SET);
             fread(&Reg.removido, sizeof(char), 1, binario);
             fread(&Reg.encadeamento, sizeof(int), 1, binario);
             fread(&Reg.idPoPs, sizeof(int), 1, binario);
