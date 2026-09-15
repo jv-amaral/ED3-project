@@ -350,25 +350,23 @@ void busca_condicional()
 void busca_RRN()
 {
     int RRN;
-    char arquivo_binario;
+    char arquivo_binario[50];
 
     scanf("%s", arquivo_binario);
 
     FILE *binario = verificar_arquivo(arquivo_binario, "rb");
-
+    if (binario == NULL)
+    return;
     // verifica qual o RRN desejado pelo usuario
     scanf("%d", &RRN);
 
     // sabe-se que cada registro tem 1 + 4 + 4 + 4 + 4 + 1 (char, int, int, int, int, char) bytes = 18 bytes
 
     // comeco a procurar o RRN a partir do fim do cabecalho
-    fseek(binario, 16 + RRN * 18, SEEK_SET);
+    fseek(binario, 17 + RRN * 18, SEEK_SET);
 
 
     Registro Reg = Leitura_registro(binario, RRN);
-    
-
-    fread(&Reg.removido, sizeof(char), 1, binario);
 
     if (Reg.removido == NULL || Reg.removido == 1)
     {
@@ -377,16 +375,11 @@ void busca_RRN()
 
     else
     {
-        fread(&Reg.idPoPs, sizeof(char), 1, binario);
-        fread(&Reg.idPoPsConectado, sizeof(char), 1, binario);
-        fread(&Reg.velocidade, sizeof(char), 1, binario);
-        fread(&Reg.unidade_medida, sizeof(char), 1, binario);
-    }
-
     printf("%s ", Reg.idPoPs);
     printf("%s ", Reg.idPoPsConectado);
     printf("%s ", Reg.velocidade);
     printf("%s", Reg.unidade_medida);
+    }
 
     fclose(binario);
 }
