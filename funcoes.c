@@ -5,7 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "funcoes.h"
-#include "funcoes_dadas.h"
+#include "funcoes_base.h"
 
 // Funcionalidade 1
 void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registros no arquivo binário
@@ -382,8 +382,21 @@ void busca_RRN()
 
     Registro Reg;
 
-    fread(&Reg.removido, sizeof(char), binario);
+    fread(&Reg.removido, sizeof(char), 1, binario);
     //continuar a partir daqui
+
+    if(Reg.removido == NULL || Reg.removido == 1)
+    {
+        printf("Registro inexistente.\n");
+    }
+
+    else
+    {
+        fread(&Reg.idPoPs, sizeof(char), 1, binario);
+        fread(&Reg.idPoPsConectado, sizeof(char), 1, binario);
+        fread(&Reg.velocidade, sizeof(char), 1, binario);
+        fread(&Reg.unidade_medida, sizeof(char), 1, binario);
+    }
 
 
 
