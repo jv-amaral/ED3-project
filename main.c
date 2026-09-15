@@ -25,6 +25,9 @@ int main() {
         case 3:
             busca_condicional();
             break;
+        case 4:
+            busca_RRN();
+            break;
         case 6: 
             insercao();     
             break;

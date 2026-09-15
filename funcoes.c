@@ -289,7 +289,7 @@ void busca_condicional()
         fseek(binario, 17, SEEK_SET);
         Registro Reg;
 
-        int matches_found = 0; // mudar
+        int matches_found = 0;
 
         while (fread(&Reg.removido, sizeof(char), 1, binario) == 1)
         {
@@ -342,6 +342,13 @@ void busca_condicional()
 
     fclose(binario);
 }
+// aqui se encerra a funcionalidade 3
+//_______________________________
+
+
+// Funcionalidade 4
+void busca_RRN()
+
 
 
 

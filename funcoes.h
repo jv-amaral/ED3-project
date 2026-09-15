@@ -31,7 +31,7 @@ typedef struct
 void leitura_e_gravacao();
 void recuperacao_dados();
 void busca_condicional();
-
+void busca_RRN();
 
 void insercao();
 
