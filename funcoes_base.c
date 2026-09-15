@@ -90,14 +90,16 @@ void ScanQuoteString(char *str)
     }
 
     // acho interessante colocar funcoes bases aqui
+
+
+
     
 
-
     
-
-
-    FILE *verificar_arquivo(char *arquivo_binario, RegCabecalho *cabecalho, char *modo_de_leitura)
+    FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura)
     {
+
+        char temp_status;
 
         // abre o arquivo
         FILE *binario = fopen(arquivo_binario, modo_de_leitura);
@@ -108,8 +110,8 @@ void ScanQuoteString(char *str)
             return NULL;
         }
 
-        fread(&cabecalho.status, sizeof(char), binario);
-        if (cabecalho.status != '1')
+        fread(&temp_status, sizeof(char), 1,binario);
+        if (temp_status != '1')
         {
             printf("Falha no processamento do arquivo.\n");
             fclose(binario);
@@ -118,4 +120,10 @@ void ScanQuoteString(char *str)
 
         return binario;
     }
+}
+Regcabecalho Leitura_Cabecalho(FILE *arquivo_binario)
+
+{
+    
+
 }
