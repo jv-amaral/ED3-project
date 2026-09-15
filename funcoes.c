@@ -414,14 +414,14 @@ void insercao()
 
 
     
-    // abre o arquivo para leitura e escrita
+    // abre o arquivo para leitura e escrita e verifica se está corrompido
     FILE *binario = verificar_arquivo(arquivo_binario,"rb+");
-    if (binario == NULL)
+    if (binario == NULL) // Se encontrar algum erro, ele retorna
     {
         return;
     }
     RegCabecalho cabecalho = Leitura_Cabecalho(binario); //definicao da struct e leitura do arquivo binario
-    // Le do arquivo os valores dos campos do cabeçalho
+   
     
     cabecalho.status = '0'; // como vamos escrever no arquivo, o status deve estar inconsistente
     fseek(binario, 0, SEEK_SET);
