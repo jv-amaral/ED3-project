@@ -348,6 +348,51 @@ void busca_condicional()
 
 // Funcionalidade 4
 void busca_RRN()
+{
+    char arquivo_binario[50];
+    int RRN;
+
+    //abre o arquivo
+    FILE *binario = fopen(arquivo_binario, "rb");
+
+    //verificacoes basicas, de existencia e consistencia do arquivo
+    if(binario == NULL)
+    {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    RegCabecalho cabecalho;
+
+    fread(&cabecalho.status, sizeof(char), binario)
+    if(cabecalho.status != '1')
+    {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(binario);
+        return;
+    }
+
+    //verifica qual o RRN desejado pelo usuario
+    scanf("%d", &RRN);
+
+    //sabe-se que cada registro tem 1 + 4 + 4 + 4 + 4 + 1 (char, int, int, int, int, char) bytes = 18 bytes
+
+    //comeco a procurar o RRN a partir do fim do cabecalho
+    fseek(17, binario, RRN*18);
+
+    Registro Reg;
+
+    fread(&Reg.removido, sizeof(char), binario);
+    //continuar a partir daqui
+
+
+
+
+  
+
+
+
+}
 
 
 
