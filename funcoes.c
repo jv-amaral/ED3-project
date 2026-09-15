@@ -130,7 +130,7 @@ void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registr
 // Funcionalidade 2
 void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e imprimir na tela
 {
-    // declara a variavel para armazenar o nome do arquivo e o lê
+    // declara a variavel para armazenar o nome do arquivo e o le
     char arquivo_binario[50];
     scanf("%s", arquivo_binario);
 
@@ -152,7 +152,7 @@ void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e 
         return;
     }
 
-    // pula para o byteoffset 17 do arquivo (pois é onde começam os registros) e os lê
+    // pula para o byteoffset 17 do arquivo (pois e onde começam os registros) e os le
     fseek(binario, 17, SEEK_SET);
 
     int registros_lidos = 0; // contador para verificar se algum registro foi lido
