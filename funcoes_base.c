@@ -90,31 +90,30 @@ void ScanQuoteString(char *str)
     }
 }
 
-    FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura)
+FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura)
+{
+
+    char temp_status;
+
+    // abre o arquivo
+    FILE *binario = fopen(arquivo_binario, modo_de_leitura);
+    // verificacoes basicas, de existencia e consistencia do arquivo
+    if (binario == NULL)
     {
-
-        char temp_status;
-
-        // abre o arquivo
-        FILE *binario = fopen(arquivo_binario, modo_de_leitura);
-        // verificacoes basicas, de existencia e consistencia do arquivo
-        if (binario == NULL)
-        {
-            printf("Falha no processamento do arquivo.\n");
-            return NULL;
-        }
-
-        fread(&temp_status, sizeof(char), 1, binario);
-        if (temp_status != '1')
-        {
-            printf("Falha no processamento do arquivo.\n");
-            fclose(binario);
-            return NULL;
-        }
-
-        return binario;
+        printf("Falha no processamento do arquivo.\n");
+        return NULL;
     }
 
+    fread(&temp_status, sizeof(char), 1, binario);
+    if (temp_status != '1')
+    {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(binario);
+        return NULL;
+    }
+
+    return binario;
+}
 
 RegCabecalho Leitura_Cabecalho(FILE *binario)
 
@@ -131,32 +130,18 @@ RegCabecalho Leitura_Cabecalho(FILE *binario)
     return cabecalho;
 }
 
-Registro Leitura_Registro(FILE *binario, int RRN)
+int Leitura_Registro(FILE *binario, Registro *Reg)
 {
-    Registro Reg;
-    // ira fazer a leitura se houver um paramentro de RRN
-    if (RRN != -1)
+    if (fread(&Reg->removido, sizeof(char), 1, binario) != 1)
     {
-        
-        fseek(binario,17 + RRN*18,SEEK_SET);
-        if (fread(&Reg.removido, sizeof(char), 1, binario) != 1)
-        {
-            // não conseguiu ler nada então RRN não existe no arquivo
-            printf("Registro inexistente.\n");
-            fclose(binario);
-            return;
-        }
-
-        // faz a leitura normalmente
-        else
-        {   
-            fread(&Reg.removido, sizeof(char), 1, binario);
-            fread(&Reg.encadeamento, sizeof(int), 1, binario);
-            fread(&Reg.idPoPs, sizeof(int), 1, binario);
-            fread(&Reg.idPoPsConectado, sizeof(int), 1, binario);
-            fread(&Reg.velocidade, sizeof(int), 1, binario);
-            fread(&Reg.unidade_medida, sizeof(char), 1, binario);
-            return Reg;
-        }
+        return 0;
     }
+
+    fread(&Reg->encadeamento, sizeof(int), 1, binario);
+    fread(&Reg->idPoPs, sizeof(int), 1, binario);
+    fread(&Reg->idPoPsConectado, sizeof(int), 1, binario);
+    fread(&Reg->velocidade, sizeof(int), 1, binario);
+    fread(&Reg->unidade_medida, sizeof(char), 1, binario);
+
+    return 1;
 }
