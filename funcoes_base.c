@@ -120,6 +120,8 @@ void ScanQuoteString(char *str)
 
         return binario;
     }
+
+    
 }
 Regcabecalho Leitura_Cabecalho(FILE *arquivo_binario)
 

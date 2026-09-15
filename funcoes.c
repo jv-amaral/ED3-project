@@ -354,15 +354,21 @@ void busca_condicional()
 // Funcionalidade 4
 void busca_RRN()
 {
-    abrir_arquivo()
+    int RRN;
+    char arquivo_binario;
 
-        // verifica qual o RRN desejado pelo usuario
-        scanf("%d", &RRN);
+    scanf("%s", arquivo_binario);
+
+    FILE *binario = verificar_arquivo(arquivo_binario, "rb");
+
+    // verifica qual o RRN desejado pelo usuario
+    scanf("%d", &RRN);
 
     // sabe-se que cada registro tem 1 + 4 + 4 + 4 + 4 + 1 (char, int, int, int, int, char) bytes = 18 bytes
 
     // comeco a procurar o RRN a partir do fim do cabecalho
-    fseek(17, binario, RRN * 18);
+    fseek(binario, 17 + RRN * 18, SEEK_SET);
+
 
     Registro Reg;
 
