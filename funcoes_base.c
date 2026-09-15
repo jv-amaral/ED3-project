@@ -88,6 +88,7 @@ void ScanQuoteString(char *str)
     { // EOF
         strcpy(str, "");
     }
+}
 
     FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura)
     {
@@ -113,12 +114,12 @@ void ScanQuoteString(char *str)
 
         return binario;
     }
-}
 
-Regcabecalho Leitura_Cabecalho(FILE *binario)
+
+RegCabecalho Leitura_Cabecalho(FILE *binario)
 
 {
-    Regcabecalho cabecalho; // define o nome da struct
+    RegCabecalho cabecalho; // define o nome da struct
     // Le todos os dados do registro de cabecalho
     fseek(binario, 0, SEEK_SET);
     fread(&cabecalho.status, sizeof(char), 1, binario);
