@@ -123,9 +123,17 @@ void ScanQuoteString(char *str)
 
     
 }
-Regcabecalho Leitura_Cabecalho(FILE *arquivo_binario)
+Regcabecalho Leitura_Cabecalho(FILE *binario)
 
 {
-    
+    Regcabecalho cabecalho; //define o nome da struct
+    // Le todos os dados do registro de cabecalho
+    fseek(binario,0,SEEK_SET);
+    fread(&cabecalho.status,sizeof(char),1,binario);
+    fread(&cabecalho.topo_pilha,sizeof(int),1,binario);
+    fread(&cabecalho.proxRRN,sizeof(int),1,binario);
+    fread(&cabecalho.nroRegRem,sizeof(int),1,binario);
+    fread(&cabecalho.nroPares,sizeof(int),1,binario);
 
+    return cabecalho;
 }
