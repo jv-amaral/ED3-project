@@ -146,7 +146,8 @@ Registro Leitura_Registro(FILE *binario, int RRN)
 
         // faz a leitura normalmente
         else
-        {
+        {   
+            fseek(binario,17 + RRN*18,SEEK_SET);
             fread(&Reg.removido, sizeof(char), 1, binario);
             fread(&Reg.encadeamento, sizeof(int), 1, binario);
             fread(&Reg.idPoPs, sizeof(int), 1, binario);
