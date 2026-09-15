@@ -289,11 +289,6 @@ void busca_condicional()
         fseek(binario, 17, SEEK_SET);
         Registro Reg;
 
-
-
-
-
-
         /////////////////////////////////////////////
         int matches_found = 0;
 
@@ -368,7 +363,6 @@ void busca_RRN()
 
     // comeco a procurar o RRN a partir do fim do cabecalho
     fseek(binario, 17 + RRN * 18, SEEK_SET);
-
 
     Registro Reg;
 
