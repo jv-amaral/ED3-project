@@ -355,6 +355,7 @@ void busca_RRN()
     scanf("%s", arquivo_binario);
 
     FILE *binario = verificar_arquivo(arquivo_binario, "rb");
+
     if (binario == NULL)
     return;
     // verifica qual o RRN desejado pelo usuario
@@ -365,19 +366,18 @@ void busca_RRN()
     // comeco a procurar o RRN a partir do fim do cabecalho
     fseek(binario, 17 + RRN * 18, SEEK_SET);
 
-
     Registro Reg = Leitura_registro(binario, RRN);
 
-    if (Reg.removido == NULL || Reg.removido == 1)
+    if (Reg.removido == '1')
     {
         printf("Registro inexistente.\n");
     }
 
-    else
+    else if (Reg.removido == '0')
     {
-    printf("%s ", Reg.idPoPs);
-    printf("%s ", Reg.idPoPsConectado);
-    printf("%s ", Reg.velocidade);
+    printf("%d ", Reg.idPoPs);
+    printf("%d ", Reg.idPoPsConectado);
+    printf("%d ", Reg.velocidade);
     printf("%s", Reg.unidade_medida);
     }
 

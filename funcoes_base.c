@@ -89,7 +89,6 @@ void ScanQuoteString(char *str)
         strcpy(str, "");
     }
 
-
     FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura)
     {
 
@@ -104,7 +103,7 @@ void ScanQuoteString(char *str)
             return NULL;
         }
 
-        fread(&temp_status, sizeof(char), 1,binario);
+        fread(&temp_status, sizeof(char), 1, binario);
         if (temp_status != '1')
         {
             printf("Falha no processamento do arquivo.\n");
@@ -114,20 +113,18 @@ void ScanQuoteString(char *str)
 
         return binario;
     }
-
-    
 }
 Regcabecalho Leitura_Cabecalho(FILE *binario)
 
 {
-    Regcabecalho cabecalho; //define o nome da struct
+    Regcabecalho cabecalho; // define o nome da struct
     // Le todos os dados do registro de cabecalho
-    fseek(binario,0,SEEK_SET);
-    fread(&cabecalho.status,sizeof(char),1,binario);
-    fread(&cabecalho.topo_pilha,sizeof(int),1,binario);
-    fread(&cabecalho.proxRRN,sizeof(int),1,binario);
-    fread(&cabecalho.nroRegRem,sizeof(int),1,binario);
-    fread(&cabecalho.nroPares,sizeof(int),1,binario);
+    fseek(binario, 0, SEEK_SET);
+    fread(&cabecalho.status, sizeof(char), 1, binario);
+    fread(&cabecalho.topo_pilha, sizeof(int), 1, binario);
+    fread(&cabecalho.proxRRN, sizeof(int), 1, binario);
+    fread(&cabecalho.nroRegRem, sizeof(int), 1, binario);
+    fread(&cabecalho.nroPares, sizeof(int), 1, binario);
 
     return cabecalho;
 }
@@ -135,15 +132,27 @@ Regcabecalho Leitura_Cabecalho(FILE *binario)
 Registro Leitura_Registro(FILE *binario, int RRN)
 {
     Registro Reg;
+    // ira fazer a leitura se houver um paramentro de RRN
     if (RRN != -1)
     {
-        fread(&Reg.removido, sizeof(char), 1, binario);
-        fread(&Reg.encadeamento, sizeof(int), 1, binario);
-        fread(&Reg.idPoPs, sizeof(int), 1, binario);
-        fread(&Reg.idPoPsConectado, sizeof(int), 1, binario);
-        fread(&Reg.velocidade, sizeof(int), 1, binario);
-        fread(&Reg.unidade_medida, sizeof(char), 1, binario);
-        return Reg;
+        if (fread(&Reg.removido, sizeof(char), 1, binario) != 1)
+        {
+            // não conseguiu ler nada então RRN não existe no arquivo
+            printf("Registro inexistente.\n");
+            fclose(binario);
+            return;
+        }
+
+        // faz a leitura normalmente
+        else
+        {
+            fread(&Reg.removido, sizeof(char), 1, binario);
+            fread(&Reg.encadeamento, sizeof(int), 1, binario);
+            fread(&Reg.idPoPs, sizeof(int), 1, binario);
+            fread(&Reg.idPoPsConectado, sizeof(int), 1, binario);
+            fread(&Reg.velocidade, sizeof(int), 1, binario);
+            fread(&Reg.unidade_medida, sizeof(char), 1, binario);
+            return Reg;
+        }
     }
 }
-
