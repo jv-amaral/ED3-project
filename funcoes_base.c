@@ -114,6 +114,7 @@ void ScanQuoteString(char *str)
         return binario;
     }
 }
+
 Regcabecalho Leitura_Cabecalho(FILE *binario)
 
 {
