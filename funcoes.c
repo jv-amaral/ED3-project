@@ -285,9 +285,10 @@ void busca_condicional()
             }
         }
 
-        // pula para o byteoffset 17 do arquivo (pois é onde começam os registros) e os lê
+        // pula para o byteoffset 17 do arquivo (pois é onde começam os registros)
         fseek(binario, 17, SEEK_SET);
         Registro Reg;
+
         int matches_found = 0; // mudar
 
         while (fread(&Reg.removido, sizeof(char), 1, binario) == 1)
@@ -341,6 +342,8 @@ void busca_condicional()
 
     fclose(binario);
 }
+
+
 
 // Funcionalidade 6
 void insercao()
