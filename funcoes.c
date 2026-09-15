@@ -244,7 +244,7 @@ void busca_condicional()
             scanf("%s", campo);
 
             // vai verificar qual e o criterio a ser usado por meio de comparacoes
-            // se o valor e nulo, o criterio respectivo assme -1
+            // se o valor e nulo, o criterio respectivo assume -1
             if (strcmp(campo, "idPops") == 0)
             {
                 scanf("%s", valor);
@@ -289,6 +289,12 @@ void busca_condicional()
         fseek(binario, 17, SEEK_SET);
         Registro Reg;
 
+
+
+
+
+
+        /////////////////////////////////////////////
         int matches_found = 0;
 
         while (fread(&Reg.removido, sizeof(char), 1, binario) == 1)

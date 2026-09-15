@@ -89,6 +89,11 @@ void ScanQuoteString(char *str)
 
     // acho interessante colocar funcoes bases aqui
 
+
+
+    
+
+    
     FILE *verificar_arquivo(char *arquivo_binario, RegCabecalho *cabecalho, char *modo_de_leitura)
     {
 
