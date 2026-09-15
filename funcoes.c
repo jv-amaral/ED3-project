@@ -213,9 +213,8 @@ void busca_condicional()
         return;
     }
 
-    //verificacao no numero de repeticoes desejado
+    // verificacao no numero de repeticoes desejado
     scanf("%d", &repeticoes);
-
 
     // inicia o laco externo de n buscas
     for (int busca_atual = 0; busca_atual < repeticoes; busca_atual++)
@@ -281,7 +280,7 @@ void busca_condicional()
         // pula para o byteoffset 17 do arquivo (pois é onde começam os registros)
         fseek(binario, 17, SEEK_SET);
         Registro Reg;
-        
+
         /////////////////////////////////////////////
         int matches_found = 0;
 
@@ -361,12 +360,12 @@ void busca_RRN()
 
     Registro Reg;
 
-    //vai verificar se a leitura ocorreu de fato e se o registro esta removido ou nao
+    // vai verificar se a leitura ocorreu de fato e se o registro esta removido ou nao
     if (!Leitura_Registro(binario, &Reg) || Reg.removido == '1')
     {
         printf("Registro inexistente.\n");
     }
-    //ira printar as informacoes necessarias com o tratamento de NULO e de -1
+    // ira printar as informacoes necessarias com o tratamento de NULO e de -1
     else
     {
         printf("%d %d ", Reg.idPoPs, Reg.idPoPsConectado);
@@ -396,10 +395,7 @@ void busca_RRN()
 // aqui se encerra a funcionalidade 4
 //_______________________________
 
-
 // Funcionalidade 5
-
-
 
 // Funcionalidade 6
 void insercao()
@@ -409,20 +405,16 @@ void insercao()
     char arquivo_binario[50];
     scanf("%s", arquivo_binario);
 
-    
     Registro Reg;
 
-
-    
     // abre o arquivo para leitura e escrita e verifica se está corrompido
-    FILE *binario = verificar_arquivo(arquivo_binario,"rb+");
+    FILE *binario = verificar_arquivo(arquivo_binario, "rb+");
     if (binario == NULL) // Se encontrar algum erro, ele retorna
     {
         return;
     }
-    RegCabecalho cabecalho = Leitura_Cabecalho(binario); //definicao da struct e leitura do arquivo binario
-   
-    
+    RegCabecalho cabecalho = Leitura_Cabecalho(binario); // definicao da struct e leitura do arquivo binario
+
     cabecalho.status = '0'; // como vamos escrever no arquivo, o status deve estar inconsistente
     fseek(binario, 0, SEEK_SET);
     fwrite(&cabecalho.status, sizeof(char), 1, binario);
@@ -514,5 +506,3 @@ void insercao()
 
 // aqui se encerra a funcionalidade 6
 //_______________________________
-
-
