@@ -281,13 +281,7 @@ void busca_condicional()
         // pula para o byteoffset 17 do arquivo (pois é onde começam os registros)
         fseek(binario, 17, SEEK_SET);
         Registro Reg;
-
-
-
-
-
-
-
+        
         /////////////////////////////////////////////
         int matches_found = 0;
 
