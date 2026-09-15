@@ -368,10 +368,12 @@ void busca_RRN()
 
     Registro Reg;
 
+    //vai verificar se a leitura ocorreu de fato e se o registro esta removido ou nao
     if (!Leitura_Registro(binario, &Reg) || Reg.removido == '1')
     {
         printf("Registro inexistente.\n");
     }
+    //ira printar as informacoes necessarias com o tratamento de NULO e de -1
     else
     {
         printf("%d %d ", Reg.idPoPs, Reg.idPoPsConectado);
@@ -391,7 +393,7 @@ void busca_RRN()
         }
         else
         {
-            printf("%c\n", Reg.unidade_medida);
+            printf("%s\n", Reg.unidade_medida);
         }
     }
 
