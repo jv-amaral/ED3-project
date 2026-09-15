@@ -7,7 +7,7 @@
 #include "funcoes.h"
 #include "funcoes_dadas.h"
 
-//Funcionalidade 1
+// Funcionalidade 1
 void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registros no arquivo binário
 {
 
@@ -124,11 +124,10 @@ void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registr
     BinarioNaTela(arquivo_binario);
 }
 
-//aqui se encerra a funcionalidade 1 / Create Table
+// aqui se encerra a funcionalidade 1 / Create Table
 //_______________________________
 
-
-//Funcionalidade 2
+// Funcionalidade 2
 void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e imprimir na tela
 {
     // declara a variavel para armazenar o nome do arquivo e o lê
@@ -193,111 +192,149 @@ void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e 
     fclose(binario);
 }
 
-//aqui se encerra a funcionalidade 2
+// aqui se encerra a funcionalidade 2
 //_______________________________
 
 //______________________
-//Funcionalidade 3
+// Funcionalidade 3
 
 void busca_condicional()
-    {
-    //crio as variaveis do nome do arquivo e do numero de repeticoes da busca
+{
+    // crio as variaveis do nome do arquivo e do numero de repeticoes da busca
     char arquivo_binario[50];
     int repeticoes;
 
     scanf("%s %d", arquivo_binario, &repeticoes);
 
-    //se ao tentar abrir o arquivo um erro for encontrado, uma mensagem sera exibida
+    // se ao tentar abrir o arquivo um erro for encontrado, uma mensagem sera exibida
     FILE *binario = fopen(arquivo_binario, "rb");
-        if(binario == NULL)
-        {
-            printf("Falha no processamento do arquivo.\n");
-            return;
-        }
+    if (binario == NULL)
+    {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
 
-    //irá ser feita a leitura do status do cabecalho para verificar a consistencia do arquivo
+    // irá ser feita a leitura do status do cabecalho para verificar a consistencia do arquivo
     RegCabecalho cabecalho;
     fread(&cabecalho.status, sizeof(char), 1, binario);
-    if(cabecalho.status != '1')
-        {
-            printf("Falha no processamento do arquivo.\n");
-            fclose(binario);
-            return;
-        }
+    if (cabecalho.status != '1')
+    {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(binario);
+        return;
+    }
 
-
-     
-        //inicia o laco externo de n buscas
-      for (int busca_atual = 0; busca_atual < repeticoes; busca_atual++) {
-        //vai ver quantos criterios serao levados em conta na busca
+    // inicia o laco externo de n buscas
+    for (int busca_atual = 0; busca_atual < repeticoes; busca_atual++)
+    {
+        // vai ver quantos criterios serao levados em conta na busca
         int qtd_criterios;
         scanf("%d", &qtd_criterios);
 
-        //inicio os criterios com valor -2, ja que 0 é um valor de busca valido e -1 corresponde ao nulo
+        // inicio os criterios com valor -2, ja que 0 é um valor de busca valido e -1 corresponde ao nulo
         int criterio_idPoPs = -2;
         int criterio_idPoPsConectado = -2;
         int criterio_velocidade = -2;
         char criterio_unidadeMedida = -2;
 
-        
-        for (int j = 0; j < m; j++) {
+        for (int criterio_atual = 0; criterio_atual < qtd_criterios; criterio_atual++)
+        {
             char campo[30];
             char valor[30];
             scanf("%s", campo);
 
-            if (strcmp(campo, "idPoPs") == 0) {
+            // vai verificar qual e o criterio a ser usado por meio de comparacoes
+            // se o valor e nulo, o criterio respectivo assme -1
+            if (strcmp(campo, "idPops") == 0)
+            {
                 scanf("%s", valor);
-                if (strcmp(valor, "NULO") == 0) c_idPoPs = -1;
-                else c_idPoPs = atoi(valor);
-            } else if (strcmp(campo, "idPoPsConectado") == 0) {
+                if (strcmp(valor, "NULO") == 0)
+                    criterio_idPoPs = -1;
+                else
+                    criterio_idPoPs = atoi(valor);
+            }
+
+            else if (strcmp(campo, "idPopsConectado") == 0)
+            {
                 scanf("%s", valor);
-                if (strcmp(valor, "NULO") == 0) c_idPoPsConectado = -1;
-                else c_idPoPsConectado = atoi(valor);
-            } else if (strcmp(campo, "velocidade") == 0) {
+                if (strcmp(valor, "NULO") == 0)
+                    criterio_idPoPsConectado = -1;
+                else
+                    criterio_idPoPsConectado = atoi(valor);
+            }
+
+            else if (strcmp(campo, "velocidade") == 0)
+            {
                 scanf("%s", valor);
-                if (strcmp(valor, "NULO") == 0) c_velocidade = -1;
-                else c_velocidade = atoi(valor);
-            } else if (strcmp(campo, "unidadeMedida") == 0) {
+                if (strcmp(valor, "NULO") == 0)
+                    criterio_velocidade = -1;
+                else
+                    criterio_velocidade = atoi(valor);
+            }
+
+            //verificao para a unidade de medida e diferente, ja que e uma string com apas
+            //para isso e utilizada a funcao ScanQuoteString que faz a leitura da string e decide internamente 
+            //se o que veio da entrada e NULO, um valor entre aspas ou algo sem aspas
+            else if (strcmp(campo, "unidadeMedida") == 0)
+            {
                 ScanQuoteString(valor);
-                if (strcmp(valor, "") == 0) c_unidade = '$';
-                else c_unidade = valor[0];
+                if (strcmp(valor, "") == 0)
+                    criterio_unidadeMedida = '$';
+                else
+                    criterio_unidadeMedida = valor[0];
             }
         }
 
+        // pula para o byteoffset 17 do arquivo (pois é onde começam os registros) e os lê
         fseek(binario, 17, SEEK_SET);
         Registro Reg;
-        int matches_found = 0; //mudar
+        int matches_found = 0; // mudar
 
-        while (fread(&Reg.removido, sizeof(char), 1, binario) == 1) {
+        while (fread(&Reg.removido, sizeof(char), 1, binario) == 1)
+        {
             fread(&Reg.encadeamento, sizeof(int), 1, binario);
             fread(&Reg.idPoPs, sizeof(int), 1, binario);
             fread(&Reg.idPoPsConectado, sizeof(int), 1, binario);
             fread(&Reg.velocidade, sizeof(int), 1, binario);
             fread(&Reg.unidade_medida, sizeof(char), 1, binario);
 
-            if (Reg.removido == '1') continue;
+            if (Reg.removido == '1')
+                continue;
 
             int match = 1;
-            if (c_idPoPs != -2 && Reg.idPoPs != c_idPoPs) match = 0;
-            if (c_idPoPsConectado != -2 && Reg.idPoPsConectado != c_idPoPsConectado) match = 0;
-            if (c_velocidade != -2 && Reg.velocidade != c_velocidade) match = 0;
-            if (c_unidade != -2 && Reg.unidade_medida != c_unidade) match = 0;
+            if (c_idPoPs != -2 && Reg.idPoPs != c_idPoPs)
+                match = 0;
+            if (c_idPoPsConectado != -2 && Reg.idPoPsConectado != c_idPoPsConectado)
+                match = 0;
+            if (c_velocidade != -2 && Reg.velocidade != c_velocidade)
+                match = 0;
+            if (c_unidade != -2 && Reg.unidade_medida != c_unidade)
+                match = 0;
 
-            if (match) {
+            if (match)
+            {
                 matches_found++;
-                if (Reg.velocidade == -1 && Reg.unidade_medida == '$') {
+                if (Reg.velocidade == -1 && Reg.unidade_medida == '$')
+                {
                     printf("%d %d NULO NULO\n", Reg.idPoPs, Reg.idPoPsConectado);
-                } else if (Reg.velocidade == -1) {
+                }
+                else if (Reg.velocidade == -1)
+                {
                     printf("%d %d NULO \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.unidade_medida);
-                } else if (Reg.unidade_medida == '$') {
+                }
+                else if (Reg.unidade_medida == '$')
+                {
                     printf("%d %d %d NULO\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade);
-                } else {
+                }
+                else
+                {
                     printf("%d %d %d \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade, Reg.unidade_medida);
                 }
             }
         }
 
-        if (matches_found == 0) {
+        if (matches_found == 0)
+        {
             printf("Registro inexistente.\n");
         }
     }
@@ -305,8 +342,7 @@ void busca_condicional()
     fclose(binario);
 }
 
-
-//Funcionalidade 6
+// Funcionalidade 6
 void insercao()
 
 {
@@ -427,10 +463,5 @@ void insercao()
     BinarioNaTela(arquivo_binario); // chama a funcao para imprimir o arquivo binario na tela
 }
 
-
-//aqui se encerra a funcionalidade 6
+// aqui se encerra a funcionalidade 6
 //_______________________________
-
-
-
-
