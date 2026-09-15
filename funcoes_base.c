@@ -89,13 +89,7 @@ void ScanQuoteString(char *str)
         strcpy(str, "");
     }
 
-    // acho interessante colocar funcoes bases aqui
 
-
-
-    
-
-    
     FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura)
     {
 
@@ -136,4 +130,18 @@ Regcabecalho Leitura_Cabecalho(FILE *binario)
     fread(&cabecalho.nroPares,sizeof(int),1,binario);
 
     return cabecalho;
+}
+
+Registro Leitura_Registro(FILE *binario, int RRN)
+{
+    Registro Reg;
+    if (RRN != -1)
+    {
+        fread(&Reg.removido, sizeof(char), 1, binario);
+        fread(&Reg.idPoPs, sizeof(char), 1, binario);
+        fread(&Reg.idPoPsConectado, sizeof(char), 1, binario);
+        fread(&Reg.velocidade, sizeof(char), 1, binario);
+        fread(&Reg.unidade_medida, sizeof(char), 1, binario);
+        return Reg;
+    }
 }

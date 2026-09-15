@@ -362,12 +362,13 @@ void busca_RRN()
     // sabe-se que cada registro tem 1 + 4 + 4 + 4 + 4 + 1 (char, int, int, int, int, char) bytes = 18 bytes
 
     // comeco a procurar o RRN a partir do fim do cabecalho
-    fseek(binario, 17 + RRN * 18, SEEK_SET);
+    fseek(binario, 16 + RRN * 18, SEEK_SET);
 
-    Registro Reg;
+
+    Registro Reg = Leitura_registro(binario, RRN);
+    
 
     fread(&Reg.removido, sizeof(char), 1, binario);
-    // continuar a partir daqui
 
     if (Reg.removido == NULL || Reg.removido == 1)
     {
