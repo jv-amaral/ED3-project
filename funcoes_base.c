@@ -1,15 +1,69 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "funcoes.h"
-#include "funcoes_base.h"
 #include <string.h>
 #include <ctype.h>
+#include "funcoes.h"
+#include "funcoes_base.h"
 
-// funcoes dadas:
-/*
- * Ela vai abrir de novo para leitura e depois fechar
- * (você não vai perder pontos por isso se usar ela).
- */
+
+FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura)
+{
+
+    char temp_status;
+
+    // abre o arquivo
+    FILE *binario = fopen(arquivo_binario, modo_de_leitura);
+    // verificacoes basicas, de existencia e consistencia do arquivo
+    if (binario == NULL)
+    {
+        printf("Falha no processamento do arquivo.\n");
+        return NULL;
+    }
+
+    fread(&temp_status, sizeof(char), 1, binario);
+    if (temp_status != '1')
+    {
+        printf("Falha no processamento do arquivo.\n");
+        fclose(binario);
+        return NULL;
+    }
+
+    return binario;
+}
+
+RegCabecalho Leitura_Cabecalho(FILE *binario)
+
+{
+    RegCabecalho cabecalho; // define o nome da struct
+    // Le todos os dados do registro de cabecalho
+    fseek(binario, 0, SEEK_SET);
+    fread(&cabecalho.status, sizeof(char), 1, binario);
+    fread(&cabecalho.topo_pilha, sizeof(int), 1, binario);
+    fread(&cabecalho.proxRRN, sizeof(int), 1, binario);
+    fread(&cabecalho.nroRegRem, sizeof(int), 1, binario);
+    fread(&cabecalho.nroPares, sizeof(int), 1, binario);
+
+    return cabecalho;
+}
+
+int Leitura_Registro(FILE *binario, Registro *Reg)
+{
+    if (fread(&Reg->removido, sizeof(char), 1, binario) != 1)
+    {
+        return 0;
+    }
+
+    fread(&Reg->encadeamento, sizeof(int), 1, binario);
+    fread(&Reg->idPoPs, sizeof(int), 1, binario);
+    fread(&Reg->idPoPsConectado, sizeof(int), 1, binario);
+    fread(&Reg->velocidade, sizeof(int), 1, binario);
+    fread(&Reg->unidade_medida, sizeof(char), 1, binario);
+
+    return 1;
+}
+
+//funcoes dadas na plataforma
+
 void BinarioNaTela(char *arquivo)
 {
     FILE *fs;
@@ -42,19 +96,6 @@ void BinarioNaTela(char *arquivo)
     fclose(fs);
 }
 
-/*
- *	Use essa função para ler um campo string delimitado entre aspas (").
- *	Chame ela na hora que for ler tal campo. Por exemplo:
- *
- *	A entrada está da seguinte forma:
- *		nomeDoCampo "MARIA DA SILVA"
- *
- *	Para ler isso para as strings já alocadas str1 e str2 do seu programa,
- * você faz: scanf("%s", str1); // Vai salvar nomeDoCampo em str1
- *		scan_quote_string(str2); // Vai salvar MARIA DA SILVA em str2
- * (sem as aspas)
- *
- */
 void ScanQuoteString(char *str)
 {
     char R;
@@ -87,76 +128,5 @@ void ScanQuoteString(char *str)
     else
     { // EOF
         strcpy(str, "");
-    }
-}
-
-    FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura)
-    {
-
-        char temp_status;
-
-        // abre o arquivo
-        FILE *binario = fopen(arquivo_binario, modo_de_leitura);
-        // verificacoes basicas, de existencia e consistencia do arquivo
-        if (binario == NULL)
-        {
-            printf("Falha no processamento do arquivo.\n");
-            return NULL;
-        }
-
-        fread(&temp_status, sizeof(char), 1, binario);
-        if (temp_status != '1')
-        {
-            printf("Falha no processamento do arquivo.\n");
-            fclose(binario);
-            return NULL;
-        }
-
-        return binario;
-    }
-
-
-RegCabecalho Leitura_Cabecalho(FILE *binario)
-
-{
-    RegCabecalho cabecalho; // define o nome da struct
-    // Le todos os dados do registro de cabecalho
-    fseek(binario, 0, SEEK_SET);
-    fread(&cabecalho.status, sizeof(char), 1, binario);
-    fread(&cabecalho.topo_pilha, sizeof(int), 1, binario);
-    fread(&cabecalho.proxRRN, sizeof(int), 1, binario);
-    fread(&cabecalho.nroRegRem, sizeof(int), 1, binario);
-    fread(&cabecalho.nroPares, sizeof(int), 1, binario);
-
-    return cabecalho;
-}
-
-Registro Leitura_Registro(FILE *binario, int RRN)
-{
-    Registro Reg;
-    // ira fazer a leitura se houver um paramentro de RRN
-    if (RRN != -1)
-    {
-        
-        fseek(binario,17 + RRN*18,SEEK_SET);
-        if (fread(&Reg.removido, sizeof(char), 1, binario) != 1)
-        {
-            // não conseguiu ler nada então RRN não existe no arquivo
-            printf("Registro inexistente.\n");
-            fclose(binario);
-            return;
-        }
-
-        // faz a leitura normalmente
-        else
-        {   
-            fread(&Reg.removido, sizeof(char), 1, binario);
-            fread(&Reg.encadeamento, sizeof(int), 1, binario);
-            fread(&Reg.idPoPs, sizeof(int), 1, binario);
-            fread(&Reg.idPoPsConectado, sizeof(int), 1, binario);
-            fread(&Reg.velocidade, sizeof(int), 1, binario);
-            fread(&Reg.unidade_medida, sizeof(char), 1, binario);
-            return Reg;
-        }
     }
 }
