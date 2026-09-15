@@ -272,9 +272,9 @@ void busca_condicional()
                     criterio_velocidade = atoi(valor);
             }
 
-            //verificao para a unidade de medida e diferente, ja que e uma string com apas
-            //para isso e utilizada a funcao ScanQuoteString que faz a leitura da string e decide internamente 
-            //se o que veio da entrada e NULO, um valor entre aspas ou algo sem aspas
+            // verificao para a unidade de medida e diferente, ja que e uma string com apas
+            // para isso e utilizada a funcao ScanQuoteString que faz a leitura da string e decide internamente
+            // se o que veio da entrada e NULO, um valor entre aspas ou algo sem aspas
             else if (strcmp(campo, "unidadeMedida") == 0)
             {
                 ScanQuoteString(valor);
@@ -345,47 +345,25 @@ void busca_condicional()
 // aqui se encerra a funcionalidade 3
 //_______________________________
 
-
 // Funcionalidade 4
 void busca_RRN()
 {
-    char arquivo_binario[50];
-    int RRN;
+    abrir_arquivo()
 
-    //abre o arquivo
-    FILE *binario = fopen(arquivo_binario, "rb");
+        // verifica qual o RRN desejado pelo usuario
+        scanf("%d", &RRN);
 
-    //verificacoes basicas, de existencia e consistencia do arquivo
-    if(binario == NULL)
-    {
-        printf("Falha no processamento do arquivo.\n");
-        return;
-    }
+    // sabe-se que cada registro tem 1 + 4 + 4 + 4 + 4 + 1 (char, int, int, int, int, char) bytes = 18 bytes
 
-    RegCabecalho cabecalho;
-
-    fread(&cabecalho.status, sizeof(char), binario)
-    if(cabecalho.status != '1')
-    {
-        printf("Falha no processamento do arquivo.\n");
-        fclose(binario);
-        return;
-    }
-
-    //verifica qual o RRN desejado pelo usuario
-    scanf("%d", &RRN);
-
-    //sabe-se que cada registro tem 1 + 4 + 4 + 4 + 4 + 1 (char, int, int, int, int, char) bytes = 18 bytes
-
-    //comeco a procurar o RRN a partir do fim do cabecalho
-    fseek(17, binario, RRN*18);
+    // comeco a procurar o RRN a partir do fim do cabecalho
+    fseek(17, binario, RRN * 18);
 
     Registro Reg;
 
     fread(&Reg.removido, sizeof(char), 1, binario);
-    //continuar a partir daqui
+    // continuar a partir daqui
 
-    if(Reg.removido == NULL || Reg.removido == 1)
+    if (Reg.removido == NULL || Reg.removido == 1)
     {
         printf("Registro inexistente.\n");
     }
@@ -398,17 +376,16 @@ void busca_RRN()
         fread(&Reg.unidade_medida, sizeof(char), 1, binario);
     }
 
+    printf("%s ", Reg.idPoPs);
+    printf("%s ", Reg.idPoPsConectado);
+    printf("%s ", Reg.velocidade);
+    printf("%s", Reg.unidade_medida);
 
-
-
-  
-
-
-
+    fclose(binario);
 }
 
-
-
+// aqui se encerra a funcionalidade 4
+//_______________________________
 
 // Funcionalidade 6
 void insercao()

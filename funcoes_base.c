@@ -3,13 +3,8 @@
 #include "funcoes.h"
 #include "funcoes_base.h"
 
-//funcoes dadas:
+// funcoes dadas:
 /*
- * Você não precisa entender o código dessa função.
- *
- * Use essa função para comparação no run.codes.
- * Lembre-se de ter fechado (fclose) o arquivo anteriormente.
- *
  * Ela vai abrir de novo para leitura e depois fechar
  * (você não vai perder pontos por isso se usar ela).
  */
@@ -90,5 +85,30 @@ void ScanQuoteString(char *str)
     else
     { // EOF
         strcpy(str, "");
+    }
+
+    // acho interessante colocar funcoes bases aqui
+
+    FILE *verificar_arquivo(char *arquivo_binario, RegCabecalho *cabecalho, char *modo_de_leitura)
+    {
+
+        // abre o arquivo
+        FILE *binario = fopen(arquivo_binario, modo_de_leitura);
+        // verificacoes basicas, de existencia e consistencia do arquivo
+        if (binario == NULL)
+        {
+            printf("Falha no processamento do arquivo.\n");
+            return NULL;
+        }
+
+        fread(&cabecalho.status, sizeof(char), binario);
+        if (cabecalho.status != '1')
+        {
+            printf("Falha no processamento do arquivo.\n");
+            fclose(binario);
+            return NULL;
+        }
+
+        return binario;
     }
 }
