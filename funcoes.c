@@ -204,25 +204,18 @@ void busca_condicional()
     char arquivo_binario[50];
     int repeticoes;
 
-    scanf("%s %d", arquivo_binario, &repeticoes);
+    scanf("%s", arquivo_binario);
 
-    // se ao tentar abrir o arquivo um erro for encontrado, uma mensagem sera exibida
-    FILE *binario = fopen(arquivo_binario, "rb");
+    FILE *binario = verificar_arquivo(arquivo_binario, "rb");
+
     if (binario == NULL)
     {
-        printf("Falha no processamento do arquivo.\n");
         return;
     }
 
-    // irá ser feita a leitura do status do cabecalho para verificar a consistencia do arquivo
-    RegCabecalho cabecalho;
-    fread(&cabecalho.status, sizeof(char), 1, binario);
-    if (cabecalho.status != '1')
-    {
-        printf("Falha no processamento do arquivo.\n");
-        fclose(binario);
-        return;
-    }
+    //verificacao no numero de repeticoes desejado
+    scanf("%d", &repeticoes);
+
 
     // inicia o laco externo de n buscas
     for (int busca_atual = 0; busca_atual < repeticoes; busca_atual++)
@@ -288,6 +281,12 @@ void busca_condicional()
         // pula para o byteoffset 17 do arquivo (pois é onde começam os registros)
         fseek(binario, 17, SEEK_SET);
         Registro Reg;
+
+
+
+
+
+
 
         /////////////////////////////////////////////
         int matches_found = 0;
@@ -393,7 +392,7 @@ void busca_RRN()
         }
         else
         {
-            printf("%s\n", Reg.unidade_medida);
+            printf("%c\n", Reg.unidade_medida);
         }
     }
 
@@ -402,6 +401,11 @@ void busca_RRN()
 
 // aqui se encerra a funcionalidade 4
 //_______________________________
+
+
+// Funcionalidade 5
+
+
 
 // Funcionalidade 6
 void insercao()
