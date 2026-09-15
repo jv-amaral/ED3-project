@@ -395,30 +395,20 @@ void insercao()
     char arquivo_binario[50];
     scanf("%s", arquivo_binario);
 
-    RegCabecalho cabecalho; // definicao das structs para a sexta funcao
+    
     Registro Reg;
 
+
+    
     // abre o arquivo para leitura e escrita
-    FILE *binario = fopen(arquivo_binario, "rb+");
+    FILE *binario = verificar_arquivo(arquivo_binario,"rb+");
     if (binario == NULL)
     {
-        printf("Falha no processamento do arquivo.\n");
         return;
     }
-    fread(&cabecalho.status, sizeof(char), 1, binario);
-    if (cabecalho.status != '1')
-    {
-        printf("Falha no processamento do arquivo.\n");
-        fclose(binario);
-        return;
-    }
-
+    RegCabecalho cabecalho = Leitura_Cabecalho(binario); //definicao da struct e leitura do arquivo binario
     // Le do arquivo os valores dos campos do cabeçalho
-    fread(&cabecalho.topo_pilha, sizeof(int), 1, binario);
-    fread(&cabecalho.proxRRN, sizeof(int), 1, binario);
-    fread(&cabecalho.nroRegRem, sizeof(int), 1, binario);
-    fread(&cabecalho.nroPares, sizeof(int), 1, binario);
-
+    
     cabecalho.status = '0'; // como vamos escrever no arquivo, o status deve estar inconsistente
     fseek(binario, 0, SEEK_SET);
     fwrite(&cabecalho.status, sizeof(char), 1, binario);
@@ -510,3 +500,5 @@ void insercao()
 
 // aqui se encerra a funcionalidade 6
 //_______________________________
+
+

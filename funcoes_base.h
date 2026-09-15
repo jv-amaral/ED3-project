@@ -3,7 +3,7 @@
 
 void BinarioNaTela(char *arquivo_binario);
 void ScanQuoteString(char *str);
-void abrir_arquivo(char *binario);
+FILE *verificar_arquivo(char *arquivo_binario,char *modo_de_leitura);
 
 
 #endif
