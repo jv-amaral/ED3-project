@@ -8,6 +8,7 @@
 #include <string.h>
 #include <ctype.h>
 #include "funcoes.h"
+#include "funcoes_dadas.h"
 
 int main() {
     int funcionalidade;

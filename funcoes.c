@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "funcoes.h"
+#include "funcoes_dadas.h"
 
 //Funcionalidade 1
 void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registros no arquivo binário
@@ -416,3 +417,7 @@ void busca_condicional() {
 
     fclose(binario);
 }
+
+
+
+

@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "funcoes.h"
+#include "funcoes_dadas.h"
 
 //funcoes dadas:
 /*
