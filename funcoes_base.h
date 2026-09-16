@@ -7,7 +7,7 @@ typedef struct
     int idPoPs;
     int idPoPsConectado;
     int velocidade;
-    char unidade_medida;
+    char unidadeMedida;
 } Criterios;
 
 FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura);
