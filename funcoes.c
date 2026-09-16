@@ -204,7 +204,8 @@ void busca_condicional()
     char arquivo_binario[50];
     int repeticoes;
 
-    scanf("%s", arquivo_binario);
+    //ler o nome do arquivo e o numero de repeticoes a serem levadas em conta
+    scanf("%s %d", arquivo_binario, &repeticoes);
 
     FILE *binario = verificar_arquivo(arquivo_binario, "rb");
 
@@ -212,10 +213,7 @@ void busca_condicional()
     {
         return;
     }
-
-    // verificacao no numero de repeticoes desejado
-    scanf("%d", &repeticoes);
-
+    
     // inicia o laco externo de n buscas
     for (int busca_atual = 0; busca_atual < repeticoes; busca_atual++)
     {
@@ -228,7 +226,8 @@ void busca_condicional()
         int criterio_idPoPsConectado = -2;
         int criterio_velocidade = -2;
         char criterio_unidadeMedida = -2;
-
+        
+        //laco interno que vai verificar os criterios a serem buscados
         for (int criterio_atual = 0; criterio_atual < qtd_criterios; criterio_atual++)
         {
             char campo[30];
@@ -237,7 +236,7 @@ void busca_condicional()
 
             // vai verificar qual e o criterio a ser usado por meio de comparacoes
             // se o valor e nulo, o criterio respectivo assume -1
-            if (strcmp(campo, "idPops") == 0)
+            if (strcmp(campo, "idPoPs") == 0)
             {
                 scanf("%s", valor);
                 if (strcmp(valor, "NULO") == 0)
@@ -246,7 +245,7 @@ void busca_condicional()
                     criterio_idPoPs = atoi(valor);
             }
 
-            else if (strcmp(campo, "idPopsConectado") == 0)
+            else if (strcmp(campo, "idPoPsConectado") == 0)
             {
                 scanf("%s", valor);
                 if (strcmp(valor, "NULO") == 0)
@@ -281,33 +280,35 @@ void busca_condicional()
         fseek(binario, 17, SEEK_SET);
         Registro Reg;
 
-        /////////////////////////////////////////////
-        int matches_found = 0;
+        int registros_encontrados = 0;
 
-        while (fread(&Reg.removido, sizeof(char), 1, binario) == 1)
+        //comeca a percorrer todos os registros, com a condicao de que quando nao encontrar
+        //registro de removido, 0 ou 1, o arquivo terminou
+
+        while (Leitura_Registro(binario, &Reg))
         {
-            fread(&Reg.encadeamento, sizeof(int), 1, binario);
-            fread(&Reg.idPoPs, sizeof(int), 1, binario);
-            fread(&Reg.idPoPsConectado, sizeof(int), 1, binario);
-            fread(&Reg.velocidade, sizeof(int), 1, binario);
-            fread(&Reg.unidade_medida, sizeof(char), 1, binario);
+            //inicia a variavel encontro como 1, que torna-se 0 se no registro percorrido no momento
+            //nao e encontrada o valor desejado
 
-            if (Reg.removido == '1')
+            if(Reg.removido == '1')
                 continue;
 
-            int match = 1;
-            if (c_idPoPs != -2 && Reg.idPoPs != c_idPoPs)
-                match = 0;
-            if (c_idPoPsConectado != -2 && Reg.idPoPsConectado != c_idPoPsConectado)
-                match = 0;
-            if (c_velocidade != -2 && Reg.velocidade != c_velocidade)
-                match = 0;
-            if (c_unidade != -2 && Reg.unidade_medida != c_unidade)
-                match = 0;
+            int encontro = 1;
+            if (criterio_idPoPs != -2 && Reg.idPoPs != criterio_idPoPs)
+                encontro = 0;
+            if (criterio_idPoPsConectado != -2 && Reg.idPoPsConectado != criterio_idPoPsConectado)
+                encontro = 0;
+            if (criterio_velocidade != -2 && Reg.velocidade != criterio_velocidade)
+                encontro = 0;
+            if (criterio_unidadeMedida != -2 && Reg.unidade_medida != criterio_unidadeMedida)
+                encontro = 0;
 
-            if (match)
+            //se a variavel encontro permanece 1, o numero de registros encontrados aumenta
+            //e eles sao printados, respeitando os valores nulos no reg.velocidade e reg.unidade_medida
+
+            if (encontro)
             {
-                matches_found++;
+                registros_encontrados++;
                 if (Reg.velocidade == -1 && Reg.unidade_medida == '$')
                 {
                     printf("%d %d NULO NULO\n", Reg.idPoPs, Reg.idPoPsConectado);
@@ -327,11 +328,14 @@ void busca_condicional()
             }
         }
 
-        if (matches_found == 0)
+        //se nao e encontrado nenhum registro que contem o valor do
+        //campo ou o campo pertence a um registro que esteja removido
+        if (registros_encontrados == 0)
         {
             printf("Registro inexistente.\n");
         }
     }
+
 
     fclose(binario);
 }
@@ -385,7 +389,7 @@ void busca_RRN()
         }
         else
         {
-            printf("%c\n", Reg.unidade_medida);
+            printf("\"%c\"\n", Reg.unidade_medida);
         }
     }
 
