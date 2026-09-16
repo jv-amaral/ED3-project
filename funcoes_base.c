@@ -65,7 +65,7 @@ int Leitura_Registro(FILE *binario, Registro *Reg)
 
 Criterios ler_criterios(int qtd_criterios)
 {
-    int busca_atual;
+    
     Criterios C; // inicia a struct dos criterios
 
         // inicio os criterios com valor -2, ja que 0 é um valor de busca valido e -1 corresponde ao nulo
@@ -122,6 +122,7 @@ Criterios ler_criterios(int qtd_criterios)
                     C.unidadeMedida = valor[0];
             }
         }
+        return C;
     }
 
 
