@@ -62,6 +62,14 @@ int Leitura_Registro(FILE *binario, Registro *Reg)
     return 1;
 }
 
+//vou fazer uma funcao para achar os criterios, ex 3 e 5
+
+
+
+
+
+
+//fazer funcao para printar as coisas
 
 
 //funcoes dadas na plataforma
