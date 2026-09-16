@@ -214,67 +214,7 @@ void busca_condicional()
         return;
     }
     
-    // inicia o laco externo de n buscas
-    for (int busca_atual = 0; busca_atual < repeticoes; busca_atual++)
-    {
-        // vai ver quantos criterios serao levados em conta na busca
-        int qtd_criterios;
-        scanf("%d", &qtd_criterios);
-
-        // inicio os criterios com valor -2, ja que 0 é um valor de busca valido e -1 corresponde ao nulo
-        int criterio_idPoPs = -2;
-        int criterio_idPoPsConectado = -2;
-        int criterio_velocidade = -2;
-        char criterio_unidadeMedida = -2;
-        
-        //laco interno que vai verificar os criterios a serem buscados
-        for (int criterio_atual = 0; criterio_atual < qtd_criterios; criterio_atual++)
-        {
-            char campo[30];
-            char valor[30];
-            scanf("%s", campo);
-
-            // vai verificar qual e o criterio a ser usado por meio de comparacoes
-            // se o valor e nulo, o criterio respectivo assume -1
-            if (strcmp(campo, "idPoPs") == 0)
-            {
-                scanf("%s", valor);
-                if (strcmp(valor, "NULO") == 0)
-                    criterio_idPoPs = -1;
-                else
-                    criterio_idPoPs = atoi(valor);
-            }
-
-            else if (strcmp(campo, "idPoPsConectado") == 0)
-            {
-                scanf("%s", valor);
-                if (strcmp(valor, "NULO") == 0)
-                    criterio_idPoPsConectado = -1;
-                else
-                    criterio_idPoPsConectado = atoi(valor);
-            }
-
-            else if (strcmp(campo, "velocidade") == 0)
-            {
-                scanf("%s", valor);
-                if (strcmp(valor, "NULO") == 0)
-                    criterio_velocidade = -1;
-                else
-                    criterio_velocidade = atoi(valor);
-            }
-
-            // verificao para a unidade de medida e diferente, ja que e uma string com apas
-            // para isso e utilizada a funcao ScanQuoteString que faz a leitura da string e decide internamente
-            // se o que veio da entrada e NULO, um valor entre aspas ou algo sem aspas
-            else if (strcmp(campo, "unidadeMedida") == 0)
-            {
-                ScanQuoteString(valor);
-                if (strcmp(valor, "") == 0)
-                    criterio_unidadeMedida = '$';
-                else
-                    criterio_unidadeMedida = valor[0];
-            }
-        }
+    
 
         // pula para o byteoffset 17 do arquivo (pois é onde começam os registros)
         fseek(binario, 17, SEEK_SET);
