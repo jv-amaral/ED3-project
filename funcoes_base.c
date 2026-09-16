@@ -63,24 +63,18 @@ int Leitura_Registro(FILE *binario, Registro *Reg)
 
 // vou fazer uma funcao para achar os criterios, ex 3 e 5
 
-void ler_criterios(int repeticoes)
+Criterios ler_criterios(int qtd_criterios)
 {
     int busca_atual;
-
-    // inicia o laco externo de n buscas
-    for (busca_atual = 0; busca_atual < repeticoes; busca_atual++)
-    {
-        // vai ver quantos criterios serao levados em conta na busca
-        int qtd_criterios;
-        scanf("%d", &qtd_criterios);
+    Criterios C; // inicia a struct dos criterios
 
         // inicio os criterios com valor -2, ja que 0 é um valor de busca valido e -1 corresponde ao nulo
-        int criterio_idPoPs = -2;
-        int criterio_idPoPsConectado = -2;
-        int criterio_velocidade = -2;
-        char criterio_unidadeMedida = -2; 
+        C.idPoPs = -2;
+        C.idPoPsConectado = -2;
+        C.velocidade = -2;
+        C.unidadeMedida = -2;
 
-        //laco interno que vai verificar os criterios a serem buscados
+        // laco que vai verificar os criterios a serem buscados
         for (int criterio_atual = 0; criterio_atual < qtd_criterios; criterio_atual++)
         {
             char campo[30];
@@ -93,27 +87,27 @@ void ler_criterios(int repeticoes)
             {
                 scanf("%s", valor);
                 if (strcmp(valor, "NULO") == 0)
-                    criterio_idPoPs = -1;
+                    C.idPoPs = -1;
                 else
-                    criterio_idPoPs = atoi(valor);
+                    C.idPoPs = atoi(valor);
             }
 
             else if (strcmp(campo, "idPoPsConectado") == 0)
             {
                 scanf("%s", valor);
                 if (strcmp(valor, "NULO") == 0)
-                    criterio_idPoPsConectado = -1;
+                    C.idPoPsConectado = -1;
                 else
-                    criterio_idPoPsConectado = atoi(valor);
+                    C.idPoPsConectado = atoi(valor);
             }
 
             else if (strcmp(campo, "velocidade") == 0)
             {
                 scanf("%s", valor);
                 if (strcmp(valor, "NULO") == 0)
-                    criterio_velocidade = -1;
+                    C.velocidade = -1;
                 else
-                    criterio_velocidade = atoi(valor);
+                    C.velocidade = atoi(valor);
             }
 
             // verificao para a unidade de medida e diferente, ja que e uma string com apas
@@ -123,25 +117,20 @@ void ler_criterios(int repeticoes)
             {
                 ScanQuoteString(valor);
                 if (strcmp(valor, "") == 0)
-                    criterio_unidadeMedida = '$';
+                    C.unidadeMedida = '$';
                 else
-                    criterio_unidadeMedida = valor[0];
+                    C.unidadeMedida = valor[0];
             }
         }
-
     }
-}
+
+
 
 
 
 
 
 // fazer funcao para printar as coisas
-
-
-
-
-
 
 // funcoes dadas na plataforma
 

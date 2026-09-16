@@ -34,6 +34,6 @@ void busca_condicional();
 void busca_RRN();
 
 void insercao();
-
+void atualizacao_registros();
 
 #endif
