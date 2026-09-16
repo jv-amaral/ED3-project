@@ -506,3 +506,194 @@ void insercao()
 
 // aqui se encerra a funcionalidade 6
 //_______________________________
+
+
+void atualizacao_registros()
+{
+       
+    char arquivo_binario[50];
+    scanf("%s", arquivo_binario);
+
+    
+    Registro Reg; // struct para o registro a ser lido
+    RegCabecalho cab; // definicao da struct para escrever o status do cabecalho
+
+
+    
+    // abre o arquivo para leitura e escrita e verifica se está corrompido
+    FILE *binario = verificar_arquivo(arquivo_binario,"rb+");
+    if (binario == NULL) // Se encontrar algum erro, ele retorna
+    {
+        return;
+    }
+    cab.status = '0'; // definicao de status = 0 para indicar que sera escrito no arquivo
+    fseek(binario,0,SEEK_SET);
+    fwrite(&cab.status,sizeof(char),1,binario);
+    
+    int n; 
+    scanf("%d",&n); // declara e le do teclado quantas vezes sera feita a busca e a atualizacao de registros
+
+    for (int i = 0; i< n;i++)
+    {
+        int m;
+        scanf("%d",&m);
+        int p;
+        // criterios inicializados com -2 pois -1 é o valor nulo
+        // serao utilizados para armazenar o valor a ser buscado para o campo escolhido
+        int criterio_idPoPs = -2;
+        int criterio_idPoPsConectado = -2;
+        int criterio_velocidade = -2;
+        char criterio_unidadeMedida = -2;
+
+     for(int j = 0; j<m; j++)
+    {
+        char campo[50];
+        char valor[50];
+        scanf("%s", campo);
+    if (strcmp(campo, "idPops") == 0)
+            {
+                scanf("%s", valor);
+                if (strcmp(valor, "NULO") == 0)
+                    criterio_idPoPs = -1;
+                else
+                    criterio_idPoPs = atoi(valor);
+            }
+
+            else if (strcmp(campo, "idPopsConectado") == 0)
+            {
+                scanf("%s", valor);
+                if (strcmp(valor, "NULO") == 0)
+                    criterio_idPoPsConectado = -1;
+                else
+                    criterio_idPoPsConectado = atoi(valor);
+            }
+
+            else if (strcmp(campo, "velocidade") == 0)
+            {
+                scanf("%s", valor);
+                if (strcmp(valor, "NULO") == 0)
+                    criterio_velocidade = -1;
+                else
+                    criterio_velocidade = atoi(valor);
+            }
+
+            // verificao para a unidade de medida e diferente, ja que e uma string com apas
+            // para isso e utilizada a funcao ScanQuoteString que faz a leitura da string e decide internamente
+            // se o que veio da entrada e NULO, um valor entre aspas ou algo sem aspas
+            else if (strcmp(campo, "unidadeMedida") == 0)
+            {
+                ScanQuoteString(valor);
+                if (strcmp(valor, "") == 0)
+                    criterio_unidadeMedida = '$';
+                else
+                    criterio_unidadeMedida = valor[0];
+            }
+        }
+
+        scanf("%d",&p); // le quantos campos serao atualizados
+
+        
+        Registro atualizar; // definicao da struct para atualizar os registros
+        atualizar.idPoPs = -2;
+        atualizar.idPoPsConectado = -2;
+        atualizar.velocidade = -2;
+        atualizar.unidade_medida = -2;
+        for(int k = 0; k<p; k++) // for para ler os valores novos dos registros
+        {
+            char campo_novo[50];
+            char valor_novo[50];
+            scanf("%s",campo_novo);
+            if (strcmp(campo_novo, "idPops") == 0)
+            {
+                scanf("%s", valor_novo);
+                if (strcmp(valor_novo, "NULO") == 0)
+                    atualizar.idPoPs = -1;
+                else
+                    atualizar.idPoPs = atoi(valor_novo);
+            }
+
+            else if (strcmp(campo_novo, "idPopsConectado") == 0)
+            {
+                scanf("%s", valor_novo);
+                if (strcmp(valor_novo, "NULO") == 0)
+                    atualizar.idPoPsConectado = -1;
+                else
+                    atualizar.idPoPsConectado = atoi(valor_novo);
+            }
+
+            else if (strcmp(campo_novo, "velocidade") == 0)
+            {
+                scanf("%s", valor_novo);
+                if (strcmp(valor_novo, "NULO") == 0)
+                    atualizar.velocidade = -1;
+                else
+                    atualizar.velocidade = atoi(valor_novo);
+            }
+
+            // Utilizacao da funcao ScanQuoteString para descartar as aspas e se ler o valor nulo 
+            // caracteriza da forma correta, caso contrario, ele mantem o que foi lido sem aspas
+            else if (strcmp(campo_novo, "unidadeMedida") == 0)
+            {
+                ScanQuoteString(valor_novo);
+                if (strcmp(valor_novo, "") == 0)
+                    atualizar.unidade_medida = '$';
+                else
+                    atualizar.unidade_medida = valor_novo[0];
+            }
+
+
+        }
+        fseek(binario,17,SEEK_SET);
+        while (fread(&Reg.removido,sizeof(char),1,binario)==1)
+        {
+            if(Reg.removido == '1')
+            {
+                fseek(binario,17,SEEK_CUR);
+                continue;
+            }
+
+            fread(&Reg.encadeamento,sizeof(int),1,binario);
+            fread(&Reg.idPoPs,sizeof(int),1,binario);
+            fread(&Reg.idPoPsConectado,sizeof(int),1,binario);
+            fread(&Reg.velocidade,sizeof(int),1,binario);
+            fread(&Reg.unidade_medida,sizeof(char),1,binario);
+
+            int controle = 1; // variavel para ver se e o registro correto
+            if(criterio_idPoPs != -2 && criterio_idPoPs != Reg.idPoPs ) controle = 0;
+            if(criterio_idPoPsConectado != -2 && criterio_idPoPsConectado != Reg.idPoPsConectado ) controle = 0;
+            if(criterio_velocidade != -2 && criterio_velocidade != Reg.velocidade ) controle = 0;
+            if(criterio_unidadeMedida != -2 && criterio_unidadeMedida != Reg.unidade_medida ) controle = 0;
+
+            if(controle == 1)
+
+            {
+                if(atualizar.idPoPs != -2)
+                {
+                    Reg.idPoPs = atualizar.idPoPs;
+                }
+                if(atualizar.idPoPsConectado != -2)
+                {
+                    Reg.idPoPsConectado = atualizar.idPoPsConectado;
+                }
+                if(atualizar.velocidade != -2)
+                {
+                    Reg.velocidade = atualizar.velocidade;
+                }
+                if(atualizar.unidade_medida != -2)
+                {
+                    Reg.unidade_medida = atualizar.unidade_medida;
+                }
+                fseek(binario,-13,SEEK_CUR);
+                fwrite(&Reg.idPoPs,sizeof(int),1,binario);
+                fwrite(&Reg.idPoPsConectado,sizeof(int),1,binario);
+                fwrite(&Reg.velocidade,sizeof(int),1,binario);
+                fwrite(&Reg.unidade_medida,sizeof(char),1,binario);
+
+            }
+            
+        }
+
+        }
+
+
+    }
