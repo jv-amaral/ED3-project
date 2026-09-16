@@ -401,6 +401,9 @@ void busca_RRN()
 
 // Funcionalidade 5
 
+
+
+
 // Funcionalidade 6
 void insercao()
 
