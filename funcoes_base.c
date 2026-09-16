@@ -62,6 +62,8 @@ int Leitura_Registro(FILE *binario, Registro *Reg)
     return 1;
 }
 
+
+
 //funcoes dadas na plataforma
 
 void BinarioNaTela(char *arquivo)
