@@ -132,7 +132,16 @@ void ler_criterios(int repeticoes)
     }
 }
 
+
+
+
+
 // fazer funcao para printar as coisas
+
+
+
+
+
 
 // funcoes dadas na plataforma
 
