@@ -327,6 +327,10 @@ void busca_RRN()
 
 // Funcionalidade 5
 
+void remocao_logica()
+{
+    
+}
 
 // Funcionalidade 6
 void insercao()
