@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "funcoes.h"
+#include "funcionalidades.h"
 #include "funcoes_base.h"
 
 // Funcionalidade 1

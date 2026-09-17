@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include "funcoes.h"
+#include "funcionalidades.h"
 #include "funcoes_base.h"
 
 FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura)

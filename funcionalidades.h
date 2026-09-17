@@ -1,8 +1,8 @@
 //arquivo de cabecalho para as funcoes do projeto
 
 //evita que o conteudo do arquivo seja incluido mais de uma vez no programa
-#ifndef FUNCOES_H   
-#define FUNCOES_H
+#ifndef FUNCIONALIDADES_H   
+#define FUNCIONALIDADES_H
 
 //definicao do registro do cabecalho
 typedef struct {
