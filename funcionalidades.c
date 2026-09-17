@@ -216,20 +216,7 @@ void busca_condicional()
             if (Reg.removido == '1')
                 continue;
 
-            int encontro = 1;
-            if (C.idPoPs != -2 && Reg.idPoPs != C.idPoPs)
-                encontro = 0;
-            if (C.idPoPsConectado != -2 && Reg.idPoPsConectado != C.idPoPsConectado)
-                encontro = 0;
-            if (C.velocidade != -2 && Reg.velocidade != C.velocidade)
-                encontro = 0;
-            if (C.unidadeMedida != -2 && Reg.unidade_medida != C.unidadeMedida)
-                encontro = 0;
-
-            // se a variavel encontro permanece 1, o numero de registros encontrados aumenta
-            // e eles sao printados, respeitando os valores nulos no reg.velocidade e reg.unidade_medida
-
-            if (encontro)
+            if (verificar_encontro(&C, &Reg))
             {
                 registros_encontrados++;
                 if (Reg.velocidade == -1 && Reg.unidade_medida == '$')

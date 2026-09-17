@@ -155,6 +155,8 @@ Registro apagar_registro(Registro *Reg)
 
 int verificar_encontro(Criterios *C, Registro *Reg)
 {
+    // se a variavel encontro permanece 1, o numero de registros encontrados aumenta
+    // e eles sao printados, respeitando os valores nulos no reg.velocidade e reg.unidade_medida
     int encontro = 1;
 
     if (C->idPoPs != -2 && Reg->idPoPs != C->idPoPs)
@@ -166,7 +168,7 @@ int verificar_encontro(Criterios *C, Registro *Reg)
     if (C->unidadeMedida != -2 && Reg->unidade_medida != C->unidadeMedida)
         encontro = 0;
 
-        return encontro;
+    return encontro;
 }
 
 // funcoes dadas na plataforma
