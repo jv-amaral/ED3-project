@@ -45,8 +45,8 @@ RegCabecalho Leitura_Cabecalho(FILE *binario)
     return cabecalho;
 }
 
-//funcao para fazer a leitura de um registro completo
-//fazendo a verificao de quando o arquivo se encerra tambem
+// funcao para fazer a leitura de um registro completo
+// fazendo a verificao de quando o arquivo se encerra tambem
 int Leitura_Registro(FILE *binario, Registro *Reg)
 {
     if (fread(&Reg->removido, sizeof(char), 1, binario) != 1)
@@ -125,7 +125,7 @@ Criterios ler_criterios(int qtd_criterios)
     return C;
 }
 
-//funcao para escrever os registros
+// funcao para escrever os registros
 int escreve_arquivo(FILE *binario, Registro *Reg)
 {
     fwrite(&Reg->removido, sizeof(char), 1, binario);
@@ -137,7 +137,7 @@ int escreve_arquivo(FILE *binario, Registro *Reg)
     return 1;
 }
 
-//funcao para escrever o cabecalho
+// funcao para escrever o cabecalho
 int escreve_cabecalho(FILE *binario, RegCabecalho *Cab)
 {
     fwrite(&Cab->status, sizeof(char), 1, binario);
@@ -149,8 +149,17 @@ int escreve_cabecalho(FILE *binario, RegCabecalho *Cab)
 }
 
 // funcao para apagar registro
-Registro apagar_registro(Registro *Reg)
+Registro remove_registro(Registro *Reg)
 {
+    //indica a remocao do registro
+    Reg->removido = '1'
+
+    //memset preenche byte a byte os campos necessarios
+    memset(&Reg.idPoPs, '$', sizeof(int));
+    memset(&Reg.idPoPsConectado, '$', sizeof(int));
+    memset(&Reg.velocidade, '$', sizeof(int));
+    Reg.unidade_medida = '$';
+
     
 }
 
@@ -174,7 +183,6 @@ int verificar_encontro(Criterios *C, Registro *Reg)
 
     return encontro;
 }
-
 
 // funcoes dadas na plataforma
 

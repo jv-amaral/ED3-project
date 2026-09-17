@@ -17,7 +17,7 @@ int Leitura_Registro(FILE *binario, Registro *Reg);
 Criterios ler_criterios(int repeticoes); // arrumar
 int escreve_arquivo(FILE *binario, Registro *Reg);
 int escreve_cabecalho(FILE *binario, RegCabecalho *Cab);
-Registro apagar_registro(Registro *Reg);
+Registro remove_registro(Registro *Reg);
 int verificar_encontro(Criterios *C, Registro *Reg);
 void BinarioNaTela(char *arquivo_binario);
 void ScanQuoteString(char *str);
