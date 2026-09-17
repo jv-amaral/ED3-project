@@ -260,6 +260,7 @@ void busca_condicional()
         {
             printf("Registro inexistente.\n");
         }
+        printf("\n");
     }
 
 
