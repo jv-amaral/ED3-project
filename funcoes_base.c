@@ -153,6 +153,7 @@ Registro remove_registro(Registro *Reg)
 {
     //indica a remocao do registro
     Reg->removido = '1'
+    Reg->encadeamento = 
 
     //memset preenche byte a byte os campos necessarios
     memset(&Reg.idPoPs, '$', sizeof(int));
@@ -160,7 +161,7 @@ Registro remove_registro(Registro *Reg)
     memset(&Reg.velocidade, '$', sizeof(int));
     Reg.unidade_medida = '$';
 
-    
+
 }
 
 // funcao para verificar o encontro de criterios
