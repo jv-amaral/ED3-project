@@ -61,7 +61,6 @@ int Leitura_Registro(FILE *binario, Registro *Reg)
     return 1;
 }
 
-// vou fazer uma funcao para achar os criterios, ex 3 e 5
 
 Criterios ler_criterios(int qtd_criterios)
 {
@@ -127,11 +126,7 @@ Criterios ler_criterios(int qtd_criterios)
 
 
 
-
-
-
-
-// fazer funcao para printar as coisas
+//funcao para printar
 int escreve_arquivo(FILE *binario, Registro *Reg)
 {
     fwrite(&Reg->removido,sizeof(char),1,binario);
@@ -152,6 +147,7 @@ int escreve_cabecalho(FILE *binario, RegCabecalho *Cab)
     fwrite(&Cab->nroPares,sizeof(int),1,binario);
     return 1;
 }
+
 // funcoes dadas na plataforma
 
 void BinarioNaTela(char *arquivo)
