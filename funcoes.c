@@ -514,16 +514,13 @@ void insercao()
 
 void atualizacao_registros()
 {
-       
+    // declara e le o nome do arquivo binario a ser utilizado
     char arquivo_binario[50];
     scanf("%s", arquivo_binario);
 
-    
     Registro Reg; // struct para o registro a ser lido
     RegCabecalho cab; // definicao da struct para escrever o status do cabecalho
 
-
-    
     // abre o arquivo para leitura e escrita e verifica se está corrompido
     FILE *binario = verificar_arquivo(arquivo_binario,"rb+");
     if (binario == NULL) // Se encontrar algum erro, ele retorna
@@ -539,42 +536,28 @@ void atualizacao_registros()
 
     for (int i = 0; i< n;i++)
     {
-        int m;
+        int m; // declara e le quantos campos serao utilizados na busca
         scanf("%d",&m);
+        Criterios busca = ler_criterios(m); // chama a funcao que vai ler e guardar os campos e valores a serem buscados
         int p;
-        // criterios inicializados com -2 pois -1 é o valor nulo
-        // serao utilizados para armazenar o valor a ser buscado para o campo escolhido
-        Criterios busca = ler_criterios(m);
-        
-
         scanf("%d",&p); // le quantos campos serao atualizados
-        Criterios atualizacao = ler_criterios(p);
+        Criterios atualizacao = ler_criterios(p); // le os valores que vao ser escritos no arquivo
             
-        
         fseek(binario,17,SEEK_SET);
-        while (fread(&Reg.removido,sizeof(char),1,binario)==1)
+        while (Leitura_Registro(binario,&Reg)==1) // leitura do arquivo
         {
-            if(Reg.removido == '1')
-            {
-                fseek(binario,17,SEEK_CUR);
-                continue;
-            }
-
-            fread(&Reg.encadeamento,sizeof(int),1,binario);
-            fread(&Reg.idPoPs,sizeof(int),1,binario);
-            fread(&Reg.idPoPsConectado,sizeof(int),1,binario);
-            fread(&Reg.velocidade,sizeof(int),1,binario);
-            fread(&Reg.unidade_medida,sizeof(char),1,binario);
-
+            if (Reg.removido == '1') continue; // se o arquivo estiver removido, ele pula para o proximo
+            
             int controle = 1; // variavel para ver se e o registro correto
-            if(busca.idPoPs != -2 && busca.idPoPs != Reg.idPoPs ) controle = 0;
+            // ifs para verificar se o arquivo identificado na busca é o correto
+            if(busca.idPoPs != -2 && busca.idPoPs != Reg.idPoPs ) controle = 0; 
             if(busca.idPoPsConectado != -2 && busca.idPoPsConectado != Reg.idPoPsConectado ) controle = 0;
             if(busca.velocidade != -2 && busca.velocidade != Reg.velocidade ) controle = 0;
             if(busca.unidadeMedida != -2 && busca.unidadeMedida != Reg.unidade_medida ) controle = 0;
 
-            if(controle == 1)
+            if(controle == 1) 
 
-            {
+            {   // se o arquivo for o correto, atualiza os valores lidos na variavel p
                 if(atualizacao.idPoPs != -2)
                 {
                     Reg.idPoPs = atualizacao.idPoPs;
@@ -587,16 +570,23 @@ void atualizacao_registros()
                 {
                     Reg.velocidade = atualizacao.velocidade;
                 }
-                if(atualizacao.unidade_medida != -2)
+                if(atualizacao.unidadeMedida != -2)
                 {
-                    Reg.unidade_medida = atualizacao.unidade_medida;
+                    Reg.unidade_medida = atualizacao.unidadeMedida;
                 }
-                fseek(binario,-13,SEEK_CUR);
-                fwrite(&Reg.idPoPs,sizeof(int),1,binario);
-                fwrite(&Reg.idPoPsConectado,sizeof(int),1,binario);
-                fwrite(&Reg.velocidade,sizeof(int),1,binario);
-                fwrite(&Reg.unidade_medida,sizeof(char),1,binario);
+                // Como o registro foi lido ate o final, deve-se retornar 18 bytes para escrever no inicio do registro
+                fseek(binario,-18,SEEK_CUR);
+                escreve_arquivo(binario,&Reg); // utiliza a funcao para escrever no arquivo
+                fseek(binario,0,SEEK_CUR); // fseek necessario, pois apos a escrita no arquivo
+                                           // ele volta la no while para ler novos dados     
             }
         }
         }
+        // Atualiza o status do arquivo para 1 apos realizar a funcionalidade
+        cab.status = '1';
+        fseek(binario,0,SEEK_SET);
+        fwrite(&cab.status,sizeof(char),1,binario);
+        fclose(binario);
+        BinarioNaTela(binario); 
     }
+

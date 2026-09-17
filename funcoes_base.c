@@ -72,7 +72,7 @@ Criterios ler_criterios(int qtd_criterios)
         C.idPoPs = -2;
         C.idPoPsConectado = -2;
         C.velocidade = -2;
-        C.unidade_medida = -2;
+        C.unidadeMedida = -2;
 
         // laco que vai verificar os criterios a serem buscados
         for (int criterio_atual = 0; criterio_atual < qtd_criterios; criterio_atual++)
@@ -117,9 +117,9 @@ Criterios ler_criterios(int qtd_criterios)
             {
                 ScanQuoteString(valor);
                 if (strcmp(valor, "") == 0)
-                    C.unidade_medida = '$';
+                    C.unidadeMedida = '$';
                 else
-                    C.unidade_medida = valor[0];
+                    C.unidadeMedida = valor[0];
             }
         }
         return C;
@@ -132,22 +132,15 @@ Criterios ler_criterios(int qtd_criterios)
 
 
 // fazer funcao para printar as coisas
-void printa_arquivo()
+int escreve_arquivo(FILE *binario, Registro *Reg)
 {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    fwrite(&Reg->removido,sizeof(char),1,binario);
+    fwrite(&Reg->encadeamento,sizeof(int),1,binario);
+    fwrite(&Reg->idPoPs,sizeof(int),1,binario);
+    fwrite(&Reg->idPoPsConectado,sizeof(int),1,binario);
+    fwrite(&Reg->velocidade,sizeof(int),1,binario);
+    fwrite(&Reg->unidade_medida,sizeof(char),1,binario);
+    return 1; 
 }
 
 // funcoes dadas na plataforma
