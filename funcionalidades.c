@@ -313,6 +313,8 @@ void busca_RRN()
 
 void remocao_logica()
 {
+    //inicio as variaveis para pegar nome do arquivo, a quantidade de criterios
+    //a serem utilizados e o numero de repeticoes da busca
     char arquivo_binario[30];
     int repeticoes;
     int qtd_criterios;
@@ -321,32 +323,36 @@ void remocao_logica()
 
     FILE *binario = verificar_arquivo(arquivo_binario, "rb");
 
+    //retorno caso o arquivo tenha uma falha no seu processamento
     if (binario == NULL)
     {
         return;
     }
 
+    //o loop usado na busca e iniciado
     for (int busca_atual = 0; busca_atual < repeticoes; busca_atual++)
     {
         scanf("%d", qtd_criterios);
         Criterios C = ler_criterios(qtd.criterios);
 
+        //cursor e colocado no comeco dos registros
         fseek(binario, 17, SEEK_SET);
         Registro Reg;
 
         int registros_encontrados = 0;
 
-        while (Leitura_Registro(binario, Reg))
+        //loop que vai fazer a leitura do registro e verificar o encontro dos criterios desejados
+        while (Leitura_Registro(binario, &Reg))
         {
             if (Reg.removido == '1')
             {
                 continue;
             }
-            int encontro = 1;
 
-            if (C.idPoPs != -2 && Reg.idPoPs != C.idPoPs)
-                encontro = 0;
-            if ()
+            if (verificar_encontro(&C, &Reg))
+            {
+                
+            }
         }
     }
 }
