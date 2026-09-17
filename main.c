@@ -31,6 +31,10 @@ int main() {
         case 6: 
             insercao();     
             break;
+            
+        case 7:
+            atualizacao_registros();
+            break;
     }
     
     return 0;

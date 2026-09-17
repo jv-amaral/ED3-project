@@ -174,15 +174,15 @@ void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e 
         // atribuicao dos valores nulos na hora de printar na tela
         if (Reg.velocidade == -1)
         {
-            printf("%d  %d  %s  \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, "NULO", Reg.unidade_medida);
+            printf("%d %d %s \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, "NULO", Reg.unidade_medida);
         }
         else if (Reg.unidade_medida == '$')
         {
-            printf("%d  %d  %d  \"%s\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade, "NULO");
+            printf("%d %d %d \"%s\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade, "NULO");
         }
         else
         { // caso nao seja nenhum valor nulo, printa normalmente
-            printf("%d  %d  %d  \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade, Reg.unidade_medida);
+            printf("%d %d %d \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade, Reg.unidade_medida);
         }
     }
     if (registros_lidos == 0) // printa na tela caso nenhum registro tenha sido lido
@@ -462,12 +462,7 @@ void insercao()
             fseek(binario, 17 + cabecalho.proxRRN * 18, SEEK_SET);
             Reg.removido = '0';
             Reg.encadeamento = -1;
-            fwrite(&Reg.removido, sizeof(char), 1, binario);
-            fwrite(&Reg.encadeamento, sizeof(int), 1, binario);
-            fwrite(&Reg.idPoPs, sizeof(int), 1, binario);
-            fwrite(&Reg.idPoPsConectado, sizeof(int), 1, binario);
-            fwrite(&Reg.velocidade, sizeof(int), 1, binario);
-            fwrite(&Reg.unidade_medida, sizeof(char), 1, binario);
+            escreve_arquivo(binario,&Reg);
             cabecalho.proxRRN++;
             cabecalho.nroPares++;
 
@@ -587,6 +582,6 @@ void atualizacao_registros()
         fseek(binario,0,SEEK_SET);
         fwrite(&cab.status,sizeof(char),1,binario);
         fclose(binario);
-        BinarioNaTela(binario); 
+        BinarioNaTela(arquivo_binario); 
     }
 
