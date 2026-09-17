@@ -32,7 +32,7 @@ void leitura_e_gravacao();
 void recuperacao_dados();
 void busca_condicional();
 void busca_RRN();
-
+void remocao_logica();
 void insercao();
 void atualizacao_registros();
 
