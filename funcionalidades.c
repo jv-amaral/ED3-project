@@ -333,9 +333,10 @@ void busca_RRN()
 void remocao_logica()
 {
     char arquivo_binario[30];
+    int repeticoes;
     int qtd_criterios;
 
-    scanf("%s", &arquivo_binario);
+    scanf("%s %d", arquivo_binario, &repeticoes);
 
     FILE *binario = verificar_arquivo(arquivo_binario, "rb");
 
@@ -344,7 +345,23 @@ void remocao_logica()
         return;
     }
 
-    
+    for(int busca_atual = 0; busca_atual < repeticoes; busca_atual++)
+    {
+        scanf("%d", qtd_criterios);
+        Criterios C = ler_criterios(qtd.criterios);
+
+        fseek(binario, 17, SEEK_SET);
+        Registro Reg;
+
+        int registros_encontrados = 0;
+
+        while(Leitura_Registro(binario, Reg))
+        {
+            
+        }
+    }
+   
+
 
 }
 
