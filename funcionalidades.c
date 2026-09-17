@@ -145,6 +145,8 @@ void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e 
         }
         registros_lidos++; // incrementa se o registro for lido
         // atribuicao dos valores nulos na hora de printar na tela
+
+    
         if (Reg.velocidade == -1 && Reg.unidade_medida == '$')
         {
             printf("%d %d %s \"%s\"\n", Reg.idPoPs, Reg.idPoPsConectado, "NULO", "NULO");
@@ -371,7 +373,7 @@ void insercao()
         ScanQuoteString(temp_unidade_medida);
         // faz a comparação das strings temporarias com o valor nulo, se for verdadeiro atribui -1 a velocidade e $ a unidade
         // de medida, se for falso, ele atribui o valor lido do teclado para velocidade e o caractere lido sem aspas
-        if (strcmp(temp_velocidade, "") == 0)
+        if (strcmp(temp_velocidade, "" ) == 0 || strcmp(temp_velocidade,"NULO")==0)
         {
             Reg.velocidade = -1; // atribui -1 se o campo for nulo
         }
@@ -379,7 +381,7 @@ void insercao()
         {
             Reg.velocidade = atoi(temp_velocidade);
         }
-        if (strcmp(temp_unidade_medida, "") == 0)
+        if (strcmp(temp_unidade_medida, "") == 0 || strcmp(temp_unidade_medida,"NULO") ==0)
         {
             Reg.unidade_medida = '$'; // atribui '$' se o campo for nulo
         }
