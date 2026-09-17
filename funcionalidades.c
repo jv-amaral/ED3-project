@@ -397,7 +397,7 @@ void insercao()
             Reg.encadeamento = -1;
             escreve_arquivo(binario,&Reg);
             cabecalho.proxRRN++;
-            cabecalho.nroPares++;
+            
 
             // Atualiza os valores do cabecalho que foram alterados dentro da condicional
         }

@@ -28,8 +28,7 @@ int main() {
         case 4:
             busca_RRN();
             break;
-        case 5:
-            remocao_logica();
+    
         case 6: 
             insercao();     
             break;
