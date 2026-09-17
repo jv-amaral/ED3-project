@@ -7,7 +7,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "funcoes.h"
+#include "funcionalidades.h"
 #include "funcoes_base.h"
 
 int main() {
