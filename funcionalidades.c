@@ -117,6 +117,7 @@ void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registr
 // aqui se encerra a funcionalidade 1 / Create Table
 //_______________________________
 
+
 // Funcionalidade 2
 void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e imprimir na tela
 {
@@ -170,6 +171,7 @@ void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e 
 // aqui se encerra a funcionalidade 2
 //_______________________________
 
+
 //______________________
 // Funcionalidade 3
 
@@ -196,61 +198,8 @@ void busca_condicional()
         int qtd_criterios;
         scanf("%d", &qtd_criterios);
 
-        // inicio os criterios com valor -2, ja que 0 é um valor de busca valido e -1 corresponde ao nulo
-        int criterio_idPoPs = -2;
-        int criterio_idPoPsConectado = -2;
-        int criterio_velocidade = -2;
-        char criterio_unidadeMedida = -2;
+        Criterios C = ler_criterios(qtd_criterios);
         
-        //laco interno que vai verificar os criterios a serem buscados
-        for (int criterio_atual = 0; criterio_atual < qtd_criterios; criterio_atual++)
-        {
-            char campo[30];
-            char valor[30];
-            scanf("%s", campo);
-
-            // vai verificar qual e o criterio a ser usado por meio de comparacoes
-            // se o valor e nulo, o criterio respectivo assume -1
-            if (strcmp(campo, "idPoPs") == 0)
-            {
-                scanf("%s", valor);
-                if (strcmp(valor, "NULO") == 0)
-                    criterio_idPoPs = -1;
-                else
-                    criterio_idPoPs = atoi(valor);
-            }
-
-            else if (strcmp(campo, "idPoPsConectado") == 0)
-            {
-                scanf("%s", valor);
-                if (strcmp(valor, "NULO") == 0)
-                    criterio_idPoPsConectado = -1;
-                else
-                    criterio_idPoPsConectado = atoi(valor);
-            }
-
-            else if (strcmp(campo, "velocidade") == 0)
-            {
-                scanf("%s", valor);
-                if (strcmp(valor, "NULO") == 0)
-                    criterio_velocidade = -1;
-                else
-                    criterio_velocidade = atoi(valor);
-            }
-
-            // verificao para a unidade de medida e diferente, ja que e uma string com apas
-            // para isso e utilizada a funcao ScanQuoteString que faz a leitura da string e decide internamente
-            // se o que veio da entrada e NULO, um valor entre aspas ou algo sem aspas
-            else if (strcmp(campo, "unidadeMedida") == 0)
-            {
-                ScanQuoteString(valor);
-                if (strcmp(valor, "") == 0)
-                    criterio_unidadeMedida = '$';
-                else
-                    criterio_unidadeMedida = valor[0];
-            }
-        }
-
         // pula para o byteoffset 17 do arquivo (pois é onde começam os registros)
         fseek(binario, 17, SEEK_SET);
         Registro Reg;
@@ -269,13 +218,13 @@ void busca_condicional()
                 continue;
 
             int encontro = 1;
-            if (criterio_idPoPs != -2 && Reg.idPoPs != criterio_idPoPs)
+            if (C.idPoPs != -2 && Reg.idPoPs != C.idPoPs)
                 encontro = 0;
-            if (criterio_idPoPsConectado != -2 && Reg.idPoPsConectado != criterio_idPoPsConectado)
+            if (C.idPoPsConectado != -2 && Reg.idPoPsConectado != C.idPoPsConectado)
                 encontro = 0;
-            if (criterio_velocidade != -2 && Reg.velocidade != criterio_velocidade)
+            if (C.velocidade != -2 && Reg.velocidade != C.velocidade)
                 encontro = 0;
-            if (criterio_unidadeMedida != -2 && Reg.unidade_medida != criterio_unidadeMedida)
+            if (C.unidadeMedida != -2 && Reg.unidade_medida != C.unidadeMedida)
                 encontro = 0;
 
             //se a variavel encontro permanece 1, o numero de registros encontrados aumenta
@@ -316,6 +265,7 @@ void busca_condicional()
 }
 // aqui se encerra a funcionalidade 3
 //_______________________________
+
 
 // Funcionalidade 4
 void busca_RRN()
@@ -374,7 +324,9 @@ void busca_RRN()
 // aqui se encerra a funcionalidade 4
 //_______________________________
 
+
 // Funcionalidade 5
+
 
 // Funcionalidade 6
 void insercao()
