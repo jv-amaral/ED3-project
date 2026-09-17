@@ -15,6 +15,7 @@ RegCabecalho Leitura_Cabecalho(FILE *binario);
 int Leitura_Registro(FILE *binario, Registro *Reg);
 Criterios ler_criterios(int repeticoes); // arrumar
 int escreve_arquivo(FILE *binario, Registro *Reg);
+int escreve_cabecalho(FILE *binario, RegCabecalho *Cab);
 void BinarioNaTela(char *arquivo_binario);
 void ScanQuoteString(char *str);
 

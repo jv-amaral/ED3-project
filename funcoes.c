@@ -49,12 +49,7 @@ void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registr
     cabecalho.nroRegRem = 0;
     cabecalho.nroPares = 0;
 
-    fwrite(&cabecalho.status, sizeof(char), 1, binario);
-    fwrite(&cabecalho.topo_pilha, sizeof(int), 1, binario);
-    fwrite(&cabecalho.proxRRN, sizeof(int), 1, binario);
-    fwrite(&cabecalho.nroRegRem, sizeof(int), 1, binario);
-    fwrite(&cabecalho.nroPares, sizeof(int), 1, binario);
-
+    escreve_cabecalho(binario, &cabecalho);
     // atribuicao inicial de valores aos campos do registro
     Reg.removido = '0';
     Reg.encadeamento = -1;
@@ -94,12 +89,7 @@ void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registr
 
         // escreve os campos do registro no arquivo binário
 
-        fwrite(&Reg.removido, sizeof(char), 1, binario);
-        fwrite(&Reg.encadeamento, sizeof(int), 1, binario);
-        fwrite(&Reg.idPoPs, sizeof(int), 1, binario);
-        fwrite(&Reg.idPoPsConectado, sizeof(int), 1, binario);
-        fwrite(&Reg.velocidade, sizeof(int), 1, binario);
-        fwrite(&Reg.unidade_medida, sizeof(char), 1, binario);
+        escreve_arquivo(binario, &Reg);
 
         // atualiza os valores do cabeçalho do proxRRN e do numero de pares
         cabecalho.proxRRN++;
@@ -134,45 +124,30 @@ void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e 
     char arquivo_binario[50];
     scanf("%s", arquivo_binario);
 
-    RegCabecalho cabecalho; // definicao das structs  para a segunda funcao
+   
     Registro Reg;
-
-    // abre o arquivo para leitura
-    FILE *binario = fopen(arquivo_binario, "rb");
-    if (binario == NULL)
+    FILE *binario = verificar_arquivo(arquivo_binario, "rb");
+    if (binario == NULL) // Se encontrar algum erro, ele retorna
     {
-        printf("Falha no processamento do arquivo.\n");
         return;
     }
-    fread(&cabecalho.status, sizeof(char), 1, binario);
-    if (cabecalho.status != '1') // verifica se o arquivo está consistente
-    {
-        printf("Falha no processamento do arquivo.\n");
-        fclose(binario);
-        return;
-    }
-
     // pula para o byteoffset 17 do arquivo (pois e onde começam os registros) e os le
     fseek(binario, 17, SEEK_SET);
 
     int registros_lidos = 0; // contador para verificar se algum registro foi lido
 
-    while (fread(&Reg.removido, sizeof(char), 1, binario) == 1) // se o registro existir ele será lido
+    while (Leitura_Registro(binario,&Reg)==1) // se o registro existir ele será lido
     {
         if (Reg.removido == '1') // se o registro estiver removido, ele é ignorado
         {
-            fseek(binario, 17, SEEK_CUR); // pula para o proximo registro
             continue;
         }
-        registros_lidos++;
-        // leitura dos bytes do arquivo binario para os campos do registro
-        fread(&Reg.encadeamento, sizeof(int), 1, binario);
-        fread(&Reg.idPoPs, sizeof(int), 1, binario);
-        fread(&Reg.idPoPsConectado, sizeof(int), 1, binario);
-        fread(&Reg.velocidade, sizeof(int), 1, binario);
-        fread(&Reg.unidade_medida, sizeof(char), 1, binario);
+        registros_lidos++; // incrementa se o registro for lido
         // atribuicao dos valores nulos na hora de printar na tela
-        if (Reg.velocidade == -1)
+        if (Reg.velocidade == -1 && Reg.unidade_medida == '$')
+        {
+            printf("%d %d %s \"%s\"\n", Reg.idPoPs, Reg.idPoPsConectado, "NULO", "NULO");
+        } else if (Reg.velocidade == -1)
         {
             printf("%d %d %s \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, "NULO", Reg.unidade_medida);
         }
@@ -180,10 +155,10 @@ void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e 
         {
             printf("%d %d %d \"%s\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade, "NULO");
         }
-        else
+        else 
         { // caso nao seja nenhum valor nulo, printa normalmente
             printf("%d %d %d \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade, Reg.unidade_medida);
-        }
+        } 
     }
     if (registros_lidos == 0) // printa na tela caso nenhum registro tenha sido lido
     {
@@ -480,12 +455,7 @@ void insercao()
 
             fseek(binario, 17 + temp * 18, SEEK_SET);
             Reg.removido = '0'; // atribui o valor 0 ao novo registro inserido e escreve no arquivo
-            fwrite(&Reg.removido, sizeof(char), 1, binario);
-            fwrite(&Reg.encadeamento, sizeof(int), 1, binario); // escreve no arquivo o valor do encadeamento
-            fwrite(&Reg.idPoPs, sizeof(int), 1, binario);       // escreve no arquivo os campos lidos do teclado
-            fwrite(&Reg.idPoPsConectado, sizeof(int), 1, binario);
-            fwrite(&Reg.velocidade, sizeof(int), 1, binario);
-            fwrite(&Reg.unidade_medida, sizeof(char), 1, binario);
+            escreve_arquivo(binario, &Reg);
             cabecalho.nroRegRem--; // atualiza o numero de registros removidos no cabecalho
             cabecalho.nroPares++;  // atualiza o numero de pares no cabecalho
         }
@@ -493,12 +463,8 @@ void insercao()
     // Atualiza os valores do cabecalho que foram alterados
     cabecalho.status = '1';
     fseek(binario, 0, SEEK_SET);
-    fwrite(&cabecalho.status, sizeof(char), 1, binario);
-    fwrite(&cabecalho.topo_pilha, sizeof(int), 1, binario);
-    fwrite(&cabecalho.proxRRN, sizeof(int), 1, binario);
-    fwrite(&cabecalho.nroRegRem, sizeof(int), 1, binario);
-    fwrite(&cabecalho.nroPares, sizeof(int), 1, binario);
-
+     escreve_cabecalho(binario,&cabecalho);
+   
     fclose(binario);
     BinarioNaTela(arquivo_binario); // chama a funcao para imprimir o arquivo binario na tela
 }

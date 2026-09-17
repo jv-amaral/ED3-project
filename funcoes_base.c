@@ -8,7 +8,7 @@
 FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura)
 {
 
-    char temp_status;
+    char temp_status; // variavel temporaria para guardar o valor lido do status
 
     // abre o arquivo
     FILE *binario = fopen(arquivo_binario, modo_de_leitura);
@@ -143,6 +143,15 @@ int escreve_arquivo(FILE *binario, Registro *Reg)
     return 1; 
 }
 
+int escreve_cabecalho(FILE *binario, RegCabecalho *Cab)
+{
+    fwrite(&Cab->status,sizeof(char),1,binario);
+    fwrite(&Cab->topo_pilha,sizeof(int),1,binario);
+    fwrite(&Cab->proxRRN,sizeof(int),1,binario);
+    fwrite(&Cab->nroRegRem,sizeof(int),1,binario);
+    fwrite(&Cab->nroPares,sizeof(int),1,binario);
+    return 1;
+}
 // funcoes dadas na plataforma
 
 void BinarioNaTela(char *arquivo)
