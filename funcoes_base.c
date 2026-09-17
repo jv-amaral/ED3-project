@@ -61,91 +61,112 @@ int Leitura_Registro(FILE *binario, Registro *Reg)
     return 1;
 }
 
-
 Criterios ler_criterios(int qtd_criterios)
 {
-    
+
     Criterios C; // inicia a struct dos criterios
 
-        // inicio os criterios com valor -2, ja que 0 é um valor de busca valido e -1 corresponde ao nulo
-        C.idPoPs = -2;
-        C.idPoPsConectado = -2;
-        C.velocidade = -2;
-        C.unidadeMedida = -2;
+    // inicio os criterios com valor -2, ja que 0 é um valor de busca valido e -1 corresponde ao nulo
+    C.idPoPs = -2;
+    C.idPoPsConectado = -2;
+    C.velocidade = -2;
+    C.unidadeMedida = -2;
 
-        // laco que vai verificar os criterios a serem buscados
-        for (int criterio_atual = 0; criterio_atual < qtd_criterios; criterio_atual++)
+    // laco que vai verificar os criterios a serem buscados
+    for (int criterio_atual = 0; criterio_atual < qtd_criterios; criterio_atual++)
+    {
+        char campo[30];
+        char valor[30];
+        scanf("%s", campo);
+
+        // vai verificar qual e o criterio a ser usado por meio de comparacoes
+        // se o valor e nulo, o criterio respectivo assume -1
+        if (strcmp(campo, "idPoPs") == 0)
         {
-            char campo[30];
-            char valor[30];
-            scanf("%s", campo);
-
-            // vai verificar qual e o criterio a ser usado por meio de comparacoes
-            // se o valor e nulo, o criterio respectivo assume -1
-            if (strcmp(campo, "idPoPs") == 0)
-            {
-                scanf("%s", valor);
-                if (strcmp(valor, "NULO") == 0)
-                    C.idPoPs = -1;
-                else
-                    C.idPoPs = atoi(valor);
-            }
-
-            else if (strcmp(campo, "idPoPsConectado") == 0)
-            {
-                scanf("%s", valor);
-                if (strcmp(valor, "NULO") == 0)
-                    C.idPoPsConectado = -1;
-                else
-                    C.idPoPsConectado = atoi(valor);
-            }
-
-            else if (strcmp(campo, "velocidade") == 0)
-            {
-                scanf("%s", valor);
-                if (strcmp(valor, "NULO") == 0)
-                    C.velocidade = -1;
-                else
-                    C.velocidade = atoi(valor);
-            }
-
-            // verificao para a unidade de medida e diferente, ja que e uma string com apas
-            // para isso e utilizada a funcao ScanQuoteString que faz a leitura da string e decide internamente
-            // se o que veio da entrada e NULO, um valor entre aspas ou algo sem aspas
-            else if (strcmp(campo, "unidadeMedida") == 0)
-            {
-                ScanQuoteString(valor);
-                if (strcmp(valor, "") == 0)
-                    C.unidadeMedida = '$';
-                else
-                    C.unidadeMedida = valor[0];
-            }
+            scanf("%s", valor);
+            if (strcmp(valor, "NULO") == 0)
+                C.idPoPs = -1;
+            else
+                C.idPoPs = atoi(valor);
         }
-        return C;
+
+        else if (strcmp(campo, "idPoPsConectado") == 0)
+        {
+            scanf("%s", valor);
+            if (strcmp(valor, "NULO") == 0)
+                C.idPoPsConectado = -1;
+            else
+                C.idPoPsConectado = atoi(valor);
+        }
+
+        else if (strcmp(campo, "velocidade") == 0)
+        {
+            scanf("%s", valor);
+            if (strcmp(valor, "NULO") == 0)
+                C.velocidade = -1;
+            else
+                C.velocidade = atoi(valor);
+        }
+
+        // verificao para a unidade de medida e diferente, ja que e uma string com apas
+        // para isso e utilizada a funcao ScanQuoteString que faz a leitura da string e decide internamente
+        // se o que veio da entrada e NULO, um valor entre aspas ou algo sem aspas
+        else if (strcmp(campo, "unidadeMedida") == 0)
+        {
+            ScanQuoteString(valor);
+            if (strcmp(valor, "") == 0)
+                C.unidadeMedida = '$';
+            else
+                C.unidadeMedida = valor[0];
+        }
     }
+    return C;
+}
 
-
-
-//funcao para printar
+// funcao para printar
 int escreve_arquivo(FILE *binario, Registro *Reg)
 {
-    fwrite(&Reg->removido,sizeof(char),1,binario);
-    fwrite(&Reg->encadeamento,sizeof(int),1,binario);
-    fwrite(&Reg->idPoPs,sizeof(int),1,binario);
-    fwrite(&Reg->idPoPsConectado,sizeof(int),1,binario);
-    fwrite(&Reg->velocidade,sizeof(int),1,binario);
-    fwrite(&Reg->unidade_medida,sizeof(char),1,binario);
-    return 1; 
+    fwrite(&Reg->removido, sizeof(char), 1, binario);
+    fwrite(&Reg->encadeamento, sizeof(int), 1, binario);
+    fwrite(&Reg->idPoPs, sizeof(int), 1, binario);
+    fwrite(&Reg->idPoPsConectado, sizeof(int), 1, binario);
+    fwrite(&Reg->velocidade, sizeof(int), 1, binario);
+    fwrite(&Reg->unidade_medida, sizeof(char), 1, binario);
+    return 1;
 }
 
 int escreve_cabecalho(FILE *binario, RegCabecalho *Cab)
 {
-    fwrite(&Cab->status,sizeof(char),1,binario);
-    fwrite(&Cab->topo_pilha,sizeof(int),1,binario);
-    fwrite(&Cab->proxRRN,sizeof(int),1,binario);
-    fwrite(&Cab->nroRegRem,sizeof(int),1,binario);
-    fwrite(&Cab->nroPares,sizeof(int),1,binario);
+    fwrite(&Cab->status, sizeof(char), 1, binario);
+    fwrite(&Cab->topo_pilha, sizeof(int), 1, binario);
+    fwrite(&Cab->proxRRN, sizeof(int), 1, binario);
+    fwrite(&Cab->nroRegRem, sizeof(int), 1, binario);
+    fwrite(&Cab->nroPares, sizeof(int), 1, binario);
     return 1;
+}
+
+// funcao para apagar registro
+Registro apagar_registro(Registro *Reg)
+{
+}
+
+// funcao para verificar o encontro de criterios
+// utilizada na funcionalidade 3,5,7
+
+int verificar_encontro(Criterios *C, Registro *Reg)
+{
+    int encontro = 1;
+
+    if (C->idPoPs != -2 && Reg->idPoPs != C->idPoPs)
+        encontro = 0;
+    if (C->idPoPsConectado != -2 && Reg->idPoPsConectado != C->idPoPsConectado)
+        encontro = 0;
+    if (C->velocidade != -2 && Reg->velocidade != C->velocidade)
+        encontro = 0;
+    if (C->unidadeMedida != -2 && Reg->unidade_medida != C->unidadeMedida)
+        encontro = 0;
+
+        return encontro;
 }
 
 // funcoes dadas na plataforma

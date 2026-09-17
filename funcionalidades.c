@@ -117,7 +117,6 @@ void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registr
 // aqui se encerra a funcionalidade 1 / Create Table
 //_______________________________
 
-
 // Funcionalidade 2
 void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e imprimir na tela
 {
@@ -125,7 +124,6 @@ void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e 
     char arquivo_binario[50];
     scanf("%s", arquivo_binario);
 
-   
     Registro Reg;
     FILE *binario = verificar_arquivo(arquivo_binario, "rb");
     if (binario == NULL) // Se encontrar algum erro, ele retorna
@@ -137,7 +135,7 @@ void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e 
 
     int registros_lidos = 0; // contador para verificar se algum registro foi lido
 
-    while (Leitura_Registro(binario,&Reg)==1) // se o registro existir ele será lido
+    while (Leitura_Registro(binario, &Reg) == 1) // se o registro existir ele será lido
     {
         if (Reg.removido == '1') // se o registro estiver removido, ele é ignorado
         {
@@ -146,11 +144,11 @@ void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e 
         registros_lidos++; // incrementa se o registro for lido
         // atribuicao dos valores nulos na hora de printar na tela
 
-    
         if (Reg.velocidade == -1 && Reg.unidade_medida == '$')
         {
             printf("%d %d %s \"%s\"\n", Reg.idPoPs, Reg.idPoPsConectado, "NULO", "NULO");
-        } else if (Reg.velocidade == -1)
+        }
+        else if (Reg.velocidade == -1)
         {
             printf("%d %d %s \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, "NULO", Reg.unidade_medida);
         }
@@ -158,10 +156,10 @@ void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e 
         {
             printf("%d %d %d \"%s\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade, "NULO");
         }
-        else 
+        else
         { // caso nao seja nenhum valor nulo, printa normalmente
             printf("%d %d %d \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade, Reg.unidade_medida);
-        } 
+        }
     }
     if (registros_lidos == 0) // printa na tela caso nenhum registro tenha sido lido
     {
@@ -173,7 +171,6 @@ void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e 
 // aqui se encerra a funcionalidade 2
 //_______________________________
 
-
 //______________________
 // Funcionalidade 3
 
@@ -183,7 +180,7 @@ void busca_condicional()
     char arquivo_binario[50];
     int repeticoes;
 
-    //ler o nome do arquivo e o numero de repeticoes a serem levadas em conta
+    // ler o nome do arquivo e o numero de repeticoes a serem levadas em conta
     scanf("%s %d", arquivo_binario, &repeticoes);
 
     FILE *binario = verificar_arquivo(arquivo_binario, "rb");
@@ -192,7 +189,7 @@ void busca_condicional()
     {
         return;
     }
-    
+
     // inicia o laco externo de n buscas
     for (int busca_atual = 0; busca_atual < repeticoes; busca_atual++)
     {
@@ -201,22 +198,22 @@ void busca_condicional()
         scanf("%d", &qtd_criterios);
 
         Criterios C = ler_criterios(qtd_criterios);
-        
+
         // pula para o byteoffset 17 do arquivo (pois é onde começam os registros)
         fseek(binario, 17, SEEK_SET);
         Registro Reg;
 
         int registros_encontrados = 0;
 
-        //comeca a percorrer todos os registros, com a condicao de que quando nao encontrar
-        //registro de removido, 0 ou 1, o arquivo terminou
+        // comeca a percorrer todos os registros, com a condicao de que quando nao encontrar
+        // registro de removido, 0 ou 1, o arquivo terminou
 
         while (Leitura_Registro(binario, &Reg))
         {
-            //inicia a variavel encontro como 1, que torna-se 0 se no registro percorrido no momento
-            //nao e encontrada o valor desejado
+            // inicia a variavel encontro como 1, que torna-se 0 se no registro percorrido no momento
+            // nao e encontrada o valor desejado
 
-            if(Reg.removido == '1')
+            if (Reg.removido == '1')
                 continue;
 
             int encontro = 1;
@@ -229,8 +226,8 @@ void busca_condicional()
             if (C.unidadeMedida != -2 && Reg.unidade_medida != C.unidadeMedida)
                 encontro = 0;
 
-            //se a variavel encontro permanece 1, o numero de registros encontrados aumenta
-            //e eles sao printados, respeitando os valores nulos no reg.velocidade e reg.unidade_medida
+            // se a variavel encontro permanece 1, o numero de registros encontrados aumenta
+            // e eles sao printados, respeitando os valores nulos no reg.velocidade e reg.unidade_medida
 
             if (encontro)
             {
@@ -254,8 +251,8 @@ void busca_condicional()
             }
         }
 
-        //se nao e encontrado nenhum registro que contem o valor do
-        //campo ou o campo pertence a um registro que esteja removido
+        // se nao e encontrado nenhum registro que contem o valor do
+        // campo ou o campo pertence a um registro que esteja removido
         if (registros_encontrados == 0)
         {
             printf("Registro inexistente.\n");
@@ -263,12 +260,10 @@ void busca_condicional()
         printf("\n");
     }
 
-
     fclose(binario);
 }
 // aqui se encerra a funcionalidade 3
 //_______________________________
-
 
 // Funcionalidade 4
 void busca_RRN()
@@ -327,7 +322,6 @@ void busca_RRN()
 // aqui se encerra a funcionalidade 4
 //_______________________________
 
-
 // Funcionalidade 5
 
 void remocao_logica()
@@ -340,12 +334,12 @@ void remocao_logica()
 
     FILE *binario = verificar_arquivo(arquivo_binario, "rb");
 
-    if(binario == NULL)
+    if (binario == NULL)
     {
         return;
     }
 
-    for(int busca_atual = 0; busca_atual < repeticoes; busca_atual++)
+    for (int busca_atual = 0; busca_atual < repeticoes; busca_atual++)
     {
         scanf("%d", qtd_criterios);
         Criterios C = ler_criterios(qtd.criterios);
@@ -355,14 +349,19 @@ void remocao_logica()
 
         int registros_encontrados = 0;
 
-        while(Leitura_Registro(binario, Reg))
+        while (Leitura_Registro(binario, Reg))
         {
-            
+            if (Reg.removido == '1')
+            {
+                continue;
+            }
+            int encontro = 1;
+
+            if (C.idPoPs != -2 && Reg.idPoPs != C.idPoPs)
+                encontro = 0;
+            if ()
         }
     }
-   
-
-
 }
 
 // Funcionalidade 6
@@ -404,7 +403,7 @@ void insercao()
         ScanQuoteString(temp_unidade_medida);
         // faz a comparação das strings temporarias com o valor nulo, se for verdadeiro atribui -1 a velocidade e $ a unidade
         // de medida, se for falso, ele atribui o valor lido do teclado para velocidade e o caractere lido sem aspas
-        if (strcmp(temp_velocidade, "" ) == 0 || strcmp(temp_velocidade,"NULO")==0)
+        if (strcmp(temp_velocidade, "") == 0 || strcmp(temp_velocidade, "NULO") == 0)
         {
             Reg.velocidade = -1; // atribui -1 se o campo for nulo
         }
@@ -412,7 +411,7 @@ void insercao()
         {
             Reg.velocidade = atoi(temp_velocidade);
         }
-        if (strcmp(temp_unidade_medida, "") == 0 || strcmp(temp_unidade_medida,"NULO") ==0)
+        if (strcmp(temp_unidade_medida, "") == 0 || strcmp(temp_unidade_medida, "NULO") == 0)
         {
             Reg.unidade_medida = '$'; // atribui '$' se o campo for nulo
         }
@@ -426,9 +425,8 @@ void insercao()
             fseek(binario, 17 + cabecalho.proxRRN * 18, SEEK_SET);
             Reg.removido = '0';
             Reg.encadeamento = -1;
-            escreve_arquivo(binario,&Reg);
+            escreve_arquivo(binario, &Reg);
             cabecalho.proxRRN++;
-            
 
             // Atualiza os valores do cabecalho que foram alterados dentro da condicional
         }
@@ -452,8 +450,8 @@ void insercao()
     // Atualiza os valores do cabecalho que foram alterados
     cabecalho.status = '1';
     fseek(binario, 0, SEEK_SET);
-     escreve_cabecalho(binario,&cabecalho);
-   
+    escreve_cabecalho(binario, &cabecalho);
+
     fclose(binario);
     BinarioNaTela(arquivo_binario); // chama a funcao para imprimir o arquivo binario na tela
 }
@@ -461,82 +459,85 @@ void insercao()
 // aqui se encerra a funcionalidade 6
 //_______________________________
 
-
 void atualizacao_registros()
 {
     // declara e le o nome do arquivo binario a ser utilizado
     char arquivo_binario[50];
     scanf("%s", arquivo_binario);
 
-    Registro Reg; // struct para o registro a ser lido
+    Registro Reg;     // struct para o registro a ser lido
     RegCabecalho cab; // definicao da struct para escrever o status do cabecalho
 
     // abre o arquivo para leitura e escrita e verifica se está corrompido
-    FILE *binario = verificar_arquivo(arquivo_binario,"rb+");
+    FILE *binario = verificar_arquivo(arquivo_binario, "rb+");
     if (binario == NULL) // Se encontrar algum erro, ele retorna
     {
         return;
     }
     cab.status = '0'; // definicao de status = 0 para indicar que sera escrito no arquivo
-    fseek(binario,0,SEEK_SET);
-    fwrite(&cab.status,sizeof(char),1,binario);
-    
-    int n; 
-    scanf("%d",&n); // declara e le do teclado quantas vezes sera feita a busca e a atualizacao de registros
+    fseek(binario, 0, SEEK_SET);
+    fwrite(&cab.status, sizeof(char), 1, binario);
 
-    for (int i = 0; i< n;i++)
+    int n;
+    scanf("%d", &n); // declara e le do teclado quantas vezes sera feita a busca e a atualizacao de registros
+
+    for (int i = 0; i < n; i++)
     {
         int m; // declara e le quantos campos serao utilizados na busca
-        scanf("%d",&m);
+        scanf("%d", &m);
         Criterios busca = ler_criterios(m); // chama a funcao que vai ler e guardar os campos e valores a serem buscados
         int p;
-        scanf("%d",&p); // le quantos campos serao atualizados
+        scanf("%d", &p);                          // le quantos campos serao atualizados
         Criterios atualizacao = ler_criterios(p); // le os valores que vao ser escritos no arquivo
-            
-        fseek(binario,17,SEEK_SET);
-        while (Leitura_Registro(binario,&Reg)==1) // leitura do arquivo
+
+        fseek(binario, 17, SEEK_SET);
+        while (Leitura_Registro(binario, &Reg) == 1) // leitura do arquivo
         {
-            if (Reg.removido == '1') continue; // se o arquivo estiver removido, ele pula para o proximo
-            
-            int controle = 1; // variavel para ver se e o registro correto
+            if (Reg.removido == '1')
+                continue; // se o arquivo estiver removido, ele pula para o proximo
+
+            int encontro = 1; // variavel para ver se e o registro correto
             // ifs para verificar se o arquivo identificado na busca é o correto
-            if(busca.idPoPs != -2 && busca.idPoPs != Reg.idPoPs ) controle = 0; 
-            if(busca.idPoPsConectado != -2 && busca.idPoPsConectado != Reg.idPoPsConectado ) controle = 0;
-            if(busca.velocidade != -2 && busca.velocidade != Reg.velocidade ) controle = 0;
-            if(busca.unidadeMedida != -2 && busca.unidadeMedida != Reg.unidade_medida ) controle = 0;
+            if (busca.idPoPs != -2 && busca.idPoPs != Reg.idPoPs)
+                encontro = 0;
+            if (busca.idPoPsConectado != -2 && busca.idPoPsConectado != Reg.idPoPsConectado)
+                encontro = 0;
+            if (busca.velocidade != -2 && busca.velocidade != Reg.velocidade)
+                encontro = 0;
+            if (busca.unidadeMedida != -2 && busca.unidadeMedida != Reg.unidade_medida)
+                encontro = 0;
 
-            if(controle == 1) 
+            if (encontro == 1)
 
-            {   // se o arquivo for o correto, atualiza os valores lidos na variavel p
-                if(atualizacao.idPoPs != -2)
+            { // se o arquivo for o correto, atualiza os valores lidos na variavel p
+                if (atualizacao.idPoPs != -2)
                 {
                     Reg.idPoPs = atualizacao.idPoPs;
                 }
-                if(atualizacao.idPoPsConectado != -2)
+                if (atualizacao.idPoPsConectado != -2)
                 {
                     Reg.idPoPsConectado = atualizacao.idPoPsConectado;
                 }
-                if(atualizacao.velocidade != -2)
+                if (atualizacao.velocidade != -2)
                 {
                     Reg.velocidade = atualizacao.velocidade;
                 }
-                if(atualizacao.unidadeMedida != -2)
+                if (atualizacao.unidadeMedida != -2)
                 {
                     Reg.unidade_medida = atualizacao.unidadeMedida;
                 }
                 // Como o registro foi lido ate o final, deve-se retornar 18 bytes para escrever no inicio do registro
-                fseek(binario,-18,SEEK_CUR);
-                escreve_arquivo(binario,&Reg); // utiliza a funcao para escrever no arquivo
-                fseek(binario,0,SEEK_CUR); // fseek necessario, pois apos a escrita no arquivo
-                                           // ele volta la no while para ler novos dados     
+                fseek(binario, -18, SEEK_CUR);
+                escreve_arquivo(binario, &Reg); // utiliza a funcao para escrever no arquivo
+                fseek(binario, 0, SEEK_CUR);    // fseek necessario, pois apos a escrita no arquivo
+                                                // ele volta la no while para ler novos dados
             }
         }
-        }
-        // Atualiza o status do arquivo para 1 apos realizar a funcionalidade
-        cab.status = '1';
-        fseek(binario,0,SEEK_SET);
-        fwrite(&cab.status,sizeof(char),1,binario);
-        fclose(binario);
-        BinarioNaTela(arquivo_binario); 
     }
-
+    // Atualiza o status do arquivo para 1 apos realizar a funcionalidade
+    cab.status = '1';
+    fseek(binario, 0, SEEK_SET);
+    fwrite(&cab.status, sizeof(char), 1, binario);
+    fclose(binario);
+    BinarioNaTela(arquivo_binario);
+}
