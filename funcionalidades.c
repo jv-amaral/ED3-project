@@ -332,7 +332,20 @@ void busca_RRN()
 
 void remocao_logica()
 {
-    return;
+    char arquivo_binario[30];
+    int qtd_criterios;
+
+    scanf("%s", &arquivo_binario);
+
+    FILE *binario = verificar_arquivo(arquivo_binario, "rb");
+
+    if(binario == NULL)
+    {
+        return;
+    }
+
+    
+
 }
 
 // Funcionalidade 6
