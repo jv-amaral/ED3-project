@@ -30,6 +30,7 @@ int main() {
             break;
         case 5:
             remocao_logica();
+            break;
         case 6: 
             insercao();     
             break;

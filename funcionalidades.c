@@ -329,7 +329,7 @@ void busca_RRN()
 
 void remocao_logica()
 {
-    
+    return;
 }
 
 // Funcionalidade 6
