@@ -185,28 +185,3 @@ As funções `BinarioNaTela()` e `ScanQuoteString()` estão identificadas no có
 `ler_criterios()` e `verificar_encontro()` compartilham a seleção entre as funcionalidades 3, 5 e 7. `print_registro()` centraliza a apresentação nas funcionalidades 2, 3 e 4. `Leitura_Registro()`, `escreve_registro()`, `Leitura_Cabecalho()` e `escreve_cabecalho()` concentram a serialização dos campos.
 
 A escrita isolada do status e a leitura do encadeamento da pilha acessam somente os campos necessários, sem exigir a leitura ou regravação de estruturas completas.
-
-## Validação e limites da versão revisada
-
-A versão recebida para revisão compilou pelo Makefile e com `-std=c11 -Wall -Wextra -Wpedantic`, sem avisos. Foram verificados importação do CSV, tamanho físico, consultas, nulos, remoção, pilha, reaproveitamento, inserção ao final, atualizações sucessivas e rejeição de arquivo ausente ou com status inconsistente.
-
-Existe uma pendência reproduzida na funcionalidade 6: ao ler uma velocidade de um único algarismo por `ScanQuoteString()`, a rotina pode consumir o token da unidade. A entrada `10 20 5 "G"` foi gravada como `10 20 5 NULO`. Uma cópia de teste que leu a velocidade com `scanf("%19s", temp_velocidade)` e manteve `ScanQuoteString()` para a unidade passou pelos 31 controles da revisão; os arquivos-fonte enviados não foram modificados nessa revisão.
-
-A implementação pressupõe entradas no formato esperado. Não oferece validação completa de CSV malformado, leituras parciais de arquivos, falhas de escrita ou valores fora do domínio. A estrutura de critérios mantém um valor por campo, e a sentinela -2 de `unidadeMedida` pressupõe um `char` com sinal. A funcionalidade 3 acrescenta uma linha vazia após cada busca.
-
-Essas verificações locais não substituem os testes reservados nem os demais critérios de avaliação da disciplina.
-
-## Preparação para entrega
-
-A seção “Material para Entregar” do enunciado solicita código-fonte documentado e Makefile no ZIP. A composição mínima é:
-
-- `main.c`
-- `funcionalidades.c`
-- `funcionalidades.h`
-- `funcoes_base.c`
-- `funcoes_base.h`
-- `Makefile`
-
-Mantenha esses arquivos na raiz do ZIP, com os nomes esperados pelos includes. O README e o CSV não são exigidos nessa relação; o CSV é necessário apenas para executar localmente a funcionalidade 1. Executáveis, binários de dados, resultados de testes e versões antigas dos fontes não precisam integrar a entrega.
-
-O vídeo é uma entrega separada no e-disciplinas: deve ter até sete minutos, participação equilibrada de todos os integrantes, webcam e link acessível. Os critérios acadêmicos e as orientações posteriores da docente também devem ser observados.
