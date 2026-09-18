@@ -357,6 +357,9 @@ void remocao_logica()
     }
 }
 
+// aqui se encerra a funcionalidade 4
+//_______________________________
+
 // Funcionalidade 6
 void insercao()
 

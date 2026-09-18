@@ -149,10 +149,10 @@ int escreve_cabecalho(FILE *binario, RegCabecalho *Cab)
 }
 
 // funcao para apagar registro
-Registro remove_registro(Registro *Reg)
+Registro remove_registro(Registro *Reg, RegCabecalho *Cabecalho)
 {
     //indica a remocao do registro
-    Reg->removido = '1'
+    Reg->removido = '1';
 
     //memset preenche byte a byte os campos necessarios
     memset(&Reg->idPoPs, '$', sizeof(int));
@@ -160,7 +160,11 @@ Registro remove_registro(Registro *Reg)
     memset(&Reg->velocidade, '$', sizeof(int));
     Reg->unidade_medida = '$';
 
+    //atualiza o valor topo_pilha para o RRN
 
+    &Cabecalho->topo_pilha =  
+
+    return Reg;
 }
 
 // funcao para verificar o encontro de criterios
