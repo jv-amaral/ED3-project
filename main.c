@@ -14,6 +14,7 @@ int main() {
     int funcionalidade;
     scanf("%d", &funcionalidade);
 
+    //switch utilizado para selecionar qual funcionalidade deve ser executada
     switch (funcionalidade)
     {
         case 1: 
