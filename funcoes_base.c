@@ -126,7 +126,7 @@ Criterios ler_criterios(int qtd_criterios)
 }
 
 // funcao para escrever os registros
-int escreve_registro(FILE *binario, Registro *Reg)
+void escreve_registro(FILE *binario, Registro *Reg)
 {
     fwrite(&Reg->removido, sizeof(char), 1, binario);
     fwrite(&Reg->encadeamento, sizeof(int), 1, binario);
@@ -134,19 +134,19 @@ int escreve_registro(FILE *binario, Registro *Reg)
     fwrite(&Reg->idPoPsConectado, sizeof(int), 1, binario);
     fwrite(&Reg->velocidade, sizeof(int), 1, binario);
     fwrite(&Reg->unidade_medida, sizeof(char), 1, binario);
-    return 1;
 }
 
 // funcao para escrever o cabecalho
-int escreve_cabecalho(FILE *binario, RegCabecalho *Cab)
+void escreve_cabecalho(FILE *binario, RegCabecalho *Cab)
 {
     fwrite(&Cab->status, sizeof(char), 1, binario);
     fwrite(&Cab->topo_pilha, sizeof(int), 1, binario);
     fwrite(&Cab->proxRRN, sizeof(int), 1, binario);
     fwrite(&Cab->nroRegRem, sizeof(int), 1, binario);
     fwrite(&Cab->nroPares, sizeof(int), 1, binario);
-    return 1;
 }
+
+
 
 // funcao para apagar registro
 void remove_registro(Registro *Reg, RegCabecalho *Cabecalho, int RRN_registro)
