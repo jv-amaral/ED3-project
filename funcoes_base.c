@@ -153,13 +153,12 @@ Registro remove_registro(Registro *Reg)
 {
     //indica a remocao do registro
     Reg->removido = '1'
-    Reg->encadeamento = 
 
     //memset preenche byte a byte os campos necessarios
-    memset(&Reg.idPoPs, '$', sizeof(int));
-    memset(&Reg.idPoPsConectado, '$', sizeof(int));
-    memset(&Reg.velocidade, '$', sizeof(int));
-    Reg.unidade_medida = '$';
+    memset(&Reg->idPoPs, '$', sizeof(int));
+    memset(&Reg->idPoPsConectado, '$', sizeof(int));
+    memset(&Reg->velocidade, '$', sizeof(int));
+    Reg->unidade_medida = '$';
 
 
 }
