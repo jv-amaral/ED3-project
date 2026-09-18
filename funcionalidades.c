@@ -318,6 +318,7 @@ void remocao_logica()
     char arquivo_binario[30];
     int repeticoes;
     int qtd_criterios;
+    
 
     scanf("%s %d", arquivo_binario, &repeticoes);
 
@@ -329,6 +330,8 @@ void remocao_logica()
         return;
     }
 
+    RegCabecalho Cabecalho = Leitura_Cabecalho(binario);
+
     //o loop usado na busca e iniciado
     for (int busca_atual = 0; busca_atual < repeticoes; busca_atual++)
     {
@@ -338,12 +341,12 @@ void remocao_logica()
         //cursor e colocado no comeco dos registros
         fseek(binario, 17, SEEK_SET);
         Registro Reg;
-
-        int registros_encontrados = 0;
+        int RRN_registro = 0;
 
         //loop que vai fazer a leitura do registro e verificar o encontro dos criterios desejados
         while (Leitura_Registro(binario, &Reg))
         {
+            RRN_registro++;
             if (Reg.removido == '1')
             {
                 continue;
@@ -351,10 +354,14 @@ void remocao_logica()
 
             if (verificar_encontro(&C, &Reg))
             {
-                
+                remove_registro(&Reg, &Cabecalho, RRN_registro);
             }
         }
     }
+
+    BinarioNaTela(binario);
+
+     fclose(binario);
 }
 
 // aqui se encerra a funcionalidade 4
