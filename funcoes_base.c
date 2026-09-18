@@ -146,6 +146,26 @@ void escreve_cabecalho(FILE *binario, RegCabecalho *Cab)
     fwrite(&Cab->nroPares, sizeof(int), 1, binario);
 }
 
+//funcao para printar o registro levando em consideracao possiveis valores nulos
+void print_registro(Registro *Reg)
+{
+     if (Reg->velocidade == -1 && Reg->unidade_medida == '$')
+        {
+            printf("%d %d %s %s\n", Reg->idPoPs, Reg->idPoPsConectado, "NULO", "NULO");
+        }
+        else if (Reg->velocidade == -1)
+        {
+            printf("%d %d %s \"%c\"\n", Reg->idPoPs, Reg->idPoPsConectado, "NULO", Reg->unidade_medida);
+        }
+        else if (Reg->unidade_medida == '$')
+        {
+            printf("%d %d %d %s\n", Reg->idPoPs, Reg->idPoPsConectado, Reg->velocidade, "NULO");
+        }
+        else
+        { // caso nao seja nenhum valor nulo, printa normalmente
+            printf("%d %d %d \"%c\"\n", Reg->idPoPs, Reg->idPoPsConectado, Reg->velocidade, Reg->unidade_medida);
+        }
+}
 
 
 // funcao para apagar registro

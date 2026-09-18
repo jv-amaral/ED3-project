@@ -139,24 +139,9 @@ void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e 
             continue;
         }
         registros_lidos++; // incrementa se o registro for lido
-        // atribuicao dos valores nulos na hora de printar na tela
+                           // atribuicao dos valores nulos na hora de printar na tela
 
-        if (Reg.velocidade == -1 && Reg.unidade_medida == '$')
-        {
-            printf("%d %d %s \"%s\"\n", Reg.idPoPs, Reg.idPoPsConectado, "NULO", "NULO");
-        }
-        else if (Reg.velocidade == -1)
-        {
-            printf("%d %d %s \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, "NULO", Reg.unidade_medida);
-        }
-        else if (Reg.unidade_medida == '$')
-        {
-            printf("%d %d %d \"%s\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade, "NULO");
-        }
-        else
-        { // caso nao seja nenhum valor nulo, printa normalmente
-            printf("%d %d %d \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade, Reg.unidade_medida);
-        }
+        print_registro(&Reg); //chama a funcao responsavel por printar
     }
     if (registros_lidos == 0) // printa na tela caso nenhum registro tenha sido lido
     {
@@ -215,23 +200,8 @@ void busca_condicional()
 
             if (verificar_encontro(&C, &Reg))
             {
-                registros_encontrados++;
-                if (Reg.velocidade == -1 && Reg.unidade_medida == '$')
-                {
-                    printf("%d %d NULO NULO\n", Reg.idPoPs, Reg.idPoPsConectado);
-                }
-                else if (Reg.velocidade == -1)
-                {
-                    printf("%d %d NULO \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.unidade_medida);
-                }
-                else if (Reg.unidade_medida == '$')
-                {
-                    printf("%d %d %d NULO\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade);
-                }
-                else
-                {
-                    printf("%d %d %d \"%c\"\n", Reg.idPoPs, Reg.idPoPsConectado, Reg.velocidade, Reg.unidade_medida);
-                }
+                registros_encontrados++; //incrementa o contador
+                print_registro(&Reg); //chama a funcao responsavel por printar
             }
         }
 
@@ -279,25 +249,7 @@ void busca_RRN()
     // ira printar as informacoes necessarias com o tratamento de NULO e de -1
     else
     {
-        printf("%d %d ", Reg.idPoPs, Reg.idPoPsConectado);
-
-        if (Reg.velocidade == -1)
-        {
-            printf("NULO ");
-        }
-        else
-        {
-            printf("%d ", Reg.velocidade);
-        }
-
-        if (Reg.unidade_medida == '$')
-        {
-            printf("NULO\n");
-        }
-        else
-        {
-            printf("\"%c\"\n", Reg.unidade_medida);
-        }
+       print_registro(&Reg);
     }
 
     fclose(binario);
