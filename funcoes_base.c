@@ -190,8 +190,7 @@ void remove_registro(Registro *Reg, RegCabecalho *Cabecalho, int RRN_registro)
 
 int verificar_encontro(Criterios *C, Registro *Reg)
 {
-    // se a variavel encontro permanece 1, o numero de registros encontrados aumenta
-    // e eles sao printados, respeitando os valores nulos no reg.velocidade e reg.unidade_medida
+    //essa funcao vai retornar se os criterios desejados foram encontrados nos registros ou nao
     int encontro = 1;
 
     if (C->idPoPs != -2 && Reg->idPoPs != C->idPoPs)

@@ -141,7 +141,7 @@ void recuperacao_dados() // funcao para recuperar os dados do arquivo binario e 
         registros_lidos++; // incrementa se o registro for lido
                            // atribuicao dos valores nulos na hora de printar na tela
 
-        print_registro(&Reg); //chama a funcao responsavel por printar
+        print_registro(&Reg); // chama a funcao responsavel por printar
     }
     if (registros_lidos == 0) // printa na tela caso nenhum registro tenha sido lido
     {
@@ -200,8 +200,8 @@ void busca_condicional()
 
             if (verificar_encontro(&C, &Reg))
             {
-                registros_encontrados++; //incrementa o contador
-                print_registro(&Reg); //chama a funcao responsavel por printar
+                registros_encontrados++; // incrementa o contador
+                print_registro(&Reg);    // chama a funcao responsavel por printar
             }
         }
 
@@ -249,7 +249,7 @@ void busca_RRN()
     // ira printar as informacoes necessarias com o tratamento de NULO e de -1
     else
     {
-       print_registro(&Reg);
+        print_registro(&Reg);
     }
 
     fclose(binario);
@@ -443,85 +443,133 @@ void insercao()
 // aqui se encerra a funcionalidade 6
 //_______________________________
 
+// Funcionalidade 7
+
 void atualizacao_registros()
 {
-    // declara e le o nome do arquivo binario a ser utilizado
+    // crio as variaveis do nome do arquivo e do numero de repeticoes
     char arquivo_binario[50];
-    scanf("%s", arquivo_binario);
+    int repeticoes;
 
-    Registro Reg;     // struct para o registro a ser lido
-    RegCabecalho cab; // definicao da struct para escrever o status do cabecalho
+    // le o nome do arquivo e o numero de repeticoes
+    scanf("%s %d", arquivo_binario, &repeticoes);
 
-    // abre o arquivo para leitura e escrita e verifica se está corrompido
-    FILE *binario = verificar_arquivo(arquivo_binario, "rb+");
-    if (binario == NULL) // Se encontrar algum erro, ele retorna
+    // abre o arquivo para leitura e escrita e verifica se esta consistente
+    FILE *binario =
+        verificar_arquivo(arquivo_binario, "rb+");
+
+    if (binario == NULL)
     {
         return;
     }
-    cab.status = '0'; // definicao de status = 0 para indicar que sera escrito no arquivo
+
+    // le o cabecalho do arquivo
+    RegCabecalho Cabecalho =
+        Leitura_Cabecalho(binario);
+
+    // atualiza o status, pois o arquivo sera alterado
+    // e pode ficar temporariamente inconsistente
+    Cabecalho.status = '0';
+
     fseek(binario, 0, SEEK_SET);
-    fwrite(&cab.status, sizeof(char), 1, binario);
+    fwrite(
+        &Cabecalho.status,
+        sizeof(char),
+        1,
+        binario);
 
-    int n;
-    scanf("%d", &n); // declara e le do teclado quantas vezes sera feita a busca e a atualizacao de registros
+    // garante que o status 0 seja enviado ao arquivo
+    // antes do inicio das atualizacoes
+    fflush(binario);
 
-    for (int i = 0; i < n; i++)
+    // inicia o laco externo das n buscas e atualizacoes
+    for (
+        int busca_atual = 0;
+        busca_atual < repeticoes;
+        busca_atual++)
     {
-        int m; // declara e le quantos campos serao utilizados na busca
-        scanf("%d", &m);
-        Criterios busca = ler_criterios(m); // chama a funcao que vai ler e guardar os campos e valores a serem buscados
-        int p;
-        scanf("%d", &p);                          // le quantos campos serao atualizados
-        Criterios atualizacao = ler_criterios(p); // le os valores que vao ser escritos no arquivo
+        // le quantos criterios serao utilizados na busca
+        int qtd_criterios;
+        scanf("%d", &qtd_criterios);
 
+        // le e guarda os criterios da busca
+        Criterios C = ler_criterios(qtd_criterios);
+
+        // le quantos campos serao atualizados
+        int qtd_atualizacoes;
+        scanf("%d", &qtd_atualizacoes);
+
+        // le e guarda os novos valores
+        Criterios A = ler_criterios(qtd_atualizacoes);
+
+        // pula para o byteoffset 17 do arquivo,
+        // pois e onde comecam os registros
         fseek(binario, 17, SEEK_SET);
-        while (Leitura_Registro(binario, &Reg) == 1) // leitura do arquivo
+
+        Registro Reg;
+
+        // percorre todos os registros do arquivo
+        while (Leitura_Registro(binario, &Reg))
         {
+            // se o registro estiver removido,
+            // ele e ignorado
             if (Reg.removido == '1')
-                continue; // se o arquivo estiver removido, ele pula para o proximo
+            {
+                continue;
+            }
 
-            int encontro = 1; // variavel para ver se e o registro correto
-            // ifs para verificar se o arquivo identificado na busca é o correto
-            if (busca.idPoPs != -2 && busca.idPoPs != Reg.idPoPs)
-                encontro = 0;
-            if (busca.idPoPsConectado != -2 && busca.idPoPsConectado != Reg.idPoPsConectado)
-                encontro = 0;
-            if (busca.velocidade != -2 && busca.velocidade != Reg.velocidade)
-                encontro = 0;
-            if (busca.unidadeMedida != -2 && busca.unidadeMedida != Reg.unidade_medida)
-                encontro = 0;
+            // verifica se o registro atual atende
+            // a todos os criterios da busca
+            if (verificar_encontro(&C, &Reg))
+            {
+                // atualiza apenas os campos informados
+                if (A.idPoPs != -2)
+                {
+                    Reg.idPoPs = A.idPoPs;
+                }
 
-            if (encontro == 1)
+                if (A.idPoPsConectado != -2)
+                {
+                    Reg.idPoPsConectado = A.idPoPsConectado;
+                }
 
-            { // se o arquivo for o correto, atualiza os valores lidos na variavel p
-                if (atualizacao.idPoPs != -2)
+                if (A.velocidade != -2)
                 {
-                    Reg.idPoPs = atualizacao.idPoPs;
+                    Reg.velocidade = A.velocidade;
                 }
-                if (atualizacao.idPoPsConectado != -2)
+
+                if (A.unidadeMedida != -2)
                 {
-                    Reg.idPoPsConectado = atualizacao.idPoPsConectado;
+                    Reg.unidade_medida = A.unidadeMedida;
                 }
-                if (atualizacao.velocidade != -2)
-                {
-                    Reg.velocidade = atualizacao.velocidade;
-                }
-                if (atualizacao.unidadeMedida != -2)
-                {
-                    Reg.unidade_medida = atualizacao.unidadeMedida;
-                }
-                // Como o registro foi lido ate o final, deve-se retornar 18 bytes para escrever no inicio do registro
+
+                // como o registro foi lido por completo,
+                // o cursor retorna 18 bytes para o inicio dele
                 fseek(binario, -18, SEEK_CUR);
-                escreve_registro(binario, &Reg); // utiliza a funcao para escrever no arquivo
-                fseek(binario, 0, SEEK_CUR);     // fseek necessario, pois apos a escrita no arquivo
-                                                 // ele volta la no while para ler novos dados
+
+                // escreve campo a campo o registro atualizado
+                escreve_registro(binario, &Reg);
+
+                // sincroniza a mudanca de escrita para leitura
+                // e mantem o cursor no inicio do proximo registro
+                fseek(binario, 0, SEEK_CUR);
             }
         }
     }
-    // Atualiza o status do arquivo para 1 apos realizar a funcionalidade
-    cab.status = '1';
+
+    // atualiza o status para 1 depois que todas
+    // as atualizacoes foram realizadas
+    Cabecalho.status = '1';
+
+    // escreve o status por ultimo, indicando
+    // que o arquivo esta consistente
     fseek(binario, 0, SEEK_SET);
-    fwrite(&cab.status, sizeof(char), 1, binario);
+    fwrite(&Cabecalho.status, sizeof(char), 1, binario);
     fclose(binario);
+
+    // mostra o arquivo binario atualizado
     BinarioNaTela(arquivo_binario);
 }
+
+// aqui se encerra a funcionalidade 7
+//_______________________________
