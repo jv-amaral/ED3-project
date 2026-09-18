@@ -321,7 +321,7 @@ void remocao_logica()
 
     scanf("%s %d", arquivo_binario, &repeticoes);
 
-    FILE *binario = verificar_arquivo(arquivo_binario, "r+b");
+    FILE *binario = verificar_arquivo(arquivo_binario, "rb+");
 
     // retorno caso o arquivo tenha uma falha no seu processamento
     if (binario == NULL)
@@ -377,7 +377,7 @@ void remocao_logica()
     fclose(binario);
 }
 
-// aqui se encerra a funcionalidade 4
+// aqui se encerra a funcionalidade 5
 //_______________________________
 
 // Funcionalidade 6
