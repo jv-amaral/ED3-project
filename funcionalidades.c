@@ -432,9 +432,13 @@ void insercao()
         }
     }
     // Atualiza os valores do cabecalho que foram alterados
-    cabecalho.status = '1';
     fseek(binario, 0, SEEK_SET);
     escreve_cabecalho(binario, &cabecalho);
+
+    // status e atualizado e escrito por ultimo para manter a consistencia
+    cabecalho.status = '1';
+    fseek(binario, 0, SEEK_SET);
+    fwrite(&cabecalho.status, sizeof(char), 1, binario);
 
     fclose(binario);
     BinarioNaTela(arquivo_binario); // chama a funcao para imprimir o arquivo binario na tela
