@@ -331,6 +331,14 @@ void remocao_logica()
 
     RegCabecalho Cabecalho = Leitura_Cabecalho(binario);
 
+    // status do cabecalho e atualizado ja que ele esta sendo alterado
+    //e pode estar temporariamente inconsistente
+    Cabecalho.status = '0';
+    fseek(binario, 0, SEEK_SET);
+    fwrite(&Cabecalho.status, sizeof(char), 1, binario);
+    fflush(binario); //segue rigorosamente o proposito de status, ja que envia
+    //imediatamente para o arquivo algo que pode estar temporariamente guardado no buffer de escrita
+
     // o loop usado na busca e iniciado
     for (int busca_atual = 0; busca_atual < repeticoes; busca_atual++)
     {
@@ -346,35 +354,46 @@ void remocao_logica()
         while (Leitura_Registro(binario, &Reg))
         {
 
+            // se o registro ja estiver removido o loop do momento e
+            // mas o RRN e incrementado mesmo assim
             if (Reg.removido == '1')
             {
                 RRN_registro++;
                 continue;
             }
 
+            // o encontro dos parametros buscados e verificado
             if (verificar_encontro(&C, &Reg))
             {
-                int byte_do_registro = RRN_registro;
-
+                // o registro e removido e o contador do numero de registros removidos e incrementado
                 remove_registro(&Reg, &Cabecalho, RRN_registro);
                 Cabecalho.nroRegRem++;
+                Cabecalho.nroPares--;
 
+                // o cursor volta ao registro que deve ser removido para que a escrita seja feita
                 fseek(binario, 17 + RRN_registro * 18, SEEK_SET);
                 escreve_registro(binario, &Reg);
 
+                // cursor retorna ao fim do registro que foi removido
                 fseek(binario, 17 + (RRN_registro + 1) * 18, SEEK_SET);
             }
-
+            // o RRN e incrementado
             RRN_registro++;
         }
     }
 
+    // cabecalho e atualizado
     fseek(binario, 0, SEEK_SET);
     escreve_cabecalho(binario, &Cabecalho);
 
-    BinarioNaTela(arquivo_binario);
-
+    //valor do status e atulizado e escrito por ultimo para garantir que tudo
+    //terminou corretamente, ou seja, o arquivo esta consistente
+    Cabecalho.status = '1';
+    fseek(binario, 0, SEEK_SET);
+    fwrite(&Cabecalho.status, sizeof(char), 1, binario);
     fclose(binario);
+    // funcao binario na tela e utilizada para printar o arquivo atualizado
+    BinarioNaTela(arquivo_binario);
 }
 
 // aqui se encerra a funcionalidade 5
