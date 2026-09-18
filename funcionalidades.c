@@ -89,7 +89,7 @@ void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registr
 
         // escreve os campos do registro no arquivo binário
 
-        escreve_arquivo(binario, &Reg);
+        escreve_registro(binario, &Reg);
 
         // atualiza os valores do cabeçalho do proxRRN e do numero de pares
         cabecalho.proxRRN++;
@@ -321,7 +321,7 @@ void remocao_logica()
 
     scanf("%s %d", arquivo_binario, &repeticoes);
 
-    FILE *binario = verificar_arquivo(arquivo_binario, "rb");
+    FILE *binario = verificar_arquivo(arquivo_binario, "r+b");
 
     // retorno caso o arquivo tenha uma falha no seu processamento
     if (binario == NULL)
@@ -345,20 +345,34 @@ void remocao_logica()
         // loop que vai fazer a leitura do registro e verificar o encontro dos criterios desejados
         while (Leitura_Registro(binario, &Reg))
         {
-            RRN_registro++;
+
             if (Reg.removido == '1')
             {
+                RRN_registro++;
                 continue;
             }
 
             if (verificar_encontro(&C, &Reg))
             {
+                int byte_do_registro = RRN_registro;
+
                 remove_registro(&Reg, &Cabecalho, RRN_registro);
+                Cabecalho.nroRegRem++;
+
+                fseek(binario, 17 + RRN_registro * 18, SEEK_SET);
+                escreve_registro(binario, &Reg);
+
+                fseek(binario, 17 + (RRN_registro + 1) * 18, SEEK_SET);
             }
+
+            RRN_registro++;
         }
     }
 
-    BinarioNaTela(binario);
+    fseek(binario, 0, SEEK_SET);
+    escreve_cabecalho(binario, &Cabecalho);
+
+    BinarioNaTela(arquivo_binario);
 
     fclose(binario);
 }
@@ -427,7 +441,7 @@ void insercao()
             fseek(binario, 17 + cabecalho.proxRRN * 18, SEEK_SET);
             Reg.removido = '0';
             Reg.encadeamento = -1;
-            escreve_arquivo(binario, &Reg);
+            escreve_registro(binario, &Reg);
             cabecalho.proxRRN++;
 
             // Atualiza os valores do cabecalho que foram alterados dentro da condicional
@@ -444,7 +458,7 @@ void insercao()
 
             fseek(binario, 17 + temp * 18, SEEK_SET);
             Reg.removido = '0'; // atribui o valor 0 ao novo registro inserido e escreve no arquivo
-            escreve_arquivo(binario, &Reg);
+            escreve_registro(binario, &Reg);
             cabecalho.nroRegRem--; // atualiza o numero de registros removidos no cabecalho
             cabecalho.nroPares++;  // atualiza o numero de pares no cabecalho
         }
@@ -530,9 +544,9 @@ void atualizacao_registros()
                 }
                 // Como o registro foi lido ate o final, deve-se retornar 18 bytes para escrever no inicio do registro
                 fseek(binario, -18, SEEK_CUR);
-                escreve_arquivo(binario, &Reg); // utiliza a funcao para escrever no arquivo
-                fseek(binario, 0, SEEK_CUR);    // fseek necessario, pois apos a escrita no arquivo
-                                                // ele volta la no while para ler novos dados
+                escreve_registro(binario, &Reg); // utiliza a funcao para escrever no arquivo
+                fseek(binario, 0, SEEK_CUR);     // fseek necessario, pois apos a escrita no arquivo
+                                                 // ele volta la no while para ler novos dados
             }
         }
     }

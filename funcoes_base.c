@@ -126,7 +126,7 @@ Criterios ler_criterios(int qtd_criterios)
 }
 
 // funcao para escrever os registros
-int escreve_arquivo(FILE *binario, Registro *Reg)
+int escreve_registro(FILE *binario, Registro *Reg)
 {
     fwrite(&Reg->removido, sizeof(char), 1, binario);
     fwrite(&Reg->encadeamento, sizeof(int), 1, binario);
