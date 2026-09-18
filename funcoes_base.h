@@ -14,7 +14,7 @@ typedef struct
 FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura);
 RegCabecalho Leitura_Cabecalho(FILE *binario);
 int Leitura_Registro(FILE *binario, Registro *Reg);
-Criterios ler_criterios(int repeticoes); // arrumar
+Criterios ler_criterios(int repeticoes);
 void escreve_registro(FILE *binario, Registro *Reg);
 void escreve_cabecalho(FILE *binario, RegCabecalho *Cab);
 void print_registro(Registro *Reg);

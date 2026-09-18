@@ -203,9 +203,8 @@ void busca_condicional()
 
         while (Leitura_Registro(binario, &Reg))
         {
-            // inicia a variavel encontro como 1, que torna-se 0 se no registro percorrido no momento
-            // nao e encontrada o valor desejado
-
+            // enquanto e possivel fazer a leitura do registo
+            //  e feita a verificao do encontro dos criteiros
             if (Reg.removido == '1')
                 continue;
 
@@ -394,8 +393,9 @@ void insercao()
     { // le os valores passados pelo teclado para os campos do registro
         scanf("%d", &Reg.idPoPs);
         scanf("%d", &Reg.idPoPsConectado);
-        ScanQuoteString(temp_velocidade);
+        scanf("%19s", temp_velocidade);
         ScanQuoteString(temp_unidade_medida);
+
         // faz a comparação das strings temporarias com o valor nulo, se for verdadeiro atribui -1 a velocidade e $ a unidade
         // de medida, se for falso, ele atribui o valor lido do teclado para velocidade e o caractere lido sem aspas
         if (strcmp(temp_velocidade, "") == 0 || strcmp(temp_velocidade, "NULO") == 0)

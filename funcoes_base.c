@@ -19,8 +19,8 @@ FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura)
         return NULL;
     }
 
-    fread(&temp_status, sizeof(char), 1, binario);
-    if (temp_status != '1')
+    //verifica se o fread consiguiu ler o byte antes de comparar o seu valor
+    if (fread(&temp_status, sizeof(char), 1, binario) != 1 || temp_status != '1')
     {
         printf("Falha no processamento do arquivo.\n");
         fclose(binario);
