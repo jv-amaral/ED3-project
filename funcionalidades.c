@@ -96,19 +96,16 @@ void leitura_e_gravacao() // Função para ler o arquivo CSV e gravar os registr
         cabecalho.nroPares++;
     }
 
-    // atualiza o status para 1 e grava no byteoffset 0 do arquivo binario
+    // escreve o cabecalho atualizado
+    fseek(binario, 0, SEEK_SET);
+    escreve_cabecalho(binario, &cabecalho);
+
+    // atualiza o status para 1, ou seja, consistente
     cabecalho.status = '1';
+
+    // escreve o status por ultimo, para garantir a integridade do arquivo
     fseek(binario, 0, SEEK_SET);
     fwrite(&cabecalho.status, sizeof(char), 1, binario);
-
-    // grava no byteoffset 5 o valor atualizado do proxRRN
-    fseek(binario, 5, SEEK_SET);
-    fwrite(&cabecalho.proxRRN, sizeof(int), 1, binario);
-
-    // grava no byteoffset 13 o valor atualizado do nroPares
-    fseek(binario, 13, SEEK_SET);
-    fwrite(&cabecalho.nroPares, sizeof(int), 1, binario);
-
     fclose(csv);
     fclose(binario);
     BinarioNaTela(arquivo_binario);
@@ -375,7 +372,7 @@ void remocao_logica()
                 escreve_registro(binario, &Reg);
 
                 // cursor retorna ao fim do registro que foi removido
-                //tambem funciona como sincronizacao entre o fread e o fwrite
+                // tambem funciona como sincronizacao entre o fread e o fwrite
                 fseek(binario, 17 + (RRN_registro + 1) * 18, SEEK_SET);
             }
             // o RRN e incrementado
