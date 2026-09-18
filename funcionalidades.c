@@ -365,7 +365,6 @@ void remocao_logica()
                 // o registro e removido e o contador do numero de registros removidos e incrementado
                 remove_registro(&Reg, &Cabecalho, RRN_registro);
                 Cabecalho.nroRegRem++;
-                Cabecalho.nroPares--;
 
                 // o cursor volta ao registro que deve ser removido para que a escrita seja feita
                 fseek(binario, 17 + RRN_registro * 18, SEEK_SET);
