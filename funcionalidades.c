@@ -332,12 +332,12 @@ void remocao_logica()
     RegCabecalho Cabecalho = Leitura_Cabecalho(binario);
 
     // status do cabecalho e atualizado ja que ele esta sendo alterado
-    //e pode estar temporariamente inconsistente
+    // e pode estar temporariamente inconsistente
     Cabecalho.status = '0';
     fseek(binario, 0, SEEK_SET);
     fwrite(&Cabecalho.status, sizeof(char), 1, binario);
-    fflush(binario); //segue rigorosamente o proposito de status, ja que envia
-    //imediatamente para o arquivo algo que pode estar temporariamente guardado no buffer de escrita
+    fflush(binario); // segue rigorosamente o proposito de status, ja que envia
+    // imediatamente para o arquivo algo que pode estar temporariamente guardado no buffer de escrita
 
     // o loop usado na busca e iniciado
     for (int busca_atual = 0; busca_atual < repeticoes; busca_atual++)
@@ -354,8 +354,8 @@ void remocao_logica()
         while (Leitura_Registro(binario, &Reg))
         {
 
-            // se o registro ja estiver removido o loop do momento e
-            // mas o RRN e incrementado mesmo assim
+            // se o registro já estiver removido, a iteração atual é encerrada
+            //  mas o RRN e incrementado mesmo assim
             if (Reg.removido == '1')
             {
                 RRN_registro++;
@@ -375,6 +375,7 @@ void remocao_logica()
                 escreve_registro(binario, &Reg);
 
                 // cursor retorna ao fim do registro que foi removido
+                //tambem funciona como sincronizacao entre o fread e o fwrite
                 fseek(binario, 17 + (RRN_registro + 1) * 18, SEEK_SET);
             }
             // o RRN e incrementado
@@ -386,8 +387,8 @@ void remocao_logica()
     fseek(binario, 0, SEEK_SET);
     escreve_cabecalho(binario, &Cabecalho);
 
-    //valor do status e atulizado e escrito por ultimo para garantir que tudo
-    //terminou corretamente, ou seja, o arquivo esta consistente
+    // valor do status e atulizado e escrito por ultimo para garantir que tudo
+    // terminou corretamente, ou seja, o arquivo esta consistente
     Cabecalho.status = '1';
     fseek(binario, 0, SEEK_SET);
     fwrite(&Cabecalho.status, sizeof(char), 1, binario);
