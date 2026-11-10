@@ -2,13 +2,13 @@
 //João Vitor Amaral Santos - 16812120
 //Victor Hugo Albertino e Silva - 16903448
 
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 #include "funcionalidades.h"
 #include "funcoes_base.h"
+#include "funcionalidades2.h"
 
 int main() {
     int funcionalidade;
@@ -37,6 +37,9 @@ int main() {
             break;
         case 7:
             atualizacao_registros();
+            break;
+        case 8:
+
             break;
     }
     
