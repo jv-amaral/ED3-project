@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <funcionalidades2.h>
-#include "funcoes_base.h"
+#include "funcoes_base2.h"
 
 // Funcionalidade 8
 
@@ -61,3 +61,27 @@ void create_table()
 
     }
 }
+
+void create_index()
+{
+    char arquivo_binario[50]; // variaveis para os arquivos
+    char arquivo_index[50];
+    scanf("%s", &arquivo_binario); // le o nome dos arquivos
+    scanf("%s",&arquivo_index);
+    RegIndex registro;       // declaracao da struct do registro
+
+     FILE *binario = verificar_arquivo(arquivo_binario, "rb");
+    if (binario == NULL) // Se encontrar algum erro, ele retorna
+    {
+        return;
+    }
+    fseek(binario, 25, SEEK_SET);
+
+
+
+
+
+}
+
+
+

@@ -22,4 +22,18 @@ typedef struct
     char *nomePais;
 } Registro;
 
+
+typedef struct
+{
+    char status;
+
+}RegCabecalhoIndex;
+
+typedef struct
+{
+    int idPops;
+    int64_t byteoffset;
+
+}RegIndex;
+
 #endif
