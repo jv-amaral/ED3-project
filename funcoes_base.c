@@ -146,6 +146,17 @@ void escreve_cabecalho(FILE *binario, RegCabecalho *Cab)
     fwrite(&Cab->nroPares, sizeof(int), 1, binario);
 }
 
+// funcao para escrever o cabecalho
+void escreve_cabecalho2(FILE *binario, RegCabecalho *Cab)
+{
+    fwrite(&Cab->status, sizeof(char), 1, binario);
+    fwrite(&Cab->topoLista, sizeof(int64_t), 1, binario);
+    fwrite(&Cab->proxByteOffset, sizeof(int64_t), 1, binario);
+    fwrite(&Cab->nroRegRem, sizeof(int), 1, binario);
+    fwrite(&Cab->nroPoPs, sizeof(int), 1, binario);
+}
+
+
 //funcao para printar o registro levando em consideracao possiveis valores nulos
 void print_registro(Registro *Reg)
 {

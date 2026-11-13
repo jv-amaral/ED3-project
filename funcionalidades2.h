@@ -18,8 +18,8 @@ typedef struct
     int64_t encadeamentoLista;
     int idPoPs;
     char siglaPais[3];
-    char nomePoPs[100];
-    char nomePais[100];
+    char *nomePoPs;
+    char *nomePais;
 } Registro;
 
 #endif
