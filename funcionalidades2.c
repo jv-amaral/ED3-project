@@ -5,7 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <funcionalidades2.h>
+#include "funcionalidades2.h"
 #include "funcoes_base2.h"
 
 // Funcionalidade 8
@@ -56,7 +56,7 @@ void create_table()
 
     //inicia o loop fazendo a verificação de nulo
 
-    wihile ((fgets(linha_csv, sizeof(linha_csv), arq_csv)) != NULL)
+    while ((fgets(linha_csv, sizeof(linha_csv), arq_csv)) != NULL)
     {
 
     }
@@ -66,22 +66,206 @@ void create_index()
 {
     char arquivo_binario[50]; // variaveis para os arquivos
     char arquivo_index[50];
-    scanf("%s", &arquivo_binario); // le o nome dos arquivos
-    scanf("%s",&arquivo_index);
-    RegIndex registro;       // declaracao da struct do registro
+    scanf("%s", arquivo_binario); // le o nome dos arquivos
+    scanf("%s",arquivo_index);
+      // declaracao da struct do registro
+    Registro reg;
 
      FILE *binario = verificar_arquivo(arquivo_binario, "rb");
     if (binario == NULL) // Se encontrar algum erro, ele retorna
     {
+        printf("Falha no processamento do arquivo.\n");
         return;
     }
     fseek(binario, 25, SEEK_SET);
+    int64_t byteOffsetAtual = 25; // byteoffset atual depois de ler o registro de cabecalho
+     int max_registros = 2000; 
+    RegIndex *vetor_indices = (RegIndex *) malloc(max_registros * sizeof(RegIndex)); // vetor para armazenar idPoPs e o byteoffset
+     int i = 0;                                                                      // para ordenar depois
+    while( fread(&reg.removido, sizeof(char), 1, binario)==1 )
+    {
+        fread(&reg.tamanhoRegistro,sizeof(int),1,binario);
+        if(reg.removido == '0')
+        {   
+            fread(&reg.encadeamentoLista, sizeof(int64_t),1,binario);
+            fread(&reg.idPoPs, sizeof(int),1,binario); 
+            vetor_indices[i].idPoPs = reg.idPoPs;
+            vetor_indices[i].byteoffset = byteOffsetAtual;
+            i++;
+            fseek(binario, reg.tamanhoRegistro - 17,SEEK_CUR);
+        } else 
+        {
+            fseek(binario, reg.tamanhoRegistro - 5 ,SEEK_CUR);
+        }
+       
+        byteOffsetAtual = byteOffsetAtual + reg.tamanhoRegistro;
 
+    }
+        
+
+    qsort(vetor_indices, i, sizeof(RegIndex), compara_index);
+     fclose(binario);
+
+    FILE *index = fopen(arquivo_index,"wb");
+    if(index == NULL)
+    {
+        printf("Falha no processamento do arquivo.\n"); // Mensagem padrão de erro
+        free(vetor_indices);
+        return;
+    }
+    char status_index = '0';
+    fwrite(&status_index,sizeof(char),1,index);
+    for ( int j = 0; j<i;j++)
+    {
+        fwrite(&vetor_indices[j].idPoPs,sizeof(int),1,index);
+        fwrite(&vetor_indices[j].byteoffset,sizeof(int64_t),1,index);
+    }
+    status_index ='1';
+    fseek(index,0,SEEK_SET);
+    fwrite(&status_index,sizeof(char),1,index);
+    fclose(index);
+    free(vetor_indices);
+    BinarioNaTela(arquivo_index);
+}
+
+
+
+//funcionalidade 11 (Recuperar os dados de um arquivo binario
+ //                   via busca, utilizando indice caso seja requisitado)
+
+void busca()
+{
+    char arquivo_binario[50]; // variaveis dos nomes dos arquivos
+    char arquivo_index[50];
+
+    scanf("%s",arquivo_binario);    //leitura dos nomes dos arquivos
+    scanf("%s",arquivo_index);
+    RegCabecalho cab;
+    Registro reg;           // criacao das structs de registro e de registro de indice
+    
+    FILE *binario = verificar_arquivo(arquivo_binario,"rb");     // verifica se os arquivos nao estao corrompidos
+    FILE *index = verificar_arquivo(arquivo_index,"rb");
+    if (binario == NULL) // Se encontrar algum erro, ele retorna
+    {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+    if (index == NULL) // Se encontrar algum erro, ele retorna
+    {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+    fread(&cab.status,sizeof(char),1,binario);
+
+    if (cab.status == '0')                    // verifica se o arquivo esta consistente
+    {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+    char status_index;
+    fread(&status_index,sizeof(char),1,index);
+
+    if (status_index == '0')            // verifica se o arquivo de indice esta consistente
+    {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+        // cria o vetor de indices para fazer a busca
+       int max_indices = 2000;
+         RegIndex *vetor_indices = (RegIndex *) malloc(max_indices * sizeof(RegIndex));
+         int total_indices = 0;
+
+         // Enquanto conseguir ler um idPoPs (4 bytes), é porque tem um registro
+         while (fread(&vetor_indices[total_indices].idPoPs, sizeof(int), 1, index) == 1)
+        {
+        // Se leu o ID, obrigatoriamente tem o byteoffset (8 bytes) logo na frente
+        fread(&vetor_indices[total_indices].byteoffset, sizeof(int64_t), 1, index);
+        total_indices++;
+        }
+
+    
+         fclose(index);
+    int n;          // declaracao e leitura da variavel que vai verificar quantas vezes sera feita a busca
+    scanf("%d",&n);
+
+    
+
+    for (int i = 0; i<n;i++)            // loop principal da busca que sera feita n vezes
+    {   
+        int m;
+        scanf("%d",&m);
+        Criterios C = ler_criterios(m);
+        int registro_encontrado;
+        if (C.idPoPs!= -2)
+        {
+            // (Isso entra logo depois do seu if que checou o status_index == '0')
+        
+
+     
+        int inicio = 0;
+        int fim = total_indices - 1;
+        int64_t offset_encontrado = -1;
+            while (inicio <= fim) {
+                int meio = (inicio + fim) / 2;
+
+                if (vetor_indices[meio].idPoPs == C.idPoPs) {
+                    offset_encontrado = vetor_indices[meio].byteoffset; 
+                    break; // Sai do while na hora
+                } 
+                else if (vetor_indices[meio].idPoPs < C.idPoPs) {
+                    inicio = meio + 1;
+                } 
+                else {
+                    fim = meio - 1;
+                }
+            }
+            if(offset_encontrado == -1)
+            {
+                printf("Registro inexistente.\n");
+            }
+            else
+            {
+                fseek(binario,offset_encontrado,SEEK_SET);
+                Leitura_Registro2(binario,&reg);
+                if (reg.removido == '0' && verificar_encontro(&C, &reg) == 1)
+                {
+                    print_registro2(&reg);
+                    registro_encontrado = 1;
+                }
+                
+                if (registro_encontrado == 0) 
+                {
+                    printf("Registro inexistente.\n");
+                }
+               
+            }
+            
+
+
+        }
+        else
+        {
+            fseek(binario,25,SEEK_SET);
+
+           while (Leitura_Registro2(binario, &reg) == 1)
+            {
+                if (reg.removido == '1') continue;
+                
+                if (verificar_encontro(&C, &reg) == 1)
+                {
+                    print_registro2(&reg);
+                    registro_encontrado = 1;
+                }
+            }
+
+            if (registro_encontrado == 0)
+            {
+                printf("Registro inexistente.\n");
+            }
+        }
+    }
 
 
 
 
 }
-
-
-

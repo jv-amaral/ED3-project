@@ -1,15 +1,25 @@
-#ifndef FUNCOES_BASE_H
-#define FUNCOES_BASE_H
+#ifndef FUNCOES_BASE2_H
+#define FUNCOES_BASE2_H
 
-// struct para a funcao ler_criterios
+#include <stdio.h>
+#include "funcionalidades2.h"
 
+typedef struct
+{
+    int idPoPs;
+    char siglaPais[5];
+    char nomePoPs[50];
+    char nomePais[50];
+} Criterios;
 
-// funcoes a serem utilizadas no funcionalidades.c
 FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura);
-RegCabecalho Leitura_Cabecalho2(FILE *binario);
 int Leitura_Registro2(FILE *binario, Registro *Reg);
-void escreve_registro2(FILE *binario, Registro *Reg);
 void escreve_cabecalho2(FILE *binario, RegCabecalho *Cab);
+int verificar_encontro(Criterios *C, Registro *Reg);
+Criterios ler_criterios(int qtd_criterios);
+void print_registro2(Registro *Reg);
+int compara_index(const void *a, const void *b);
+
 void BinarioNaTela(char *arquivo_binario);
 void ScanQuoteString(char *str);
 

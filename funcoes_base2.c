@@ -30,7 +30,7 @@ FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura)
     return binario;
 }
 
-RegCabecalho Leitura_Cabecalho2(FILE *binario)
+/*RegCabecalho Leitura_Cabecalho2(FILE *binario)
 
 {
     RegCabecalho cabecalho; // define o nome da struct
@@ -43,14 +43,110 @@ RegCabecalho Leitura_Cabecalho2(FILE *binario)
     fread(&cabecalho.nroPares, sizeof(int), 1, binario);
 
     return cabecalho;
-}
+}*/
 
 // funcao para fazer a leitura de um registro completo
 // fazendo a verificao de quando o arquivo se encerra tambem
 
 
+Criterios ler_criterios(int qtd_criterios)
+{
+
+    Criterios C; // inicia a struct dos criterios
+
+    // inicio os criterios com valor -2, ja que 0 é um valor de busca valido e -1 corresponde ao nulo
+    C.idPoPs = -2;
+    strcpy(C.siglaPais, "NUL");
+    strcpy(C.nomePoPs, "NUL");
+    strcpy(C.nomePais, "NUL");
+
+    
+
+    // laco que vai verificar os criterios a serem buscados
+    for (int criterio_atual = 0; criterio_atual < qtd_criterios; criterio_atual++)
+    {
+        char campo[30];
+        char valor[30];
+        scanf("%s", campo);
+
+        // vai verificar qual e o criterio a ser usado por meio de comparacoes
+        // se o valor e nulo, o criterio respectivo assume -1
+        if (strcmp(campo, "idPoPs") == 0)
+        {
+            scanf("%s", valor);
+            if (strcmp(valor, "NULO") == 0)
+                C.idPoPs = -1;
+            else
+                C.idPoPs = atoi(valor);
+        }
+
+        else if (strcmp(campo, "siglaPais") == 0)
+        {
+            ScanQuoteString(valor);
+            strcpy(C.siglaPais, valor); // Se for NULO, a ScanQuoteString retorna ""
+        }
+        else if (strcmp(campo, "nomePoPs") == 0)
+        {
+            ScanQuoteString(valor);
+            strcpy(C.nomePoPs, valor);
+        }
+        else if (strcmp(campo, "nomePais") == 0)
+        {
+            ScanQuoteString(valor);
+            strcpy(C.nomePais, valor);
+        }
+
+        
+    }
+    return C;
+}
+int verificar_encontro(Criterios *C, Registro *Reg)
+{
+    //essa funcao vai retornar se os criterios desejados foram encontrados nos registros ou nao
+    int encontro = 1;
+
+    if (C->idPoPs != -2 && C->idPoPs != Reg->idPoPs) encontro = 0;
+    if (strcmp(C->nomePoPs,"NUL")!=0 && strcmp(C->nomePoPs,Reg->nomePoPs)!=0)  encontro = 0;
+    if (strcmp(C->siglaPais,"NUL")!=0 && strcmp(C->siglaPais,Reg->siglaPais)!=0)  encontro = 0;
+    if (strcmp(C->nomePais,"NUL")!=0 && strcmp(C->nomePais,Reg->nomePais)!=0)  encontro = 0;
+        
+    return encontro;
+}
+void print_registro2(Registro *Reg)
+{
+    printf("%d ", Reg->idPoPs);
+
+    if (Reg->nomePoPs[0] == '\0' || Reg->nomePoPs[0] == '|')
+    {
+        printf("NULO ");
+    }
+    else
+    {
+        printf("%s ", Reg->nomePoPs);
+    }
+
+    if (Reg->nomePais[0] == '\0' || Reg->nomePais[0] == '|')
+    {
+        printf("NULO ");
+    }
+    else
+    {
+        printf("%s ", Reg->nomePais);
+    }
+
+    if (Reg->siglaPais[0] == '$' || Reg->siglaPais[0] == '\0')
+    {
+        printf("NULO\n");
+    }
+    else
+    {
+        printf("%.2s\n", Reg->siglaPais);
+    }
+}
+
 int Leitura_Registro2(FILE *binario, Registro *Reg)
 {
+    // Lê o campo removido. Se não ler 1 byte, o arquivo acabou.
     if (fread(&Reg->removido, sizeof(char), 1, binario) != 1)
     {
         return 0;
@@ -59,9 +155,31 @@ int Leitura_Registro2(FILE *binario, Registro *Reg)
     fread(&Reg->tamanhoRegistro, sizeof(int), 1, binario);
     fread(&Reg->encadeamentoLista, sizeof(int64_t), 1, binario);
     fread(&Reg->idPoPs, sizeof(int), 1, binario);
-    fread(&Reg->siglaPais, sizeof(char), 1, binario);
-    fread(&Reg->nomePops, sizeof(char), 1, binario);
-    fread(&Reg->nomePais, sizeof(char), 1, binario);
+    
+    // siglaPais tem tamanho fixo de 2 bytes
+    fread(Reg->siglaPais, sizeof(char), 2, binario);
+    Reg->siglaPais[2] = '\0'; 
+
+    
+    int i = 0;
+    char c;
+    // Lê byte a byte até achar o delimitador '|'
+    while (fread(&c, sizeof(char), 1, binario) == 1 && c != '|') 
+    {
+        Reg->nomePoPs[i] = c;
+        i++;
+    }
+ 
+    Reg->nomePoPs[i] = '\0'; 
+    i = 0;
+    // Lê byte a byte até achar o delimitador '|'
+    while (fread(&c, sizeof(char), 1, binario) == 1 && c != '|') 
+    {
+        Reg->nomePais[i] = c;
+        i++;
+    }
+    // Adiciona o terminador de string
+    Reg->nomePais[i] = '\0'; 
 
     return 1;
 }
@@ -70,11 +188,11 @@ int compara_index(const void *a, const void *b) {
     RegIndex *regA = (RegIndex *)a;
     RegIndex *regB = (RegIndex *)b;
     
-    return regA->idPops - regB->idPops;
+    return regA->idPoPs - regB->idPoPs;
 }
 
 // funcao para escrever os registros
-void escreve_registro2(FILE *binario, Registro *Reg)
+/*void escreve_registro2(FILE *binario, Registro *Reg)
 {
     fwrite(&Reg->removido, sizeof(char), 1, binario);
     fwrite(&Reg->encadeamento, sizeof(int), 1, binario);
@@ -82,7 +200,7 @@ void escreve_registro2(FILE *binario, Registro *Reg)
     fwrite(&Reg->idPoPsConectado, sizeof(int), 1, binario);
     fwrite(&Reg->velocidade, sizeof(int), 1, binario);
     fwrite(&Reg->unidade_medida, sizeof(char), 1, binario);
-}
+}*/
 
 
 
