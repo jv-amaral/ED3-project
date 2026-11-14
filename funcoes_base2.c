@@ -57,16 +57,21 @@ int Leitura_Registro2(FILE *binario, Registro *Reg)
     }
 
     fread(&Reg->tamanhoRegistro, sizeof(int), 1, binario);
-    fread(&Reg->encadeamentoLista, sizeof(int), 1, binario);
+    fread(&Reg->encadeamentoLista, sizeof(int64_t), 1, binario);
     fread(&Reg->idPoPs, sizeof(int), 1, binario);
-    fread(&Reg->siglaPais, sizeof(int), 1, binario);
+    fread(&Reg->siglaPais, sizeof(char), 1, binario);
     fread(&Reg->nomePops, sizeof(char), 1, binario);
     fread(&Reg->nomePais, sizeof(char), 1, binario);
 
     return 1;
 }
 
-
+int compara_index(const void *a, const void *b) {
+    RegIndex *regA = (RegIndex *)a;
+    RegIndex *regB = (RegIndex *)b;
+    
+    return regA->idPops - regB->idPops;
+}
 
 // funcao para escrever os registros
 void escreve_registro2(FILE *binario, Registro *Reg)

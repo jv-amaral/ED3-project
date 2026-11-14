@@ -23,15 +23,10 @@ typedef struct
 } Registro;
 
 
-typedef struct
-{
-    char status;
-
-}RegCabecalhoIndex;
 
 typedef struct
 {
-    int idPops;
+    int idPoPs;
     int64_t byteoffset;
 
 }RegIndex;
