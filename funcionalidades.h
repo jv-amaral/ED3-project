@@ -1,39 +1,19 @@
-//arquivo de cabecalho para as funcoes do projeto
-
-//evita que o conteudo do arquivo seja incluido mais de uma vez no programa
-#ifndef FUNCIONALIDADES_H   
+#ifndef FUNCIONALIDADES_H
 #define FUNCIONALIDADES_H
 
-//definicao do registro do cabecalho
-typedef struct {
-    char status;
-    int topo_pilha;
-    int proxRRN;
-    int nroRegRem;
-    int nroPares;
+#include "estruturas.h"
 
-}RegCabecalho;
-
-//struct de registro de dados
-typedef struct 
-{
-    char removido;
-    int encadeamento;
-    int idPoPs;
-    int idPoPsConectado;
-    int velocidade;
-    char unidade_medida;
-
-}Registro;
-
-
-//assinaturas de funcao
-void leitura_e_gravacao();
-void recuperacao_dados();
-void busca_condicional();
-void busca_RRN();
-void remocao_logica();
-void insercao();
-void atualizacao_registros();
+void leitura_e_gravacao(void);
+void recuperacao_dados(void);
+void busca_condicional(void);
+void busca_RRN(void);
+void remocao_logica(void);
+void insercao(void);
+void atualizacao_registros(void);
+void create_table(void);
+void create_index(void);
+void listar_registros(void);
+void busca(void);
+void remover_registros(void);
 
 #endif
