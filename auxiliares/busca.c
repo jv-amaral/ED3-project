@@ -10,6 +10,7 @@
 // os valores devolvidos ficam com -2 nos campos que nao foram informados.
 CriteriosConexoes ler_criterios_conexoes(int quantidade)
 {
+    // -2 significa nao informado; -1 fica reservado para o inteiro nulo
     CriteriosConexoes criterios = {-2, -2, -2, -2};
 
     for (int i = 0; i < quantidade; i++)
@@ -27,6 +28,7 @@ CriteriosConexoes ler_criterios_conexoes(int quantidade)
             criterios.velocidade = numero;
         else if (strcmp(campo, "unidadeMedida") == 0)
             criterios.unidadeMedida = valor[0] == '\0' ? '$' : valor[0];
+        // o texto foi convertido ou teve seu caractere copiado para o criterio
         free(valor);
     }
     return criterios;
@@ -36,6 +38,7 @@ CriteriosConexoes ler_criterios_conexoes(int quantidade)
 // quando todos coincidem, o resultado e 1.
 int verificar_conexao(CriteriosConexoes *criterios, RegistroConexao *registro)
 {
+    // somente campos diferentes de -2 participam da comparacao
     if (criterios->idPoPs != -2 && criterios->idPoPs != registro->idPoPs)
         return 0;
     if (criterios->idPoPsConectado != -2 && criterios->idPoPsConectado != registro->idPoPsConectado)
@@ -56,6 +59,7 @@ CriteriosPoPs ler_criterios(int quantidade)
     CriteriosPoPs criterios;
     criterios.buscar_id = 0;
     criterios.idPoPs = -1;
+    // ponteiros vazios deixam de fora os campos que nao aparecerem na entrada
     criterios.nomePoPs = NULL;
     criterios.nomePais = NULL;
     criterios.siglaPais = NULL;
@@ -68,6 +72,7 @@ CriteriosPoPs ler_criterios(int quantidade)
         if (valor == NULL)
             break;
 
+        // o id vira inteiro; os demais valores ficam como textos alocados
         if (strcmp(campo, "idPoPs") == 0)
         {
             criterios.buscar_id = 1;
@@ -76,6 +81,7 @@ CriteriosPoPs ler_criterios(int quantidade)
         }
         else if (strcmp(campo, "nomePoPs") == 0)
         {
+            // se o campo apareceu novamente, substitui o texto guardado antes
             free(criterios.nomePoPs);
             criterios.nomePoPs = valor;
         }
@@ -99,6 +105,7 @@ CriteriosPoPs ler_criterios(int quantidade)
 // ponteiro nulo indica campo nao pedido; texto vazio indica busca por valor nulo.
 int verificar_criterios(CriteriosPoPs *criterios, RegistroPoP *registro)
 {
+    // uma unica diferenca ja elimina o registro, pois os criterios sao combinados com e
     if (criterios->buscar_id && criterios->idPoPs != registro->idPoPs)
         return 0;
     if (criterios->nomePoPs != NULL && strcmp(criterios->nomePoPs, registro->nomePoPs) != 0)
@@ -107,6 +114,7 @@ int verificar_criterios(CriteriosPoPs *criterios, RegistroPoP *registro)
         return 0;
     if (criterios->siglaPais != NULL)
     {
+        // no disco, a sigla nula e lixo; para comparar com a entrada, usa texto vazio
         char *sigla = registro->siglaPais[0] == '$' ? "" : registro->siglaPais;
         if (strcmp(criterios->siglaPais, sigla) != 0)
             return 0;
@@ -123,12 +131,14 @@ int buscar_registro_indexado(FILE *arquivo, IndicePoPs *indice, int quantidade,
     if (posicao == -1)
         return -1;
 
+    // usa o offset da entrada encontrada para acessar o registro sem varrer os dados
     fseek(arquivo, indice[posicao].byteoffset, SEEK_SET);
     if (!ler_registro(arquivo, registro))
         return -1;
     if (registro->removido == '0' && verificar_criterios(criterios, registro))
         return posicao;
 
+    // se os outros criterios falharem, o chamador nao recebera os nomes deste registro
     liberar_registro(registro);
     return -1;
 }

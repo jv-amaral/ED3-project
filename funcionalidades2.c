@@ -10,6 +10,8 @@
 
 // importa os pops do csv para o arquivo binario.
 // a primeira linha indica onde esta cada campo, inclusive quando ha uma coluna extra.
+// para cada linha de dados, monta um registro de tamanho variavel e atualiza os contadores.
+// ao terminar, grava o cabecalho consistente e exibe o binario ja fechado.
 void create_table(void)
 {
     char nome_arq_entrada[100];
@@ -35,6 +37,7 @@ void create_table(void)
     // cada posicao guarda em qual coluna do csv esta um dos quatro campos
     int colunas[4] = {-1, -1, -1, -1};
     int qtd_colunas = 0;
+    // essa primeira leitura pega os titulos, que nao serao gravados como registro
     int sucesso = ler_linha_csv(arq_csv, &linha_csv, &capacidade) == 1;
 
     // descobre a ordem pelo cabecalho, inclusive quando ha uma coluna inicial extra.
@@ -43,6 +46,7 @@ void create_table(void)
         qtd_colunas = separar_campos_csv(linha_csv, campos, 5);
         for (int i = 0; i < qtd_colunas; i++)
         {
+            // compara o titulo da coluna com os nomes dos campos que precisamos guardar
             for (int j = 0; j < 4; j++)
             {
                 if (strcmp(campos[i], nomes_campos[j]) == 0)
@@ -59,12 +63,14 @@ void create_table(void)
 
     if (!sucesso)
     {
+        // sem as colunas necessarias, nao e possivel montar os registros do arquivo
         free(linha_csv);
         fclose(arq_csv);
         printf("Falha no processamento do arquivo.\n");
         return;
     }
 
+    // o modo wb cria a saida ou substitui seu conteudo, caso ela ja exista
     FILE *arq_binario = fopen(nome_arq_saida, "wb");
     if (arq_binario == NULL)
     {
@@ -83,6 +89,7 @@ void create_table(void)
     cabecalho.nroRegRem = 0;
     cabecalho.nroPoPs = 0;
 
+    // reserva os 25 bytes iniciais; os dados serao escritos depois desse cabecalho
     escrever_cabecalho(arq_binario, &cabecalho);
 
     // o primeiro byte disponivel, depois do cabecalho, e o de offset 25.
@@ -102,7 +109,7 @@ void create_table(void)
         registro.removido = '0';
         registro.encadeamentoLista = -1;
 
-        // o identificador vem preenchido no csv
+        // converte o texto da coluna do identificador para o inteiro guardado no registro
         registro.idPoPs = atoi(campos[colunas[0]]);
 
         // os nomes apontam para a linha e sao gravados antes da proxima leitura.
@@ -113,7 +120,8 @@ void create_table(void)
         memcpy(registro.siglaPais, sigla[0] == '\0' ? "$$" : sigla, 2);
         registro.siglaPais[2] = '\0'; // terminador somente em memoria.
 
-        // 19 bytes fixos + dois delimitadores + os bytes dos dois nomes.
+        // soma os 19 bytes fixos, os dois delimitadores e o comprimento dos nomes
+        // os terminadores de string usados em memoria nao entram nesse tamanho
         registro.tamanhoRegistro = TAM_MINIMO_REGISTRO + strlen(registro.nomePoPs) + strlen(registro.nomePais);
 
         // grava agora porque os nomes apontam para a linha que sera lida novamente
@@ -124,6 +132,7 @@ void create_table(void)
         cabecalho.nroPoPs++;
     }
 
+    // o leitor usa -1 quando nao consegue aumentar o buffer da linha
     if (leitura == -1)
         sucesso = 0;
     fclose(arq_csv);
@@ -147,6 +156,8 @@ void create_table(void)
 
 // monta o indice com o id e o offset de cada pop ativo.
 // as entradas sao ordenadas antes de gravar o arquivo de indice.
+// o offset aponta para o inicio do registro de dados, e nao para o campo do identificador.
+// apenas le o arquivo de dados; o novo arquivo criado e o de indice.
 void create_index(void)
 {
     char nome_dados[100];
@@ -157,6 +168,7 @@ void create_index(void)
     if (dados == NULL)
         return;
 
+    // a quantidade de pops ativos permite reservar espaco para as entradas do indice
     CabecalhoPoPs cabecalho = ler_cabecalho(dados);
     // o vetor guarda apenas as chaves e os offsets; os nomes ficam no arquivo de dados
     IndicePoPs *indice = malloc((cabecalho.nroPoPs + 1) * sizeof(IndicePoPs));
@@ -180,6 +192,7 @@ void create_index(void)
             indice[quantidade].byteoffset = posicao;
             quantidade++;
         }
+        // os nomes nao fazem parte do indice e podem ser liberados depois de copiar a chave
         liberar_registro(&registro);
         // acompanha o cursor para guardar o offset correto na proxima iteracao
         posicao = ftell(dados);
@@ -188,6 +201,7 @@ void create_index(void)
 
     // o arquivo de dados mantem sua ordem; somente o vetor do indice e ordenado
     qsort(indice, quantidade, sizeof(IndicePoPs), comparar_indices);
+    // salvar_indice cuida do cabecalho de um byte e da gravacao das entradas ordenadas
     if (salvar_indice(nome_indice, indice, quantidade))
         BinarioNaTela(nome_indice);
     else
@@ -197,6 +211,7 @@ void create_index(void)
 
 // percorre os pops e imprime os que nao foram removidos.
 // se nao houver nenhum ativo, mostra a mensagem de registro inexistente.
+// a leitura segue a ordem fisica do arquivo, sem consultar o indice.
 void listar_registros(void)
 {
     char nome_arquivo[100];
@@ -216,6 +231,7 @@ void listar_registros(void)
         // a leitura ja pula os removidos sem carregar seus campos de dados
         if (registro.removido == '0')
         {
+            // a impressao trata os nulos; o contador so considera registros exibidos
             imprimir_registro(&registro);
             encontrados++;
         }
@@ -231,6 +247,8 @@ void listar_registros(void)
 
 // usa o indice quando a busca tem idpops; nos outros casos faz a varredura.
 // todos os campos pedidos precisam coincidir para mostrar o registro.
+// cada solicitacao e independente, podendo encontrar nenhum, um ou varios pops.
+// o indice fica em memoria durante as consultas e os dados sao abertos so para leitura.
 void busca(void)
 {
     char nome_dados[100];
@@ -241,6 +259,7 @@ void busca(void)
     FILE *dados = abrir_arquivo(nome_dados, "rb");
     if (dados == NULL)
         return;
+    // os dois arquivos precisam estar consistentes para relacionar as chaves aos dados
     FILE *arquivo_indice = abrir_arquivo(nome_indice, "rb");
     if (arquivo_indice == NULL)
     {
@@ -251,6 +270,7 @@ void busca(void)
     int quantidade_indices;
     // carrega o indice uma vez e reutiliza o vetor em todas as buscas desta execucao
     IndicePoPs *indice = carregar_indice(arquivo_indice, &quantidade_indices);
+    // as consultas seguintes usam o vetor, entao o arquivo de indice pode ser fechado
     fclose(arquivo_indice);
     if (indice == NULL)
     {
@@ -263,6 +283,7 @@ void busca(void)
     {
         int quantidade_campos;
         scanf("%d", &quantidade_campos);
+        // o numero lido informa quantos pares de campo e valor pertencem a esta consulta
         CriteriosPoPs criterios = ler_criterios(quantidade_campos);
         RegistroPoP registro;
         // cada solicitacao tem sua propria contagem de resultados
@@ -275,6 +296,7 @@ void busca(void)
                                                    &criterios, &registro);
             if (posicao != -1)
             {
+                // so chega aqui se o pop encontrado pelo id tambem atender aos outros campos
                 imprimir_registro(&registro);
                 liberar_registro(&registro);
                 encontrados++;
@@ -297,6 +319,7 @@ void busca(void)
         }
 
         if (encontrados == 0)
+            // nao encerra a funcao, pois ainda pode haver outras consultas na entrada
             printf("Registro inexistente.\n");
         // os criterios seguintes podem conter outros textos, entao libera os atuais
         liberar_criterios(&criterios);
@@ -308,6 +331,8 @@ void busca(void)
 
 // remove os pops selecionados e retira suas chaves do indice.
 // os espacos liberados entram na lista de removidos, do maior para o menor.
+// nas buscas por id usa acesso direto; nas demais, percorre todos os registros ativos.
+// o cabecalho e o indice acompanham as remocoes e sao gravados ao final da operacao.
 void remover_registros(void)
 {
     char nome_dados[100];
@@ -315,6 +340,7 @@ void remover_registros(void)
     int quantidade_remocoes;
     scanf("%s %s %d", nome_dados, nome_indice, &quantidade_remocoes);
 
+    // rb+ permite consultar e modificar o mesmo arquivo, sem apagar os registros existentes
     FILE *dados = abrir_arquivo(nome_dados, "rb+");
     if (dados == NULL)
         return;
@@ -340,12 +366,14 @@ void remover_registros(void)
     // apenas o status muda no inicio; o cabecalho completo fica para o final
     alterar_status(dados, '0');
     alterar_status(arquivo_indice, '0');
+    // o arquivo e fechado, mas seu vetor permanece disponivel para as exclusoes
     fclose(arquivo_indice);
 
     for (int i = 0; i < quantidade_remocoes; i++)
     {
         int quantidade_campos;
         scanf("%d", &quantidade_campos);
+        // os criterios valem so para esta solicitacao, que pode remover mais de um pop
         CriteriosPoPs criterios = ler_criterios(quantidade_campos);
         RegistroPoP registro;
 
@@ -357,6 +385,7 @@ void remover_registros(void)
             {
                 // guarda o offset antes de retirar a entrada e deslocar o vetor
                 int64_t posicao = indice[posicao_indice].byteoffset;
+                // primeiro libera o espaco nos dados; depois elimina a chave do vetor
                 remover_registro(dados, &cabecalho, &registro, posicao);
                 retirar_do_indice(indice, &quantidade_indices, posicao_indice);
                 liberar_registro(&registro);
@@ -370,6 +399,7 @@ void remover_registros(void)
 
             while (ler_registro(dados, &registro))
             {
+                // removidos anteriores ja foram pulados pelo leitor e nao devem entrar na lista outra vez
                 if (registro.removido == '0' && verificar_criterios(&criterios, &registro))
                 {
                     // o auxiliar preenche com lixo, encadeia por tamanho e atualiza os contadores
@@ -389,6 +419,7 @@ void remover_registros(void)
     }
 
     // salva o indice sem as chaves retiradas durante as remocoes
+    // recriar o indice tambem retira os bytes das entradas que nao existem mais
     if (!salvar_indice(nome_indice, indice, quantidade_indices))
     {
         fclose(dados);
@@ -400,9 +431,11 @@ void remover_registros(void)
     // o cabecalho final ja leva o status 1, sem outra escrita so para esse byte
     cabecalho.status = '1';
     escrever_cabecalho(dados, &cabecalho);
+    // fecha os dados e libera o vetor antes da exibicao dos dois arquivos
     fclose(dados);
     free(indice);
 
+    // a ordem de saida e dados primeiro e indice depois
     BinarioNaTela(nome_dados);
     BinarioNaTela(nome_indice);
 }

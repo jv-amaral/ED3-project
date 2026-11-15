@@ -15,6 +15,7 @@ FILE *abrir_arquivo(char *nome, char *modo)
         return NULL;
     }
 
+    // o primeiro byte e o status; um arquivo inconsistente nao pode ser utilizado
     if (fread(&status, sizeof(char), 1, arquivo) != 1 || status != '1')
     {
         printf("Falha no processamento do arquivo.\n");
@@ -22,6 +23,7 @@ FILE *abrir_arquivo(char *nome, char *modo)
         return NULL;
     }
 
+    // devolve o cursor ao inicio para a proxima rotina poder ler o cabecalho completo
     rewind(arquivo);
     return arquivo;
 }
@@ -30,6 +32,7 @@ FILE *abrir_arquivo(char *nome, char *modo)
 // o fflush envia essa marcacao ao arquivo antes das outras alteracoes.
 void alterar_status(FILE *arquivo, char status)
 {
+    // o status ocupa o mesmo primeiro byte nos arquivos de dados e no indice
     fseek(arquivo, 0, SEEK_SET);
     fwrite(&status, sizeof(char), 1, arquivo);
     fflush(arquivo);
@@ -45,10 +48,12 @@ void BinarioNaTela(char *nome)
         return;
     }
 
+    // descobre quantos bytes serao somados e depois retorna ao inicio
     fseek(arquivo, 0, SEEK_END);
     long tamanho = ftell(arquivo);
     rewind(arquivo);
     unsigned long soma = 0;
+    // considera o valor de cada byte, inclusive os campos de controle e o lixo
     for (long i = 0; i < tamanho; i++)
         soma += (unsigned char)fgetc(arquivo);
 
@@ -64,6 +69,7 @@ CabecalhoConexoes ler_cabecalho_conexoes(FILE *arquivo)
 {
     CabecalhoConexoes cabecalho;
     fseek(arquivo, 0, SEEK_SET);
+    // a leitura segue a ordem dos campos nos 17 bytes iniciais
     fread(&cabecalho.status, sizeof(char), 1, arquivo);
     fread(&cabecalho.topo_pilha, sizeof(int), 1, arquivo);
     fread(&cabecalho.proxRRN, sizeof(int), 1, arquivo);
@@ -77,6 +83,7 @@ CabecalhoConexoes ler_cabecalho_conexoes(FILE *arquivo)
 void escrever_cabecalho_conexoes(FILE *arquivo, CabecalhoConexoes *cabecalho)
 {
     fseek(arquivo, 0, SEEK_SET);
+    // escreve os campos separadamente para nao incluir o padding da estrutura
     fwrite(&cabecalho->status, sizeof(char), 1, arquivo);
     fwrite(&cabecalho->topo_pilha, sizeof(int), 1, arquivo);
     fwrite(&cabecalho->proxRRN, sizeof(int), 1, arquivo);
@@ -94,6 +101,7 @@ CabecalhoPoPs ler_cabecalho(FILE *arquivo)
 
     fseek(arquivo, 0, SEEK_SET);
     fread(&cabecalho.status, sizeof(char), 1, arquivo);
+    // os offsets usam oito bytes, pois indicam posicoes em bytes no arquivo
     fread(&cabecalho.topoLista, sizeof(int64_t), 1, arquivo);
     fread(&cabecalho.proxByteOffset, sizeof(int64_t), 1, arquivo);
     fread(&cabecalho.nroRegRem, sizeof(int), 1, arquivo);
@@ -106,6 +114,7 @@ CabecalhoPoPs ler_cabecalho(FILE *arquivo)
 void escrever_cabecalho(FILE *arquivo, CabecalhoPoPs *cabecalho)
 {
     fseek(arquivo, 0, SEEK_SET);
+    // o status ja deve estar definido em memoria junto com os contadores finais
     fwrite(&cabecalho->status, sizeof(char), 1, arquivo);
     fwrite(&cabecalho->topoLista, sizeof(int64_t), 1, arquivo);
     fwrite(&cabecalho->proxByteOffset, sizeof(int64_t), 1, arquivo);

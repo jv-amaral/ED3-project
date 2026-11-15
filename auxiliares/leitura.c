@@ -21,6 +21,7 @@ int ler_linha_csv(FILE *csv, char **linha, size_t *capacidade)
             char *nova_linha = realloc(*linha, nova_capacidade);
             if (nova_linha == NULL)
                 return -1;
+            // realloc pode mudar o endereco, entao atualiza o ponteiro usado pelo chamador
             *linha = nova_linha;
             *capacidade = nova_capacidade;
         }
@@ -34,6 +35,7 @@ int ler_linha_csv(FILE *csv, char **linha, size_t *capacidade)
     // aceita tanto a quebra de linha do linux (lf) quanto a do windows (crlf).
     if (tamanho > 0 && (*linha)[tamanho - 1] == '\r')
         tamanho--;
+    // o terminador permite tratar a linha como string, mas nao pertence ao conteudo do csv
     (*linha)[tamanho] = '\0';
     return 1;
 }
@@ -48,6 +50,7 @@ int separar_campos_csv(char *linha, char *campos[], int max_campos)
     while (quantidade < max_campos)
     {
         campos[quantidade++] = inicio;
+        // guarda o inicio antes de cortar a linha na proxima virgula
         char *virgula = strchr(inicio, ',');
         if (virgula != NULL)
             *virgula = '\0';
@@ -61,6 +64,7 @@ int separar_campos_csv(char *linha, char *campos[], int max_campos)
 
         if (virgula == NULL)
             return quantidade;
+        // mesmo se o proximo trecho estiver vazio, ele ainda conta como um campo
         inicio = virgula + 1;
     }
     return -1; // mais colunas do que o esperado.
@@ -76,6 +80,7 @@ char *ler_valor(void)
         caractere = getchar();
     } while (caractere != EOF && isspace((unsigned char)caractere));
 
+    // dentro de aspas, os espacos fazem parte do valor e nao encerram a leitura
     int entre_aspas = caractere == '"';
     if (entre_aspas)
         caractere = getchar();
@@ -92,6 +97,7 @@ char *ler_valor(void)
             (!entre_aspas && isspace((unsigned char)caractere)))
             break;
 
+        // mantem espaco para o terminador enquanto o texto cresce
         if (tamanho + 1 == capacidade)
         {
             capacidade *= 2;
@@ -107,6 +113,7 @@ char *ler_valor(void)
         caractere = getchar();
     }
 
+    // nulo entre aspas e texto; sem aspas representa um campo vazio
     valor[tamanho] = '\0';
     if (!entre_aspas && strcmp(valor, "NULO") == 0)
         valor[0] = '\0';
@@ -128,6 +135,7 @@ int ler_conexao(FILE *arquivo, RegistroConexao *registro)
         return 1;
     }
 
+    // nos ativos, os campos restantes completam os 18 bytes do registro fixo
     fread(&registro->encadeamento, sizeof(int), 1, arquivo);
     fread(&registro->idPoPs, sizeof(int), 1, arquivo);
     fread(&registro->idPoPsConectado, sizeof(int), 1, arquivo);
@@ -144,11 +152,13 @@ RegistroConexao ler_conexao_terminal(void)
     registro.removido = '0';
     registro.encadeamento = -1;
     scanf("%d %d", &registro.idPoPs, &registro.idPoPsConectado);
+    // o leitor de valores reconhece as aspas e devolve string vazia para nulo
     char *velocidade = ler_valor();
     char *unidade = ler_valor();
 
     registro.velocidade = velocidade[0] == '\0' ? -1 : atoi(velocidade);
     registro.unidade_medida = unidade[0] == '\0' ? '$' : unidade[0];
+    // os valores ja foram copiados para os campos numericos e para a unidade
     free(velocidade);
     free(unidade);
     return registro;
@@ -168,6 +178,7 @@ static char *ler_campo_variavel(FILE *arquivo, int limite)
     int caractere;
     while (tamanho < limite && (caractere = fgetc(arquivo)) != EOF)
     {
+        // a barra termina o campo no disco; na memoria, ela e substituida por zero
         if (caractere == '|')
         {
             texto[tamanho] = '\0';
@@ -176,6 +187,7 @@ static char *ler_campo_variavel(FILE *arquivo, int limite)
         texto[tamanho++] = (char)caractere;
     }
 
+    // sem encontrar o delimitador, descarta a leitura incompleta
     free(texto);
     return NULL;
 }
@@ -184,7 +196,9 @@ static char *ler_campo_variavel(FILE *arquivo, int limite)
 // se estiver removido, pula pelo tamanho. nos ativos, aloca os nomes e avanca para o proximo.
 int ler_registro(FILE *arquivo, RegistroPoP *registro)
 {
+    // guarda o inicio para calcular o proximo registro, mesmo que exista sobra de lixo
     int64_t inicio = ftell(arquivo);
+    // removidos nao recebem nomes alocados, mas podem passar pela rotina de liberacao
     registro->nomePoPs = NULL;
     registro->nomePais = NULL;
 
@@ -205,6 +219,7 @@ int ler_registro(FILE *arquivo, RegistroPoP *registro)
     fread(registro->siglaPais, sizeof(char), 2, arquivo);
     registro->siglaPais[2] = '\0';
 
+    // desconta a parte fixa para reservar espaco suficiente para ler os nomes
     int limite = registro->tamanhoRegistro - TAM_FIXO_REGISTRO;
     registro->nomePoPs = ler_campo_variavel(arquivo, limite);
     registro->nomePais = ler_campo_variavel(arquivo, limite);
@@ -224,6 +239,7 @@ void liberar_registro(RegistroPoP *registro)
 {
     free(registro->nomePoPs);
     free(registro->nomePais);
+    // depois da liberacao, o registro nao deve continuar apontando para esses textos
     registro->nomePoPs = NULL;
     registro->nomePais = NULL;
 }

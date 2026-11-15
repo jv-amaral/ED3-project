@@ -29,10 +29,12 @@ void leitura_e_gravacao(void)
         return;
     }
 
+    // a criacao comeca sem removidos; o primeiro rrn disponivel e zero
     CabecalhoConexoes cabecalho = {'0', -1, 0, 0, 0};
     escrever_cabecalho_conexoes(arquivo, &cabecalho);
     char *linha = NULL;
     size_t capacidade = 0;
+    // le os titulos antes do laco, pois somente as linhas seguintes viram registros
     int sucesso = ler_linha_csv(csv, &linha, &capacidade) == 1;
     int leitura = 0;
 
@@ -49,11 +51,13 @@ void leitura_e_gravacao(void)
         RegistroConexao registro;
         registro.removido = '0';
         registro.encadeamento = -1;
+        // os dois identificadores sao obrigatorios; velocidade e unidade podem ser nulos
         registro.idPoPs = atoi(campos[0]);
         registro.idPoPsConectado = atoi(campos[1]);
         registro.velocidade = campos[2][0] == '\0' || campos[2][0] == ' ' ? -1 : atoi(campos[2]);
         registro.unidade_medida = campos[3][0] == '\0' || campos[3][0] == ' ' ? '$' : campos[3][0];
         escrever_conexao(arquivo, &registro);
+        // cada linha importada ocupa mais um registro de tamanho fixo
         cabecalho.proxRRN++;
         cabecalho.nroPares++;
     }
@@ -62,6 +66,7 @@ void leitura_e_gravacao(void)
     fclose(csv);
     if (leitura == -1)
         sucesso = 0;
+    // o cabecalho final ja e escrito com o status consistente
     if (sucesso)
     {
         cabecalho.status = '1';
@@ -84,11 +89,13 @@ void recuperacao_dados(void)
     if (arquivo == NULL)
         return;
 
+    // salta o cabecalho para comecar a leitura no primeiro registro de dados
     fseek(arquivo, TAM_CABECALHO_CONEXOES, SEEK_SET);
     RegistroConexao registro;
     int encontrados = 0;
     while (ler_conexao(arquivo, &registro))
     {
+        // o leitor pula os dados dos removidos e so os ativos sao impressos
         if (registro.removido == '0')
         {
             imprimir_conexao(&registro);
@@ -116,13 +123,16 @@ void busca_condicional(void)
     {
         int quantidade_campos;
         scanf("%d", &quantidade_campos);
+        // cada busca recebe sua propria quantidade de campos e seus valores
         CriteriosConexoes criterios = ler_criterios_conexoes(quantidade_campos);
         RegistroConexao registro;
         int encontrados = 0;
+        // reinicia a varredura, porque a consulta anterior pode ter chegado ao fim
         fseek(arquivo, TAM_CABECALHO_CONEXOES, SEEK_SET);
 
         while (ler_conexao(arquivo, &registro))
         {
+            // todos os criterios devem coincidir no mesmo registro ativo
             if (registro.removido == '0' && verificar_conexao(&criterios, &registro))
             {
                 imprimir_conexao(&registro);
@@ -149,10 +159,12 @@ void busca_RRN(void)
 
     CabecalhoConexoes cabecalho = ler_cabecalho_conexoes(arquivo);
     RegistroConexao registro;
+    // o proximo rrn ainda nao possui registro, portanto ele ja fica fora da consulta
     if (rrn < 0 || rrn >= cabecalho.proxRRN)
         printf("Registro inexistente.\n");
     else
     {
+        // a posicao soma o cabecalho com a quantidade de registros que vem antes
         fseek(arquivo, TAM_CABECALHO_CONEXOES + (long)rrn * TAM_REGISTRO_CONEXAO, SEEK_SET);
         if (ler_conexao(arquivo, &registro) && registro.removido == '0')
             imprimir_conexao(&registro);
@@ -174,6 +186,7 @@ void remocao_logica(void)
         return;
 
     CabecalhoConexoes cabecalho = ler_cabecalho_conexoes(arquivo);
+    // marca a alteracao antes de percorrer e sobrescrever os registros encontrados
     alterar_status(arquivo, '0');
 
     for (int i = 0; i < quantidade_remocoes; i++)
@@ -182,6 +195,7 @@ void remocao_logica(void)
         scanf("%d", &quantidade_campos);
         CriteriosConexoes criterios = ler_criterios_conexoes(quantidade_campos);
         RegistroConexao registro;
+        // o contador acompanha a posicao fisica para empilhar o rrn correto
         int rrn = 0;
         fseek(arquivo, TAM_CABECALHO_CONEXOES, SEEK_SET);
 
@@ -194,6 +208,7 @@ void remocao_logica(void)
         }
     }
 
+    // o topo e os contadores acumulam as remocoes de todas as solicitacoes
     cabecalho.status = '1';
     escrever_cabecalho_conexoes(arquivo, &cabecalho);
     fclose(arquivo);
@@ -214,7 +229,9 @@ void insercao(void)
     alterar_status(arquivo, '0');
     for (int i = 0; i < quantidade; i++)
     {
+        // o auxiliar le a entrada e prepara os controles de uma conexao ativa
         RegistroConexao registro = ler_conexao_terminal();
+        // a escolha entre reaproveitar um rrn e usar o final fica no auxiliar de insercao
         inserir_conexao(arquivo, &cabecalho, &registro);
     }
 
@@ -244,6 +261,7 @@ void atualizacao_registros(void)
         scanf("%d", &quantidade_busca);
         CriteriosConexoes criterios = ler_criterios_conexoes(quantidade_busca);
         scanf("%d", &quantidade_campos);
+        // os novos valores usam o mesmo formato campo e valor dos criterios de busca
         CriteriosConexoes valores = ler_criterios_conexoes(quantidade_campos);
 
         RegistroConexao registro;
@@ -252,7 +270,9 @@ void atualizacao_registros(void)
         {
             if (registro.removido == '0' && verificar_conexao(&criterios, &registro))
             {
+                // altera apenas a copia em memoria antes de voltar para gravar no arquivo
                 aplicar_atualizacoes_conexao(&registro, &valores);
+                // a leitura terminou no proximo registro; recua os 18 bytes do registro atual
                 fseek(arquivo, -TAM_REGISTRO_CONEXAO, SEEK_CUR);
                 escrever_conexao(arquivo, &registro);
                 // sincroniza a troca de escrita para leitura no mesmo arquivo

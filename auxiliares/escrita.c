@@ -6,6 +6,7 @@
 // grava os seis campos da conexao na posicao atual, avancando 18 bytes.
 void escrever_conexao(FILE *arquivo, RegistroConexao *registro)
 {
+    // os controles ficam antes dos dados e fazem parte dos 18 bytes gravados
     fwrite(&registro->removido, sizeof(char), 1, arquivo);
     fwrite(&registro->encadeamento, sizeof(int), 1, arquivo);
     fwrite(&registro->idPoPs, sizeof(int), 1, arquivo);
@@ -18,6 +19,7 @@ void escrever_conexao(FILE *arquivo, RegistroConexao *registro)
 void imprimir_conexao(RegistroConexao *registro)
 {
     printf("%d %d ", registro->idPoPs, registro->idPoPsConectado);
+    // os valores usados para representar nulos no disco nao aparecem como dados na saida
     if (registro->velocidade == -1)
         printf("NULO ");
     else
@@ -34,13 +36,16 @@ void imprimir_conexao(RegistroConexao *registro)
 void remover_conexao(FILE *arquivo, CabecalhoConexoes *cabecalho,
                      RegistroConexao *registro, int rrn)
 {
+    // salva a posicao seguinte ao registro para retomar a varredura depois da escrita
     long cursor = ftell(arquivo);
     registro->removido = '1';
+    // o novo topo aponta para quem estava no topo antes da remocao
     registro->encadeamento = cabecalho->topo_pilha;
 
     fseek(arquivo, TAM_CABECALHO_CONEXOES + (long)rrn * TAM_REGISTRO_CONEXAO, SEEK_SET);
     fwrite(&registro->removido, sizeof(char), 1, arquivo);
     fwrite(&registro->encadeamento, sizeof(int), 1, arquivo);
+    // apenas os dados viram lixo; a marca e o encadeamento precisam continuar validos
     for (int i = TAM_CONTROLE_CONEXAO; i < TAM_REGISTRO_CONEXAO; i++)
         fputc('$', arquivo);
 
@@ -56,6 +61,7 @@ void inserir_conexao(FILE *arquivo, CabecalhoConexoes *cabecalho, RegistroConexa
     int rrn;
     if (cabecalho->topo_pilha == -1)
     {
+        // sem removidos, ocupa a primeira posicao disponivel no final
         rrn = cabecalho->proxRRN;
         cabecalho->proxRRN++;
     }
@@ -63,11 +69,13 @@ void inserir_conexao(FILE *arquivo, CabecalhoConexoes *cabecalho, RegistroConexa
     {
         rrn = cabecalho->topo_pilha;
         fseek(arquivo, TAM_CABECALHO_CONEXOES + (long)rrn * TAM_REGISTRO_CONEXAO + 1, SEEK_SET);
+        // retira o topo atual e guarda o proximo rrn livre como novo topo
         fread(&cabecalho->topo_pilha, sizeof(int), 1, arquivo);
         cabecalho->nroRegRem--;
         cabecalho->nroPares++;
     }
 
+    // a nova conexao fica ativa e deixa de participar do encadeamento de removidos
     registro->removido = '0';
     registro->encadeamento = -1;
     fseek(arquivo, TAM_CABECALHO_CONEXOES + (long)rrn * TAM_REGISTRO_CONEXAO, SEEK_SET);
@@ -77,6 +85,7 @@ void inserir_conexao(FILE *arquivo, CabecalhoConexoes *cabecalho, RegistroConexa
 // copia os valores informados para a conexao. o marcador -2 deixa o campo como esta.
 void aplicar_atualizacoes_conexao(RegistroConexao *registro, CriteriosConexoes *valores)
 {
+    // essa etapa muda somente a memoria; quem chamou decide onde gravar a conexao
     if (valores->idPoPs != -2)
         registro->idPoPs = valores->idPoPs;
     if (valores->idPoPsConectado != -2)
@@ -97,16 +106,19 @@ void escrever_registro(FILE *arquivo, const RegistroPoP *registro)
     int tamanho_nome = strlen(registro->nomePoPs);
     int tamanho_pais = strlen(registro->nomePais);
 
+    // primeiro vao os controles e os campos fixos, sempre na ordem do formato binario
     fwrite(&registro->removido, sizeof(char), 1, arquivo);
     fwrite(&registro->tamanhoRegistro, sizeof(int), 1, arquivo);
     fwrite(&registro->encadeamentoLista, sizeof(int64_t), 1, arquivo);
     fwrite(&registro->idPoPs, sizeof(int), 1, arquivo);
     fwrite(registro->siglaPais, sizeof(char), 2, arquivo);
+    // cada nome e seguido pela barra; nenhum terminador de string vai para o arquivo
     fwrite(registro->nomePoPs, sizeof(char), tamanho_nome, arquivo);
     fwrite(&delimitador, sizeof(char), 1, arquivo);
     fwrite(registro->nomePais, sizeof(char), tamanho_pais, arquivo);
     fwrite(&delimitador, sizeof(char), 1, arquivo);
 
+    // a capacidade do espaco pode ser maior que o conteudo, por isso completa a sobra
     int utilizado = TAM_MINIMO_REGISTRO + tamanho_nome + tamanho_pais;
     for (int i = utilizado; i < registro->tamanhoRegistro; i++)
         fputc('$', arquivo);
@@ -116,6 +128,7 @@ void escrever_registro(FILE *arquivo, const RegistroPoP *registro)
 // imprime id, nome do pop, pais e sigla em uma linha, tratando os campos nulos.
 void imprimir_registro(RegistroPoP *registro)
 {
+    // a marca, o tamanho e o encadeamento sao controles e nao aparecem na listagem
     printf("%d ", registro->idPoPs);
     printf("%s ", registro->nomePoPs[0] == '\0' ? "NULO" : registro->nomePoPs);
     printf("%s ", registro->nomePais[0] == '\0' ? "NULO" : registro->nomePais);
@@ -123,10 +136,11 @@ void imprimir_registro(RegistroPoP *registro)
 }
 
 // encaixa o espaco removido na lista ordenada por tamanho e apaga seus dados.
-// ao muda o tamanho do registro e restaura o cursor para a varredura continuar.
+// mantem o tamanho do registro e restaura o cursor para a varredura continuar.
 void remover_registro(FILE *arquivo, CabecalhoPoPs *cabecalho,
                       RegistroPoP *registro, int64_t posicao)
 {
+    // guarda onde a leitura parou antes de percorrer e alterar a lista de espacos livres
     int64_t cursor = ftell(arquivo);
     int64_t anterior = -1;
     int64_t atual = cabecalho->topoLista;
@@ -136,12 +150,14 @@ void remover_registro(FILE *arquivo, CabecalhoPoPs *cabecalho,
     {
         int tamanho;
         int64_t proximo;
+        // pula a marca e le apenas o tamanho e o proximo elo da lista
         fseek(arquivo, atual + 1, SEEK_SET);
         fread(&tamanho, sizeof(int), 1, arquivo);
         fread(&proximo, sizeof(int64_t), 1, arquivo);
 
         if (tamanho <= registro->tamanhoRegistro)
             break;
+        // continua enquanto os espacos encontrados forem maiores que o novo removido
         anterior = atual;
         atual = proximo;
     }
@@ -164,6 +180,7 @@ void remover_registro(FILE *arquivo, CabecalhoPoPs *cabecalho,
         fwrite(&posicao, sizeof(int64_t), 1, arquivo);
     }
 
+    // o registro deixa de ser ativo, mas o arquivo nao diminui de tamanho
     cabecalho->nroRegRem++;
     cabecalho->nroPoPs--;
     fseek(arquivo, cursor, SEEK_SET);
