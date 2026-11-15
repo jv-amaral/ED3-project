@@ -63,22 +63,6 @@ int Leitura_Registro(FILE *binario, Registro *Reg)
     return 1;
 }
 
-int Leitura_Registro2(FILE *binario, Registro *Reg)
-{
-    if (fread(&Reg->removido, sizeof(char), 1, binario) != 1)
-    {
-        return 0;
-    }
-
-    fread(&Reg->encadeamento, sizeof(int), 1, binario);
-    fread(&Reg->idPoPs, sizeof(int), 1, binario);
-    fread(&Reg->idPoPsConectado, sizeof(int), 1, binario);
-    fread(&Reg->velocidade, sizeof(int), 1, binario);
-    fread(&Reg->unidade_medida, sizeof(char), 1, binario);
-
-    return 1;
-}
-
 Criterios ler_criterios(int qtd_criterios)
 {
 
@@ -160,16 +144,6 @@ void escreve_cabecalho(FILE *binario, RegCabecalho *Cab)
     fwrite(&Cab->proxRRN, sizeof(int), 1, binario);
     fwrite(&Cab->nroRegRem, sizeof(int), 1, binario);
     fwrite(&Cab->nroPares, sizeof(int), 1, binario);
-}
-
-// funcao para escrever o cabecalho
-void escreve_cabecalho2(FILE *binario, RegCabecalho *Cab)
-{
-    fwrite(&Cab->status, sizeof(char), 1, binario);
-    fwrite(&Cab->topoLista, sizeof(int64_t), 1, binario);
-    fwrite(&Cab->proxByteOffset, sizeof(int64_t), 1, binario);
-    fwrite(&Cab->nroRegRem, sizeof(int), 1, binario);
-    fwrite(&Cab->nroPoPs, sizeof(int), 1, binario);
 }
 
 

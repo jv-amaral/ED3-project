@@ -56,11 +56,72 @@ void create_table()
 
     //inicia o loop fazendo a verificação de nulo
 
-    wihile ((fgets(linha_csv, sizeof(linha_csv), arq_csv)) != NULL)
+    while ((fgets(linha_csv, sizeof(linha_csv), arq_csv)) != NULL)
     {
+         // atribui os valores do csv para os campos do registro
+        // strtok é usada para procurar a virgula, e atoi converte o texto para o numero inteiro correspondente
+        char *primeira_virgula = strchr(linha_csv, ',');
+        char *segunda_virgula = strchr(primeira_virgula + 1, ',');
+        char *terceira_virgula = strchr(segunda_virgula + 1, ',');
+        char *quarta_virgula = strchr(terceira_virgula + 1, ',');
 
+        Reg.idPoPs = atoi(strtok(linha_csv, ","));
+        Reg.idPoPsConectado = atoi(strtok(NULL, ","));
+
+        char *velocidade_ptr = segunda_virgula + 1;
+        *terceira_virgula = '\0';
+
+        // verifica se o campo velocidade é nulo e atribui -1 se for o caso, caso contrário, o valor lido do csv é copiado para a variável Reg.velocidade
+        if (velocidade_ptr[0] == '\0' || velocidade_ptr[0] == ' ')
+        {
+            Reg.velocidade = -1; // atribui -1 se o campo for nulo
+        }
+        else
+        {
+            Reg.velocidade = atoi(velocidade_ptr);
+        }
+
+        char *unidade_medida_ptr = terceira_virgula + 1;
+        unidade_medida_ptr[strcspn(unidade_medida_ptr, "\n\r")] = '\0';
+
+        // verifica se o campo de unidade de medida é nulo e atribui '$' para ser usado como lixo
+        if (unidade_medida_ptr[0] == '\0' || unidade_medida_ptr[0] == ' ')
+        {
+            Reg.unidade_medida = '$';
+        }
+        else
+        {
+            Reg.unidade_medida = unidade_medida_ptr[0];
+        }
+
+        // escreve os campos do registro no arquivo binário
+        escreve_registro(binario, &Reg);
+
+        // atualiza os valores do cabeçalho do proxRRN e do numero de pares
+        cabecalho.proxRRN++;
+        cabecalho.nroPares++;
+    }
+
+    // escreve o cabecalho atualizado
+    fseek(binario, 0, SEEK_SET);
+    escreve_cabecalho(binario, &cabecalho);
+
+    // atualiza o status para 1, ou seja, consistente
+    cabecalho.status = '1';
+
+    // escreve o status por ultimo, para garantir a integridade do arquivo
+    fseek(binario, 0, SEEK_SET);
+    fwrite(&cabecalho.status, sizeof(char), 1, binario);
+
+    fclose(csv);
+    fclose(binario);
+
+    BinarioNaTela(arquivo_binario);
+}
     }
 }
+
+
 
 void create_index()
 {
