@@ -270,97 +270,99 @@ void listar_registros(void)
 // o indice fica em memoria durante as consultas e os dados sao abertos so para leitura.
 void busca(void)
 {
-    char arquivo_binario[50]; // variaveis dos nomes dos arquivos
+    char arquivo_binario[50];
     char arquivo_index[50];
 
-    scanf("%s",arquivo_binario);    //leitura dos nomes dos arquivos
-    scanf("%s",arquivo_index);
+    scanf("%s", arquivo_binario);
+    scanf("%s", arquivo_index);
     CabecalhoPoPs cab;
-    RegistroPoP reg;           // criacao das structs de registro e de registro de indice
+    RegistroPoP reg;
 
-    FILE *binario = abrir_arquivo(arquivo_binario,"rb");     // verifica se os arquivos nao estao corrompidos
-    FILE *index = abrir_arquivo(arquivo_index,"rb");
-    if (binario == NULL) // se encontrar algum erro, ele retorna
+    FILE *binario = abrir_arquivo(arquivo_binario, "rb");
+    FILE *index = abrir_arquivo(arquivo_index, "rb");
+    
+    if (binario == NULL)
     {
         printf("Falha no processamento do arquivo.\n");
         return;
     }
-    if (index == NULL) // se encontrar algum erro, ele retorna
+    if (index == NULL)
     {
         printf("Falha no processamento do arquivo.\n");
         return;
     }
-    fread(&cab.status,sizeof(char),1,binario);
-
-    if (cab.status == '0')                    // verifica se o arquivo esta consistente
+    
+    fread(&cab.status, sizeof(char), 1, binario);
+    if (cab.status == '0')
     {
         printf("Falha no processamento do arquivo.\n");
         return;
     }
+    
     char status_index;
-    fread(&status_index,sizeof(char),1,index);
-
-    if (status_index == '0')            // verifica se o arquivo de indice esta consistente
+    fread(&status_index, sizeof(char), 1, index);
+    if (status_index == '0')
     {
         printf("Falha no processamento do arquivo.\n");
         return;
     }
-        // cria o vetor de indices para fazer a busca
-       int max_indices = 2000;
-         IndicePoPs *vetor_indices = (IndicePoPs *) malloc(max_indices * sizeof(IndicePoPs));
-         int total_indices = 0;
 
-         // enquanto conseguir ler um idpops (4 bytes), e porque tem um registro
-         while (fread(&vetor_indices[total_indices].idPoPs, sizeof(int), 1, index) == 1)
-        {
-        // se leu o id, obrigatoriamente tem o byteoffset (8 bytes) logo na frente
+    int max_indices = 2000;
+    IndicePoPs *vetor_indices = (IndicePoPs *) malloc(max_indices * sizeof(IndicePoPs));
+    int total_indices = 0;
+
+    while (fread(&vetor_indices[total_indices].idPoPs, sizeof(int), 1, index) == 1)
+    {
         fread(&vetor_indices[total_indices].byteoffset, sizeof(int64_t), 1, index);
         total_indices++;
-        }
+    }
 
+    fclose(index);
+    
+    int n;
+    scanf("%d", &n);
 
-         fclose(index);
-    int n;          // declaracao e leitura da variavel que vai verificar quantas vezes sera feita a busca
-    scanf("%d",&n);
-
-
-
-    for (int i = 0; i<n;i++)            // loop principal da busca que sera feita n vezes
+    for (int i = 0; i < n; i++)
     {
         int m;
-        scanf("%d",&m);
+        scanf("%d", &m);
         CriteriosPoPs C = ler_criterios(m);
-        int registro_encontrado;
+        int registro_encontrado = 0;
+
         if (C.buscar_id)
         {
-
-
-
-        int inicio = 0;
-        int fim = total_indices - 1;
-        int64_t offset_encontrado = -1;
-            while (inicio <= fim) {
+            int inicio = 0;
+            int fim = total_indices - 1;
+            int64_t offset_encontrado = -1;
+            
+            while (inicio <= fim) 
+            {
                 int meio = (inicio + fim) / 2;
 
-                if (vetor_indices[meio].idPoPs == C.idPoPs) {
+                if (vetor_indices[meio].idPoPs == C.idPoPs) 
+                {
                     offset_encontrado = vetor_indices[meio].byteoffset;
-                    break; // sai do while na hora
+                    break;
                 }
-                else if (vetor_indices[meio].idPoPs < C.idPoPs) {
+                else if (vetor_indices[meio].idPoPs < C.idPoPs) 
+                {
                     inicio = meio + 1;
                 }
-                else {
+                else 
+                {
                     fim = meio - 1;
                 }
             }
+            
             if(offset_encontrado == -1)
             {
                 printf("Registro inexistente.\n");
             }
             else
             {
-                fseek(binario,offset_encontrado,SEEK_SET);
-                ler_registro(binario,&reg);
+                fseek(binario, offset_encontrado, SEEK_SET);
+                ler_registro(binario, &reg);
+                
                 if (reg.removido == '0' && verificar_criterios(&C, &reg) == 1)
                 {
                     imprimir_registro(&reg);
@@ -371,25 +373,25 @@ void busca(void)
                 {
                     printf("Registro inexistente.\n");
                 }
-
+                
+                liberar_registro(&reg);
             }
-
-
-
         }
         else
         {
-            fseek(binario,25,SEEK_SET);
+            fseek(binario, 25, SEEK_SET);
 
-           while (ler_registro(binario, &reg) == 1)
+            while (ler_registro(binario, &reg) == 1)
             {
-                if (reg.removido == '1') continue;
-
-                if (verificar_criterios(&C, &reg) == 1)
+                if (reg.removido == '0')
                 {
-                    imprimir_registro(&reg);
-                    registro_encontrado = 1;
+                    if (verificar_criterios(&C, &reg) == 1)
+                    {
+                        imprimir_registro(&reg);
+                        registro_encontrado = 1;
+                    }
                 }
+                liberar_registro(&reg);
             }
 
             if (registro_encontrado == 0)
@@ -397,11 +399,17 @@ void busca(void)
                 printf("Registro inexistente.\n");
             }
         }
+        
+        liberar_criterios(&C);
+
+        if (i < n - 1) 
+        {
+            printf("\n");
+        }
     }
-
-
-
-
+    
+    free(vetor_indices);
+    fclose(binario);
 }
 
 // func 12

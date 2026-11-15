@@ -52,6 +52,8 @@ int main(void)
         case 13:
             inserir_registros();
             break;
+        case 14:
+            atualiza_registro();
     }
 
     return 0;
