@@ -30,20 +30,19 @@ FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura)
     return binario;
 }
 
-/*RegCabecalho Leitura_Cabecalho2(FILE *binario)
-
+RegCabecalho Leitura_Cabecalho2(FILE *binario)
 {
     RegCabecalho cabecalho; // define o nome da struct
     // Le todos os dados do registro de cabecalho
     fseek(binario, 0, SEEK_SET);
     fread(&cabecalho.status, sizeof(char), 1, binario);
-    fread(&cabecalho.topo_pilha, sizeof(int), 1, binario);
-    fread(&cabecalho.proxRRN, sizeof(int), 1, binario);
+    fread(&cabecalho.topoLista, sizeof(int64_t), 1, binario);
+    fread(&cabecalho.proxByteOffset, sizeof(int64_t), 1, binario);
     fread(&cabecalho.nroRegRem, sizeof(int), 1, binario);
-    fread(&cabecalho.nroPares, sizeof(int), 1, binario);
+    fread(&cabecalho.nroPoPs, sizeof(int), 1, binario);
 
     return cabecalho;
-}*/
+}
 
 // funcao para fazer a leitura de um registro completo
 // fazendo a verificao de quando o arquivo se encerra tambem
@@ -111,6 +110,24 @@ int verificar_encontro(Criterios *C, Registro *Reg)
     if (strcmp(C->nomePais,"NUL")!=0 && strcmp(C->nomePais,Reg->nomePais)!=0)  encontro = 0;
         
     return encontro;
+}
+RegIndex *criar_vetor(FILE *index, int *total_indices)
+{
+    int max_indices = 2000;
+    RegIndex *vetor_indices = (RegIndex *) malloc(max_indices * sizeof(RegIndex));
+    *total_indices = 0;
+
+    // Garante que o cursor está logo após o byte de status (posição 1)
+    fseek(index, 1, SEEK_SET);
+
+    // Enquanto conseguir ler um idPoPs (4 bytes), é porque tem um registro
+    while (fread(&vetor_indices[*total_indices].idPoPs, sizeof(int), 1, index) == 1)
+    {
+        fread(&vetor_indices[*total_indices].byteoffset, sizeof(int64_t), 1, index);
+        (*total_indices)++;
+    }
+
+    return vetor_indices;
 }
 void print_registro2(Registro *Reg)
 {
@@ -189,6 +206,44 @@ int compara_index(const void *a, const void *b) {
     RegIndex *regB = (RegIndex *)b;
     
     return regA->idPoPs - regB->idPoPs;
+}
+void modifica_registro(Registro *reg,Criterios *NovosValores)
+{
+    if(NovosValores->idPoPs!=-2)
+    {
+        reg->idPoPs = NovosValores->idPoPs;
+    }
+    
+    if(strcmp(NovosValores->nomePoPs,"NUL")!=0)
+    {
+         strcpy(reg->nomePoPs,NovosValores->nomePoPs);
+    }
+
+    if(strcmp(NovosValores->nomePais,"NUL")!=0)
+    {
+        strcpy(reg->nomePais, NovosValores->nomePais);
+    }
+    
+    if(strcmp(NovosValores->siglaPais, "NUL") != 0)
+    {
+        // Se a sigla nova for "", significa que o usuário digitou NULO.
+        // Como a sigla é tamanho fixo, gravamos '$$' no disco.
+        if (strcmp(NovosValores->siglaPais, "") == 0)
+         {
+
+            reg->siglaPais[0] = '$';
+            reg->siglaPais[1] = '$';
+            reg->siglaPais[2] = '\0';
+        } 
+        else 
+        {
+            strcpy(reg->siglaPais, NovosValores->siglaPais);
+        }
+    }
+
+  
+
+
 }
 
 // funcao para escrever os registros
