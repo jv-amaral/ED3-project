@@ -8,6 +8,7 @@
 #include "auxiliares/busca.h"
 #include "auxiliares/indice.h"
 
+// func 8
 // importa os pops do csv para o arquivo binario.
 // a primeira linha indica onde esta cada campo, inclusive quando ha uma coluna extra.
 // para cada linha de dados, monta um registro de tamanho variavel e atualiza os contadores.
@@ -154,6 +155,7 @@ void create_table(void)
         printf("Falha no processamento do arquivo.\n");
 }
 
+// func 9
 // monta o indice com o id e o offset de cada pop ativo.
 // as entradas sao ordenadas antes de gravar o arquivo de indice.
 // o offset aponta para o inicio do registro de dados, e nao para o campo do identificador.
@@ -224,6 +226,7 @@ void create_index(void)
     BinarioNaTela(arquivo_index);
 }
 
+// func 10
 // percorre os pops e imprime os que nao foram removidos.
 // se nao houver nenhum ativo, mostra a mensagem de registro inexistente.
 // a leitura segue a ordem fisica do arquivo, sem consultar o indice.
@@ -260,6 +263,7 @@ void listar_registros(void)
     fclose(arquivo);
 }
 
+// func 11
 // usa o indice quando a busca tem idpops; nos outros casos faz a varredura.
 // todos os campos pedidos precisam coincidir para mostrar o registro.
 // cada solicitacao e independente, podendo encontrar nenhum, um ou varios pops.
@@ -400,6 +404,7 @@ void busca(void)
 
 }
 
+// func 12
 // remove os pops selecionados e retira suas chaves do indice.
 // os espacos liberados entram na lista de removidos, do maior para o menor.
 // nas buscas por id usa acesso direto; nas demais, percorre todos os registros ativos.
@@ -511,6 +516,7 @@ void remover_registros(void)
     BinarioNaTela(nome_indice);
 }
 
+// func 13
 // insere os pops recebidos pela entrada, reaproveitando os maiores espacos removidos.
 // atualiza os contadores e o indice; fecha os arquivos antes de exibir os dois binarios.
 void inserir_registros(void)

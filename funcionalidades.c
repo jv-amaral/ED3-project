@@ -7,6 +7,7 @@
 #include "auxiliares/escrita.h"
 #include "auxiliares/busca.h"
 
+// func 1
 // cria o binario de conexoes com as linhas do csv.
 // o cabecalho acompanha a quantidade de registros importados.
 void leitura_e_gravacao(void)
@@ -80,6 +81,7 @@ void leitura_e_gravacao(void)
         printf("Falha no processamento do arquivo.\n");
 }
 
+// func 2
 // mostra as conexoes ativas, comecando a leitura depois do cabecalho.
 void recuperacao_dados(void)
 {
@@ -108,6 +110,7 @@ void recuperacao_dados(void)
     fclose(arquivo);
 }
 
+// func 3
 // repete a busca no arquivo de conexoes para cada conjunto de criterios.
 // cada consulta percorre os registros desde o byte 17.
 void busca_condicional(void)
@@ -147,6 +150,7 @@ void busca_condicional(void)
     fclose(arquivo);
 }
 
+// func 4
 // calcula a posicao pelo rrn e mostra a conexao, se ela estiver ativa.
 void busca_RRN(void)
 {
@@ -174,6 +178,7 @@ void busca_RRN(void)
     fclose(arquivo);
 }
 
+// func 5
 // procura as conexoes que devem ser removidas e coloca seus rrns na pilha.
 // a saida mostra o arquivo depois das alteracoes.
 void remocao_logica(void)
@@ -215,6 +220,7 @@ void remocao_logica(void)
     BinarioNaTela(nome);
 }
 
+// func 6
 // le as novas conexoes do terminal e usa os espacos livres antes de aumentar o arquivo.
 void insercao(void)
 {
@@ -241,6 +247,7 @@ void insercao(void)
     BinarioNaTela(nome);
 }
 
+// func 7
 // atualiza os campos pedidos nas conexoes que atendem a busca.
 // a escrita e feita sobre o registro, que continua ocupando 18 bytes.
 void atualizacao_registros(void)
