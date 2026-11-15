@@ -15,5 +15,6 @@ void create_index(void);
 void listar_registros(void);
 void busca(void);
 void remover_registros(void);
+void inserir_registros(void);
 
 #endif

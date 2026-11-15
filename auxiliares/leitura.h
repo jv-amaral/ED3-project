@@ -11,5 +11,6 @@ void liberar_registro(RegistroPoP *registro);
 char *ler_valor(void);
 int ler_conexao(FILE *arquivo, RegistroConexao *registro);
 RegistroConexao ler_conexao_terminal(void);
+RegistroPoP ler_pop_terminal(void);
 
 #endif

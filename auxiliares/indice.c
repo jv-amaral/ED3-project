@@ -91,3 +91,19 @@ int salvar_indice(char *nome, IndicePoPs *indice, int quantidade)
     fclose(arquivo);
     return 1;
 }
+
+// inclui a chave no vetor mantendo a ordem crescente, sem acessar arquivos.
+// o vetor ja deve ter espaco reservado; a quantidade aumenta depois da inclusao.
+void inserir_no_indice(IndicePoPs *indice, int *quantidade, int id, int64_t posicao)
+{
+    int i = *quantidade;
+    // desloca as chaves maiores para abrir a posicao da nova entrada
+    while (i > 0 && indice[i - 1].idPoPs > id)
+    {
+        indice[i] = indice[i - 1];
+        i--;
+    }
+    indice[i].idPoPs = id;
+    indice[i].byteoffset = posicao;
+    (*quantidade)++;
+}

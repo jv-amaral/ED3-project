@@ -13,5 +13,6 @@ void remover_registro(FILE *arquivo, CabecalhoPoPs *cabecalho, RegistroPoP *regi
 void remover_conexao(FILE *arquivo, CabecalhoConexoes *cabecalho, RegistroConexao *registro, int rrn);
 void inserir_conexao(FILE *arquivo, CabecalhoConexoes *cabecalho, RegistroConexao *registro);
 void aplicar_atualizacoes_conexao(RegistroConexao *registro, CriteriosConexoes *valores);
+int64_t inserir_pop(FILE *arquivo, CabecalhoPoPs *cabecalho, RegistroPoP *registro);
 
 #endif

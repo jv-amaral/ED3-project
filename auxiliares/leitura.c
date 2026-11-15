@@ -243,3 +243,24 @@ void liberar_registro(RegistroPoP *registro)
     registro->nomePoPs = NULL;
     registro->nomePais = NULL;
 }
+
+// le id, nome do pop, pais e sigla do terminal e devolve o registro pronto para inserir.
+// os nomes usam memoria alocada por ler_valor e devem ser liberados depois da gravacao.
+RegistroPoP ler_pop_terminal(void)
+{
+    RegistroPoP registro;
+    scanf("%d", &registro.idPoPs);
+    registro.nomePoPs = ler_valor();
+    registro.nomePais = ler_valor();
+    char *sigla = ler_valor();
+
+    // a sigla ocupa dois bytes; os nomes vazios serao gravados apenas com o delimitador
+    memcpy(registro.siglaPais, sigla[0] == '\0' ? "$$" : sigla, 2);
+    registro.siglaPais[2] = '\0';
+    free(sigla);
+
+    registro.removido = '0';
+    registro.encadeamentoLista = -1;
+    registro.tamanhoRegistro = TAM_MINIMO_REGISTRO + strlen(registro.nomePoPs) + strlen(registro.nomePais);
+    return registro;
+}

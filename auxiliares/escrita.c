@@ -185,3 +185,38 @@ void remover_registro(FILE *arquivo, CabecalhoPoPs *cabecalho,
     cabecalho->nroPoPs--;
     fseek(arquivo, cursor, SEEK_SET);
 }
+
+// escolhe um espaco por worst fit, grava o pop e devolve o offset utilizado.
+// modifica o cabecalho em memoria e deixa o cursor depois do registro gravado.
+int64_t inserir_pop(FILE *arquivo, CabecalhoPoPs *cabecalho, RegistroPoP *registro)
+{
+    int64_t posicao = -1;
+
+    // o topo guarda o maior espaco: se ele nao servir, nenhum outro da lista serve
+    if (cabecalho->topoLista != -1)
+    {
+        int tamanho_livre;
+        fseek(arquivo, cabecalho->topoLista + 1, SEEK_SET);
+        fread(&tamanho_livre, sizeof(int), 1, arquivo);
+
+        if (tamanho_livre >= registro->tamanhoRegistro)
+        {
+            posicao = cabecalho->topoLista;
+            fread(&cabecalho->topoLista, sizeof(int64_t), 1, arquivo);
+            cabecalho->nroRegRem--;
+            // conserva a capacidade do espaco; escrever_registro completa a sobra com lixo
+            registro->tamanhoRegistro = tamanho_livre;
+        }
+    }
+
+    if (posicao == -1)
+    {
+        posicao = cabecalho->proxByteOffset;
+        cabecalho->proxByteOffset += registro->tamanhoRegistro;
+    }
+
+    fseek(arquivo, posicao, SEEK_SET);
+    escrever_registro(arquivo, registro);
+    cabecalho->nroPoPs++;
+    return posicao;
+}

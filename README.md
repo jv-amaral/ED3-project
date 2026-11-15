@@ -6,7 +6,7 @@ O programa reúne as funcionalidades de conexões entre pontos de presença (`co
 
 ## estado atual do trabalho
 
-As funcionalidades **1 a 12 estão implementadas**. As funcionalidades **13 e 14 ainda estão pendentes**; suas regras, exemplos e verificações finais estão documentados abaixo para orientar a conclusão. Esta atualização revê os comentários e simplifica as verificações, sem acrescentar novas operações.
+As funcionalidades **1 a 13 estão implementadas**. A funcionalidade **14 ainda está pendente**. A função 13 insere PoPs com Worst Fit e atualiza o índice primário; a documentação da atualização 14 permanece abaixo para orientar a conclusão.
 
 | Opção | Operação | Dados | Situação |
 | --- | --- | --- | --- |
@@ -22,7 +22,7 @@ As funcionalidades **1 a 12 estão implementadas**. As funcionalidades **13 e 14
 | 10 | Listar registros ativos | PoPs | Implementada |
 | 11 | Buscar por critérios e índice | PoPs | Implementada |
 | 12 | Remover e atualizar o índice | PoPs | Implementada |
-| 13 | Inserir com Worst Fit e atualizar o índice | PoPs | Pendente |
+| 13 | Inserir com Worst Fit e atualizar o índice | PoPs | Implementada |
 | 14 | Atualizar com Worst Fit e atualizar o índice | PoPs | Pendente |
 
 ## organização dos arquivos
@@ -32,7 +32,7 @@ main.c                   escolha da funcionalidade
 estruturas.h             estruturas e tamanhos em disco
 funcionalidades.h        declaracoes das funcionalidades
 funcionalidades.c        funcionalidades 1 a 7
-funcionalidades2.c       funcionalidades 8 a 12; futuras 13 e 14
+funcionalidades2.c       funcionalidades 8 a 13; futura 14
 auxiliares/
     arquivos.c / .h      abertura, cabecalhos, status e exibicao binaria
     leitura.c / .h       csv, terminal, leitura de registros e liberacao dos nomes
@@ -41,7 +41,7 @@ auxiliares/
     indice.c / .h        vetor de indice, busca binaria e persistencia
 ```
 
-Os dois formatos compartilham os cinco módulos auxiliares. As rotinas específicas de cada formato têm tipos diferentes; não há uma pasta separada para o Trabalho 1. As futuras funções 13 e 14 devem ser acrescentadas a `funcionalidades2.c`, com os auxiliares necessários nos módulos existentes e suas chamadas no `main.c`.
+Os dois formatos compartilham os cinco módulos auxiliares. As rotinas específicas de cada formato têm tipos diferentes; não há uma pasta separada para o Trabalho 1. A futura função 14 deve ser acrescentada a `funcionalidades2.c`, com os auxiliares necessários nos módulos existentes e sua chamada no `main.c`.
 
 Os comentários do código usam letras minúsculas, sem acentos ou cedilha. Acima das funções, explicam finalidade, retorno e efeitos sobre o cursor ou a memória; dentro delas, explicam os principais blocos de processamento.
 
@@ -141,7 +141,7 @@ A ordem de entrada é `idPoPs idPoPsConectado velocidade unidadeMedida`. Reaprov
 
 Cada atualização contém uma lista de critérios de busca seguida de uma lista dos novos valores. Campos não informados são preservados. Ao final, exibe o binário atualizado.
 
-## funcionalidades 8 a 12: PoPs
+## funcionalidades 8 a 13: PoPs
 
 A criação identifica as colunas do CSV pelo cabeçalho. O arquivo fornecido possui uma coluna inicial de numeração, que é ignorada. Os quatro campos de dados são `idPoPs`, `nomePoPs`, `nomePais` e `siglaPais`.
 
@@ -189,11 +189,7 @@ Se houver critério de `idPoPs`, usa busca binária no vetor do índice e acesso
 
 Preenche os dados com `$`, inclui o espaço na lista de removidos e retira a chave do índice. A lista permanece ordenada do maior espaço para o menor, para Worst Fit. Em empate de tamanho, a implementação atual coloca o removido mais recente antes. A saída exibe primeiro o binário de dados e depois o índice.
 
-## funcionalidades pendentes para concluir o Trabalho 2
-
-**Os comandos desta seção são a sintaxe prevista pelo enunciado; ainda não estão disponíveis no programa.**
-
-### 13. inserção com Worst Fit — pendente
+### 13. inserir PoPs com Worst Fit
 
 ```text
 13 PoPs.bin indexaPoPs.bin 2
@@ -201,13 +197,15 @@ Preenche os dados com `$`, inclui o espaço na lista de removidos e retira a cha
 22 "TERESINA" NULO NULO
 ```
 
-A entrada contém `idPoPs nomePoPs nomePais siglaPais`. A implementação deverá:
+A entrada contém `idPoPs nomePoPs nomePais siglaPais`. Os identificadores devem respeitar a restrição de chave primária do arquivo. A rotina `ler_pop_terminal` lê os campos e calcula o tamanho do novo registro.
 
-- Calcular o tamanho necessário e procurar o maior espaço removido, no topo da lista ordenada.
-- Reaproveitar esse espaço se couber, retirando-o da lista e preenchendo a sobra com `$`; se não couber, acrescentar ao final.
-- Atualizar o topo, os contadores e o próximo byte offset quando necessário.
-- Inserir o identificador e seu offset no índice, mantendo a ordem crescente.
-- Manter os status de dados e índice consistentes ao terminar e exibir os dois binários, dados primeiro.
+`inserir_pop` consulta o topo da lista, onde está o maior espaço removido. Se o registro couber, retira esse espaço da lista, mantém sua capacidade e preenche a sobra com `$`. Se a lista estiver vazia ou o maior espaço não servir, acrescenta o registro em `proxByteOffset` e avança esse offset.
+
+O número de PoPs ativos aumenta em cada inserção; o total de removidos diminui apenas quando há reaproveitamento. `inserir_no_indice` acrescenta o identificador e o offset usado na posição correta do vetor ordenado. Ao final, salva o índice e o cabeçalho atualizado, fecha os arquivos e exibe dados primeiro, índice depois.
+
+## funcionalidade pendente para concluir o Trabalho 2
+
+**O comando abaixo representa a sintaxe prevista pelo enunciado e ainda não está disponível no programa.**
 
 ### 14. atualização com Worst Fit — pendente
 
@@ -226,7 +224,7 @@ Cada solicitação contém os critérios de busca e, na linha seguinte, os campo
 - Atualizar identificador e offset no índice quando mudarem e processar cada registro selecionado uma vez por solicitação.
 - Continuar após uma solicitação sem resultados e exibir os dois binários ao terminar.
 
-As novas rotinas devem reutilizar a leitura, os critérios, a escrita de registros, a lista de removidos e o índice já existentes. Não é necessário criar mais categorias de auxiliares.
+A nova rotina deve reutilizar a leitura, os critérios, a escrita de registros, a lista de removidos e o índice já existentes. Não é necessário criar mais categorias de auxiliares.
 
 ## formatos binários e consistência
 
@@ -256,9 +254,9 @@ A última bateria de testes de implementação registrou:
 - 28 cenários das funções 8 a 12, cobrindo CSV real, consultas, nulos, nomes longos, índice, remoção, lista Worst Fit, empates e espaços com sobra.
 - Execução normal e com sanitizadores de endereço e comportamento indefinido; não foi executada a detecção de vazamentos.
 
-Após simplificar as verificações e rever os comentários, a compilação passou sem avisos e as duas baterias acima foram executadas novamente, com sucesso. Não houve submissão ao run.codes.
+Após implementar a função 13, a compilação passou sem avisos. Passaram 32 cenários da inserção, com comparação dos dados e do índice byte a byte, incluindo encaixe exato, sobra, lista vazia, espaço insuficiente, empates e inserções após remoções. As baterias das funções 1 a 7 e 8 a 12 também passaram novamente. Não houve submissão ao run.codes.
 
-Depois de implementar 13 e 14, verificar:
+Na revisão final da inserção 13 e da futura atualização 14, verificar:
 
 - Inserção ao final, em espaço maior, em espaço exato e quando o maior removido ainda é pequeno demais.
 - Inserções e atualizações seguidas, com lista vazia, um elemento, vários elementos e empate de tamanho.
@@ -269,11 +267,11 @@ Depois de implementar 13 e 14, verificar:
 
 ## preparação da entrega final
 
-O trabalho ainda precisa da implementação e validação das funções 13 e 14 para ser considerado concluído.
+O trabalho ainda precisa da implementação e validação da função 14 e da revisão final de todas as operações para ser considerado concluído.
 
 Para fechar a entrega, seguir esta ordem:
 
-- Concluir 13 e 14, declarar suas funções em `funcionalidades.h` e acrescentar os casos no `main.c`.
+- Concluir 14, declarar sua função em `funcionalidades.h` e acrescentar o caso no `main.c`.
 - Atualizar o estado das funcionalidades, os exemplos e os testes deste README e do relatório somente depois de validar o código.
 - Conferir nomes e números USP dos dois integrantes no comentário inicial de `main.c` e os comentários das funções.
 - Compilar a partir dos fontes e verificar as saídas e os formatos exigidos pelo enunciado.

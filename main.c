@@ -49,6 +49,9 @@ int main(void)
         case 12:
             remover_registros();
             break;
+        case 13:
+            inserir_registros();
+            break;
     }
 
     return 0;
