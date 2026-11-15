@@ -402,10 +402,8 @@ void busca(void)
         
         liberar_criterios(&C);
 
-        if (i < n - 1) 
-        {
-            printf("\n");
-        }
+        printf("\n");
+     
     }
     
     free(vetor_indices);
