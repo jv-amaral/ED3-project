@@ -220,3 +220,68 @@ int64_t inserir_pop(FILE *arquivo, CabecalhoPoPs *cabecalho, RegistroPoP *regist
     cabecalho->nroPoPs++;
     return posicao;
 }
+void modifica_registro(Registro *reg,Criterios *NovosValores)
+{
+    if(NovosValores->idPoPs!=-2)
+    {
+        reg->idPoPs = NovosValores->idPoPs;
+    }
+    
+    if(strcmp(NovosValores->nomePoPs,"NUL")!=0)
+    {
+         strcpy(reg->nomePoPs,NovosValores->nomePoPs);
+    }
+
+    if(strcmp(NovosValores->nomePais,"NUL")!=0)
+    {
+        strcpy(reg->nomePais, NovosValores->nomePais);
+    }
+    
+    if(strcmp(NovosValores->siglaPais, "NUL") != 0)
+    {
+        // Se a sigla nova for "", significa que o usuário digitou NULO.
+        // Como a sigla é tamanho fixo, gravamos '$$' no disco.
+        if (strcmp(NovosValores->siglaPais, "") == 0)
+         {
+
+            reg->siglaPais[0] = '$';
+            reg->siglaPais[1] = '$';
+            reg->siglaPais[2] = '\0';
+        } 
+        else 
+        {
+            strcpy(reg->siglaPais, NovosValores->siglaPais);
+        }
+    }
+
+  
+
+
+}
+void escreve_registro2(FILE *binario, Registro *Reg)
+{
+    char pipe = '|';
+    
+    // Grava os 19 bytes fixos
+    fwrite(&Reg->removido, sizeof(char), 1, binario);
+    fwrite(&Reg->tamanhoRegistro, sizeof(int), 1, binario);
+    fwrite(&Reg->encadeamentoLista, sizeof(int64_t), 1, binario);
+    fwrite(&Reg->idPoPs, sizeof(int), 1, binario);
+    fwrite(Reg->siglaPais, sizeof(char), 2, binario); 
+    
+    // Grava nomePoPs
+    int tamanho_pops = strlen(Reg->nomePoPs);
+    if (tamanho_pops > 0) {
+        fwrite(Reg->nomePoPs, sizeof(char), tamanho_pops, binario);
+    }
+    fwrite(&pipe, sizeof(char), 1, binario); // Escreve o '|' (mesmo se a string for vazia)
+    
+    // Grava nomePais
+    int tamanho_pais = strlen(Reg->nomePais);
+    if (tamanho_pais > 0) {
+        fwrite(Reg->nomePais, sizeof(char), tamanho_pais, binario);
+    }
+    fwrite(&pipe, sizeof(char), 1, binario); // Escreve o '|' (mesmo se a string for vazia)
+}
+
+
