@@ -594,57 +594,65 @@ void inserir_registros(void)
 
 void atualiza_registro()
 {
-    char arquivo_binario[50]; // variaveis dos nomes dos arquivos
+    char arquivo_binario[50];
     char arquivo_index[50];
 
-    scanf("%s",arquivo_binario);    //leitura dos nomes dos arquivos
-    scanf("%s",arquivo_index);
-    RegCabecalho cab= Leitura_Cabecalho2(binario);       // criaçao da struct de cabecalho
-    Registro reg;   
-    RegIndex indice;        // criacao das structs de registro e de registro de indice
-    
-    FILE *binario = verificar_arquivo(arquivo_binario,"rb+");     // verifica se os arquivos nao estao corrompidos
-    FILE *index = verificar_arquivo(arquivo_index,"rb+");
-  if (binario == NULL || index == NULL)
+    scanf("%s", arquivo_binario);
+    scanf("%s", arquivo_index);
+
+    FILE *binario = abrir_arquivo(arquivo_binario, "rb+");
+    FILE *index = abrir_arquivo(arquivo_index, "rb+");
+    if (binario == NULL || index == NULL)
     {
         if (binario) fclose(binario);
         if (index) fclose(index);
-        return; 
+        return;
     }
-   
-    char status_index='0';
+
+    CabecalhoPoPs cab = ler_cabecalho(binario);
+    RegistroPoP reg;
+    
+    char status_index = '0';
     cab.status = '0';
-   
-    fseek(binario,0,SEEK_SET);
-    fseek(index,0,SEEK_SET);
-    fwrite(&cab.status,sizeof(char),1,binario);
-    fwrite(&status_index,sizeof(char),1,index);
+
+    fseek(binario, 0, SEEK_SET);
+    fseek(index, 0, SEEK_SET);
+    fwrite(&cab.status, sizeof(char), 1, binario);
+    fwrite(&status_index, sizeof(char), 1, index);
+    
     int total_indices = 0;
-    RegIndex *vetor_indices = criar_vetor(index, &total_indices);
+    IndicePoPs *vetor_indices = carregar_indice(index, &total_indices);
+    fclose(index);
+    
     int n;
-    scanf("%d",&n);
-    for (int i = 0; i<n; i++)
+    scanf("%d", &n);
+    for (int i = 0; i < n; i++)
     {
-         int m;
-        scanf("%d",&m);
-        Criterios C = ler_criterios(m);
+        int m;
+        scanf("%d", &m);
+        CriteriosPoPs C = ler_criterios(m);
+        
         int p;
-        scanf("%d",&p);
-        Criterios NovosValores = ler_criterios(p);
-        int registro_encontrado=0;
-        if (C.idPoPs!= -2)
+        scanf("%d", &p);
+        CriteriosPoPs NovosValores = ler_criterios(p);
+        
+        int registro_encontrado = 0;
+        
+        if (C.buscar_id)
         {
+            int inicio = 0;
+            int fim = total_indices - 1;
+            int64_t offset_encontrado = -1;
+            int posicao_indice = -1;
             
-        int inicio = 0;
-        int fim = total_indices - 1;
-        int64_t offset_encontrado = -1;
             while (inicio <= fim) {
                 int meio = (inicio + fim) / 2;
 
                 if (vetor_indices[meio].idPoPs == C.idPoPs) 
                 {
                     offset_encontrado = vetor_indices[meio].byteoffset; 
-                    break; // Sai do while na hora
+                    posicao_indice = meio;
+                    break;
                 } 
                 else if (vetor_indices[meio].idPoPs < C.idPoPs) 
                 {
@@ -655,86 +663,84 @@ void atualiza_registro()
                     fim = meio - 1;
                 }
             }
-              if(offset_encontrado == -1)
+            
+            if (offset_encontrado == -1)
             {
                 printf("Registro inexistente.\n");
             }
             else
             {
-                fseek(binario,offset_encontrado,SEEK_SET);
-                Leitura_Registro2(binario,&reg);
-                if (reg.removido == '0' && verificar_encontro(&C, &reg) == 1)
+                fseek(binario, offset_encontrado, SEEK_SET);
+                ler_registro(binario, &reg);
+                
+                if (reg.removido == '0' && verificar_criterios(&C, &reg))
                 {
-
-                    modifica_registro(&reg,&NovosValores);
-                    int tamanho_novo = 19 + strlen(reg.nomePais) + strlen(reg.nomePoPs) + 2;
-                    if(tamanho_novo <= reg.tamanhoRegistro)
-                    {
-                        fseek(binario,offset_encontrado,SEEK_SET);
-                        escreve_registro2(binario, &reg);
-                        int lixo= reg.tamanhoRegistro - tamanho_novo;
-                        char cifrao = '$';
-                        for(int j = 0; j<lixo;j++)
-                        {
-                            fwrite(&cifrao,sizeof(char),1,binario);
-                        }
-                        fseek(binario,offset_encontrado + reg.tamanhoRegistro, SEEK_SET);
-                    } else
-                    {
-
-                        //esperar codigo joao vitor
-
-
-                    }
-
-                    registro_encontrado=1;
+                    modifica_registro(&reg, &NovosValores);
                     
+                    int tamanho_nome = strlen(reg.nomePoPs);
+                    int tamanho_pais = strlen(reg.nomePais);
+                    int tamanho_novo = TAM_MINIMO_REGISTRO + tamanho_nome + tamanho_pais;
+                    
+                    if (tamanho_novo <= reg.tamanhoRegistro)
+                    {
+                        fseek(binario, offset_encontrado, SEEK_SET);
+                        escrever_registro(binario, &reg);
+                    } 
+                    else
+                    {
+                        remover_registro(binario, &cab, &reg, offset_encontrado);
+                        retirar_do_indice(vetor_indices, &total_indices, posicao_indice);
+                        
+                        reg.tamanhoRegistro = tamanho_novo;
+                        int64_t nova_pos = inserir_pop(binario, &cab, &reg);
+                        inserir_no_indice(vetor_indices, &total_indices, reg.idPoPs, nova_pos);
+                    }
+                    registro_encontrado = 1;
                 }
+                liberar_registro(&reg);
                 
                 if (registro_encontrado == 0) 
                 {
                     printf("Registro inexistente.\n");
                 }
-               
             }
         }
-    
         else
         {
-            fseek(binario,25,SEEK_SET);
-           int64_t offset_atual = 25;
+            int64_t offset_atual = TAM_CABECALHO;
+            fseek(binario, offset_atual, SEEK_SET);
 
-           while (Leitura_Registro2(binario, &reg) == 1)
+            while (ler_registro(binario, &reg))
             {
-
-               
-                
-                if (reg.removido == '0' && verificar_encontro(&C, &reg) == 1)
+                if (reg.removido == '0' && verificar_criterios(&C, &reg))
                 {
-                    
                     registro_encontrado = 1;
-                    modifica_registro(&reg,&NovosValores);
-                    int tamanho_novo = 19 + strlen(reg.nomePais) + strlen(reg.nomePoPs) + 2;
-                    if(tamanho_novo <= reg.tamanhoRegistro)
+                    modifica_registro(&reg, &NovosValores);
+                    
+                    int tamanho_nome = strlen(reg.nomePoPs);
+                    int tamanho_pais = strlen(reg.nomePais);
+                    int tamanho_novo = TAM_MINIMO_REGISTRO + tamanho_nome + tamanho_pais;
+                    
+                    if (tamanho_novo <= reg.tamanhoRegistro)
                     {
-                        fseek(binario,offset_atual,SEEK_SET);
-                        escreve_registro2(binario, &reg);
-                        int lixo= reg.tamanhoRegistro - tamanho_novo;
-                        char cifrao = '$';
-                        for(int j = 0; j<lixo;j++)
-                        {
-                            fwrite(&cifrao,sizeof(char),1,binario);
-                        }
-                        fseek(binario,offset_atual + reg.tamanhoRegistro, SEEK_SET);
-                    } else
+                        fseek(binario, offset_atual, SEEK_SET);
+                        escrever_registro(binario, &reg);
+                    } 
+                    else
                     {
-
-                        //esperar codigo joao vitor
-
-
+                        remover_registro(binario, &cab, &reg, offset_atual);
+                        int pos_idx = buscar_no_indice(vetor_indices, total_indices, reg.idPoPs);
+                        retirar_do_indice(vetor_indices, &total_indices, pos_idx);
+                        
+                        reg.tamanhoRegistro = tamanho_novo;
+                        int64_t nova_pos = inserir_pop(binario, &cab, &reg);
+                        inserir_no_indice(vetor_indices, &total_indices, reg.idPoPs, nova_pos);
                     }
                 }
-                offset_atual = offset_atual + reg.tamanhoRegistro;
+                liberar_registro(&reg);
+                
+                offset_atual = ftell(binario);
+                fseek(binario, offset_atual, SEEK_SET); 
             }
 
             if (registro_encontrado == 0)
@@ -742,42 +748,18 @@ void atualiza_registro()
                 printf("Registro inexistente.\n");
             }
         }
-
+        liberar_criterios(&C);
+        liberar_criterios(&NovosValores);
     }
-            // Atualiza o cabeçalho e os status
+
     cab.status = '1';
-    status_index = '1';
+    escrever_cabecalho(binario, &cab);
 
-    fseek(binario, 0, SEEK_SET);
-    fwrite(&cab.status, sizeof(char), 1, binario);
-    
-    // (Opcional) Regrava topoLista, proxByteOffset, nroRegRem etc., caso tenham sido alterados pelo João Vitor.
-    // escreve_cabecalho2(binario, &cab);
+    salvar_indice(arquivo_index, vetor_indices, total_indices);
 
-    // Fecha e recria o índice em modo de escrita ("wb")
-    fclose(index);
-    index = fopen(arquivo_index, "wb");
-    
-    // Escreve o status inicial '0' (apenas por segurança durante a escrita)
-    char temp_status = '0';
-    fwrite(&temp_status, sizeof(char), 1, index);
-    
-    // Escreve o vetor atualizado
-    for(int i = 0; i < total_indices; i++) {
-        fwrite(&vetor_indices[i].idPoPs, sizeof(int), 1, index);
-        fwrite(&vetor_indices[i].byteoffset, sizeof(int64_t), 1, index);
-    }
-    
-    // Finaliza o índice com status '1'
-    fseek(index, 0, SEEK_SET);
-    fwrite(&status_index, sizeof(char), 1, index);
-
-    // Fecha os arquivos e libera memória
     fclose(binario);
-    fclose(index);
     free(vetor_indices);
 
     BinarioNaTela(arquivo_binario);
     BinarioNaTela(arquivo_index);
-
 }

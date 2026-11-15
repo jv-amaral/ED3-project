@@ -220,30 +220,47 @@ int64_t inserir_pop(FILE *arquivo, CabecalhoPoPs *cabecalho, RegistroPoP *regist
     cabecalho->nroPoPs++;
     return posicao;
 }
-void modifica_registro(Registro *reg,Criterios *NovosValores)
+void modifica_registro(RegistroPoP *reg, CriteriosPoPs *NovosValores)
 {
-    if(NovosValores->idPoPs!=-2)
+    if (NovosValores->buscar_id)
     {
         reg->idPoPs = NovosValores->idPoPs;
     }
     
-    if(strcmp(NovosValores->nomePoPs,"NUL")!=0)
+    if (NovosValores->nomePoPs != NULL)
     {
-         strcpy(reg->nomePoPs,NovosValores->nomePoPs);
+        free(reg->nomePoPs);
+        if (strcmp(NovosValores->nomePoPs, "") == 0)
+        {
+            reg->nomePoPs = malloc(1);
+            reg->nomePoPs[0] = '\0';
+        }
+        else
+        {
+            reg->nomePoPs = malloc(strlen(NovosValores->nomePoPs) + 1);
+            strcpy(reg->nomePoPs, NovosValores->nomePoPs);
+        }
     }
 
-    if(strcmp(NovosValores->nomePais,"NUL")!=0)
+    if (NovosValores->nomePais != NULL)
     {
-        strcpy(reg->nomePais, NovosValores->nomePais);
+        free(reg->nomePais);
+        if (strcmp(NovosValores->nomePais, "") == 0)
+        {
+            reg->nomePais = malloc(1);
+            reg->nomePais[0] = '\0';
+        }
+        else
+        {
+            reg->nomePais = malloc(strlen(NovosValores->nomePais) + 1);
+            strcpy(reg->nomePais, NovosValores->nomePais);
+        }
     }
     
-    if(strcmp(NovosValores->siglaPais, "NUL") != 0)
+    if (NovosValores->siglaPais != NULL)
     {
-        // Se a sigla nova for "", significa que o usuário digitou NULO.
-        // Como a sigla é tamanho fixo, gravamos '$$' no disco.
         if (strcmp(NovosValores->siglaPais, "") == 0)
-         {
-
+        {
             reg->siglaPais[0] = '$';
             reg->siglaPais[1] = '$';
             reg->siglaPais[2] = '\0';
@@ -253,10 +270,6 @@ void modifica_registro(Registro *reg,Criterios *NovosValores)
             strcpy(reg->siglaPais, NovosValores->siglaPais);
         }
     }
-
-  
-
-
 }
 void escreve_registro2(FILE *binario, Registro *Reg)
 {
