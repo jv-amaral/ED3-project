@@ -31,4 +31,8 @@ typedef struct
 
 }RegIndex;
 
+void create_table();
+void create_index();
+void busca();
+
 #endif

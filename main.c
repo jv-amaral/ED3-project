@@ -6,9 +6,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
-#include "funcionalidades.h"
-#include "funcoes_base.h"
 #include "funcionalidades2.h"
+#include "funcoes_base2.h"
+
 
 int main() {
     int funcionalidade;
@@ -17,29 +17,17 @@ int main() {
     //switch utilizado para selecionar qual funcionalidade deve ser executada
     switch (funcionalidade)
     {
-        case 1: 
-            leitura_e_gravacao();
-            break;
-        case 2: 
-            recuperacao_dados();
-            break;
-        case 3:
-            busca_condicional();
-            break;
-        case 4:
-            busca_RRN();
-            break;
-        case 5:
-            remocao_logica();
-            break;
-        case 6: 
-            insercao();     
-            break;
-        case 7:
-            atualizacao_registros();
-            break;
+       
         case 8:
 
+            break;
+        case 9:
+            create_index();
+            break;
+        case 10:
+                break;
+        case 11:
+            busca();
             break;
     }
     
