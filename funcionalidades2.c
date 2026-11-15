@@ -1,28 +1,24 @@
-// coloquei esse nome so para começarmos a fazer as funcoes novas aqui
-// depois ajustamos onde cada uma melhor se encaixa
-
-#include <ctype.h>
 #include <limits.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "funcionalidades2.h"
-#include "funcoes_base2.h"
+#include "funcionalidades.h"
+#include "auxiliares/arquivos.h"
+#include "auxiliares/leitura.h"
+#include "auxiliares/escrita.h"
+#include "auxiliares/busca.h"
+#include "auxiliares/indice.h"
 
-// Funcionalidade 8
-
+// funcionalidade 8: le os nomes pela entrada padrao e cria o binario a partir do csv.
+// grava cabecalho e registros, fecha os arquivos e exibe o binario; nao retorna valor.
 void create_table(void)
 {
-    char nome_arq_entrada[256];
-    char nome_arq_saida[256];
+    char nome_arq_entrada[100];
+    char nome_arq_saida[100];
 
-    if (scanf("%255s %255s", nome_arq_entrada, nome_arq_saida) != 2 ||
-        strcmp(nome_arq_entrada, nome_arq_saida) == 0)
-    {
-        printf("Falha no processamento do arquivo.\n");
-        return;
-    }
+    // o csv fornece os dados; o arquivo de saida sera criado em formato binario
+    scanf("%s %s", nome_arq_entrada, nome_arq_saida);
 
     FILE *arq_csv = fopen(nome_arq_entrada, "r");
 
@@ -32,16 +28,18 @@ void create_table(void)
         return;
     }
 
-    // A linha cresce conforme necessario, sem truncar nomes de tamanho variavel.
+    // a linha cresce conforme necessario, sem truncar nomes de tamanho variavel.
     char *linha_csv = NULL;
     size_t capacidade = 0;
-    char *campos[5]; // Quatro campos de dados e uma possivel coluna de numeracao.
+    char *campos[5]; // quatro campos de dados e uma possivel coluna de numeracao.
+
     const char *nomes_campos[] = {"idPoPs", "nomePoPs", "nomePais", "siglaPais"};
+    // cada posicao guarda em qual coluna do csv esta um dos quatro campos
     int colunas[4] = {-1, -1, -1, -1};
     int qtd_colunas = 0;
     int sucesso = ler_linha_csv(arq_csv, &linha_csv, &capacidade) == 1;
 
-    // Descobre a ordem pelo cabecalho, inclusive quando ha uma coluna inicial extra.
+    // descobre a ordem pelo cabecalho, inclusive quando ha uma coluna inicial extra.
     if (sucesso)
     {
         qtd_colunas = separar_campos_csv(linha_csv, campos, 5);
@@ -53,6 +51,7 @@ void create_table(void)
                     colunas[j] = i;
             }
         }
+        // a coluna extra de numeracao e ignorada, mas os quatro campos devem existir
         for (int i = 0; i < 4; i++)
         {
             if (colunas[i] == -1)
@@ -77,28 +76,33 @@ void create_table(void)
         return;
     }
 
-    RegCabecalho cabecalho;
+    CabecalhoPoPs cabecalho;
+
+    // durante a criacao o arquivo fica inconsistente e ainda nao possui removidos
     cabecalho.status = '0';
     cabecalho.topoLista = -1;
     cabecalho.proxByteOffset = 0;
     cabecalho.nroRegRem = 0;
     cabecalho.nroPoPs = 0;
 
-    escreve_cabecalho2(arq_binario, &cabecalho);
-    // O primeiro byte disponivel, depois do cabecalho, e o de offset 25.
-    cabecalho.proxByteOffset = 25;
+    escrever_cabecalho(arq_binario, &cabecalho);
+
+    // o primeiro byte disponivel, depois do cabecalho, e o de offset 25.
+    cabecalho.proxByteOffset = TAM_CABECALHO;
+
     sucesso = !ferror(arq_binario) && fflush(arq_binario) == 0;
 
     int leitura = 0;
     while (sucesso && (leitura = ler_linha_csv(arq_csv, &linha_csv, &capacidade)) == 1)
     {
+        // separar os campos preserva os vazios, que representam valores nulos
         if (separar_campos_csv(linha_csv, campos, 5) != qtd_colunas)
         {
             sucesso = 0;
             break;
         }
-
-        Registro registro;
+        RegistroPoP registro;
+        // o registro importado esta ativo e nao participa da lista de removidos
         registro.removido = '0';
         registro.encadeamentoLista = -1;
 
@@ -114,7 +118,7 @@ void create_table(void)
         }
         registro.idPoPs = (int)id;
 
-        // Os nomes apontam para a linha e sao gravados antes da proxima leitura.
+        // os nomes apontam para a linha e sao gravados antes da proxima leitura.
         registro.nomePoPs = campos[colunas[1]];
         registro.nomePais = campos[colunas[2]];
         char *sigla = campos[colunas[3]];
@@ -123,11 +127,12 @@ void create_table(void)
             sucesso = 0;
             break;
         }
+        // a sigla nula ocupa dois bytes de lixo; o terminador nao vai para o disco
         memcpy(registro.siglaPais, sigla[0] == '\0' ? "$$" : sigla, 2);
-        registro.siglaPais[2] = '\0'; // Terminador somente em memoria.
+        registro.siglaPais[2] = '\0'; // terminador somente em memoria.
 
         // 19 bytes fixos + dois delimitadores + os bytes dos dois nomes.
-        size_t tamanho = 21 + strlen(registro.nomePoPs) + strlen(registro.nomePais);
+        size_t tamanho = TAM_MINIMO_REGISTRO + strlen(registro.nomePoPs) + strlen(registro.nomePais);
         if (tamanho > INT_MAX || cabecalho.nroPoPs == INT_MAX)
         {
             sucesso = 0;
@@ -135,12 +140,14 @@ void create_table(void)
         }
         registro.tamanhoRegistro = (int)tamanho;
 
-        if (!escreve_registro2(arq_binario, &registro))
+        // grava agora porque os nomes apontam para a linha que sera lida novamente
+        if (!escrever_registro(arq_binario, &registro))
         {
             sucesso = 0;
             break;
         }
 
+        // os tamanhos variam, entao o proximo offset cresce pelo tamanho gravado
         cabecalho.proxByteOffset += registro.tamanhoRegistro;
         cabecalho.nroPoPs++;
     }
@@ -149,239 +156,297 @@ void create_table(void)
         sucesso = 0;
     if (fclose(arq_csv) != 0)
         sucesso = 0;
+    // basta liberar a linha: os campos e os nomes apenas apontavam para dentro dela
     free(linha_csv);
 
-    // Atualiza o cabecalho ainda inconsistente e descarrega os dados antes do status 1.
+    // termina os dados antes de gravar o cabecalho final ja consistente
     if (sucesso)
     {
-        sucesso = fseek(arq_binario, 0, SEEK_SET) == 0;
+        sucesso = fflush(arq_binario) == 0;
         if (sucesso)
         {
-            escreve_cabecalho2(arq_binario, &cabecalho);
-            sucesso = !ferror(arq_binario) && fflush(arq_binario) == 0;
+            // o status e alterado em memoria antes da unica gravacao final do cabecalho
+            cabecalho.status = '1';
+            escrever_cabecalho(arq_binario, &cabecalho);
+            sucesso = !ferror(arq_binario);
         }
-    }
-    if (sucesso)
-    {
-        cabecalho.status = '1';
-        sucesso = fseek(arq_binario, 0, SEEK_SET) == 0 &&
-                  fwrite(&cabecalho.status, sizeof(char), 1, arq_binario) == 1;
     }
     if (fclose(arq_binario) != 0)
         sucesso = 0;
 
+    // a exibicao so acontece depois de fechar o arquivo de dados
     if (sucesso)
         BinarioNaTela(nome_arq_saida);
     else
         printf("Falha no processamento do arquivo.\n");
 }
 
-
-
-void create_index()
+// funcionalidade 9: monta e ordena o indice com os ids e offsets dos registros ativos.
+// le os nomes pela entrada, percorre e fecha os arquivos e exibe o indice; nao retorna valor.
+void create_index(void)
 {
-    char arquivo_binario[50]; // variaveis para os arquivos
-    char arquivo_index[50];
-    scanf("%s", arquivo_binario); // le o nome dos arquivos
-    scanf("%s",arquivo_index);
-      // declaracao da struct do registro
-    Registro reg;
+    char nome_dados[100];
+    char nome_indice[100];
+    scanf("%99s %99s", nome_dados, nome_indice);
 
-     FILE *binario = verificar_arquivo(arquivo_binario, "rb");
-    if (binario == NULL) // Se encontrar algum erro, ele retorna
+    FILE *dados = abrir_arquivo(nome_dados, "rb");
+    if (dados == NULL)
+        return;
+
+    CabecalhoPoPs cabecalho = ler_cabecalho(dados);
+    // o vetor guarda apenas as chaves e os offsets; os nomes ficam no arquivo de dados
+    IndicePoPs *indice = malloc((cabecalho.nroPoPs + 1) * sizeof(IndicePoPs));
+    if (indice == NULL)
     {
+        fclose(dados);
         printf("Falha no processamento do arquivo.\n");
         return;
     }
-    fseek(binario, 25, SEEK_SET);
-    int64_t byteOffsetAtual = 25; // byteoffset atual depois de ler o registro de cabecalho
-     int max_registros = 2000; 
-    RegIndex *vetor_indices = (RegIndex *) malloc(max_registros * sizeof(RegIndex)); // vetor para armazenar idPoPs e o byteoffset
-     int i = 0;                                                                      // para ordenar depois
-    while( fread(&reg.removido, sizeof(char), 1, binario)==1 )
+
+    int quantidade = 0;
+    // a leitura do cabecalho ja deixou o cursor no inicio do primeiro registro
+    int64_t posicao = TAM_CABECALHO;
+    RegistroPoP registro;
+    while (ler_registro(dados, &registro))
     {
-        fread(&reg.tamanhoRegistro,sizeof(int),1,binario);
-        if(reg.removido == '0')
-        {   
-            fread(&reg.encadeamentoLista, sizeof(int64_t),1,binario);
-            fread(&reg.idPoPs, sizeof(int),1,binario); 
-            vetor_indices[i].idPoPs = reg.idPoPs;
-            vetor_indices[i].byteoffset = byteOffsetAtual;
-            i++;
-            fseek(binario, reg.tamanhoRegistro - 17,SEEK_CUR);
-        } else 
+        if (registro.removido == '0')
         {
-            fseek(binario, reg.tamanhoRegistro - 5 ,SEEK_CUR);
+            // usa o inicio do registro, pois a leitura ja avancou ate o seguinte
+            indice[quantidade].idPoPs = registro.idPoPs;
+            indice[quantidade].byteoffset = posicao;
+            quantidade++;
         }
-       
-        byteOffsetAtual = byteOffsetAtual + reg.tamanhoRegistro;
-
+        liberar_registro(&registro);
+        // acompanha o cursor para guardar o offset correto na proxima iteracao
+        posicao = ftell(dados);
     }
-        
+    fclose(dados);
 
-    qsort(vetor_indices, i, sizeof(RegIndex), compara_index);
-     fclose(binario);
-
-    FILE *index = fopen(arquivo_index,"wb");
-    if(index == NULL)
-    {
-        printf("Falha no processamento do arquivo.\n"); // Mensagem padrão de erro
-        free(vetor_indices);
-        return;
-    }
-    char status_index = '0';
-    fwrite(&status_index,sizeof(char),1,index);
-    for ( int j = 0; j<i;j++)
-    {
-        fwrite(&vetor_indices[j].idPoPs,sizeof(int),1,index);
-        fwrite(&vetor_indices[j].byteoffset,sizeof(int64_t),1,index);
-    }
-    status_index ='1';
-    fseek(index,0,SEEK_SET);
-    fwrite(&status_index,sizeof(char),1,index);
-    fclose(index);
-    free(vetor_indices);
-    BinarioNaTela(arquivo_index);
+    // o arquivo de dados mantem sua ordem; somente o vetor do indice e ordenado
+    qsort(indice, quantidade, sizeof(IndicePoPs), comparar_indices);
+    if (salvar_indice(nome_indice, indice, quantidade))
+        BinarioNaTela(nome_indice);
+    else
+        printf("Falha no processamento do arquivo.\n");
+    free(indice);
 }
 
-
-
-//funcionalidade 11 (Recuperar os dados de um arquivo binario
- //                   via busca, utilizando indice caso seja requisitado)
-
-void busca()
+// funcionalidade 10: percorre o arquivo e imprime somente os registros ativos.
+// le o nome pela entrada padrao, fecha o arquivo ao terminar e nao retorna valor.
+void listar_registros(void)
 {
-    char arquivo_binario[50]; // variaveis dos nomes dos arquivos
-    char arquivo_index[50];
+    char nome_arquivo[100];
+    scanf("%99s", nome_arquivo);
 
-    scanf("%s",arquivo_binario);    //leitura dos nomes dos arquivos
-    scanf("%s",arquivo_index);
-    RegCabecalho cab;
-    Registro reg;           // criacao das structs de registro e de registro de indice
-    
-    FILE *binario = verificar_arquivo(arquivo_binario,"rb");     // verifica se os arquivos nao estao corrompidos
-    FILE *index = verificar_arquivo(arquivo_index,"rb");
-    if (binario == NULL) // Se encontrar algum erro, ele retorna
-    {
-        printf("Falha no processamento do arquivo.\n");
+    FILE *arquivo = abrir_arquivo(nome_arquivo, "rb");
+    if (arquivo == NULL)
         return;
-    }
-    if (index == NULL) // Se encontrar algum erro, ele retorna
-    {
-        printf("Falha no processamento do arquivo.\n");
-        return;
-    }
-    fread(&cab.status,sizeof(char),1,binario);
 
-    if (cab.status == '0')                    // verifica se o arquivo esta consistente
-    {
-        printf("Falha no processamento do arquivo.\n");
-        return;
-    }
-    char status_index;
-    fread(&status_index,sizeof(char),1,index);
+    int encontrados = 0;
+    RegistroPoP registro;
+    // o cabecalho nao faz parte da listagem, por isso a leitura comeca no byte 25
+    fseek(arquivo, TAM_CABECALHO, SEEK_SET);
 
-    if (status_index == '0')            // verifica se o arquivo de indice esta consistente
+    while (ler_registro(arquivo, &registro))
     {
-        printf("Falha no processamento do arquivo.\n");
-        return;
-    }
-        // cria o vetor de indices para fazer a busca
-       int max_indices = 2000;
-         RegIndex *vetor_indices = (RegIndex *) malloc(max_indices * sizeof(RegIndex));
-         int total_indices = 0;
-
-         // Enquanto conseguir ler um idPoPs (4 bytes), é porque tem um registro
-         while (fread(&vetor_indices[total_indices].idPoPs, sizeof(int), 1, index) == 1)
+        // a leitura ja pula os removidos sem carregar seus campos de dados
+        if (registro.removido == '0')
         {
-        // Se leu o ID, obrigatoriamente tem o byteoffset (8 bytes) logo na frente
-        fread(&vetor_indices[total_indices].byteoffset, sizeof(int64_t), 1, index);
-        total_indices++;
+            imprimir_registro(&registro);
+            encontrados++;
         }
+        // os nomes foram alocados pelo leitor e nao serao usados na proxima iteracao
+        liberar_registro(&registro);
+    }
 
-    
-         fclose(index);
-    int n;          // declaracao e leitura da variavel que vai verificar quantas vezes sera feita a busca
-    scanf("%d",&n);
+    // tambem vale para um arquivo que possui apenas registros removidos
+    if (encontrados == 0)
+        printf("Registro inexistente.\n");
+    fclose(arquivo);
+}
 
-    
+// funcionalidade 11: usa o indice para id e busca sequencial para os outros campos.
+// le as buscas da entrada, imprime os resultados e fecha os arquivos; nao retorna valor.
+void busca(void)
+{
+    char nome_dados[100];
+    char nome_indice[100];
+    int quantidade_buscas;
+    scanf("%99s %99s %d", nome_dados, nome_indice, &quantidade_buscas);
 
-    for (int i = 0; i<n;i++)            // loop principal da busca que sera feita n vezes
-    {   
-        int m;
-        scanf("%d",&m);
-        Criterios C = ler_criterios(m);
-        int registro_encontrado;
-        if (C.idPoPs!= -2)
+    FILE *dados = abrir_arquivo(nome_dados, "rb");
+    if (dados == NULL)
+        return;
+    FILE *arquivo_indice = abrir_arquivo(nome_indice, "rb");
+    if (arquivo_indice == NULL)
+    {
+        fclose(dados);
+        return;
+    }
+
+    int quantidade_indices;
+    // carrega o indice uma vez e reutiliza o vetor em todas as buscas desta execucao
+    IndicePoPs *indice = carregar_indice(arquivo_indice, &quantidade_indices);
+    fclose(arquivo_indice);
+    if (indice == NULL)
+    {
+        fclose(dados);
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    for (int i = 0; i < quantidade_buscas; i++)
+    {
+        int quantidade_campos;
+        scanf("%d", &quantidade_campos);
+        CriteriosPoPs criterios = ler_criterios(quantidade_campos);
+        RegistroPoP registro;
+        // cada solicitacao tem sua propria contagem de resultados
+        int encontrados = 0;
+
+        if (criterios.buscar_id)
         {
-            // (Isso entra logo depois do seu if que checou o status_index == '0')
-        
-
-     
-        int inicio = 0;
-        int fim = total_indices - 1;
-        int64_t offset_encontrado = -1;
-            while (inicio <= fim) {
-                int meio = (inicio + fim) / 2;
-
-                if (vetor_indices[meio].idPoPs == C.idPoPs) {
-                    offset_encontrado = vetor_indices[meio].byteoffset; 
-                    break; // Sai do while na hora
-                } 
-                else if (vetor_indices[meio].idPoPs < C.idPoPs) {
-                    inicio = meio + 1;
-                } 
-                else {
-                    fim = meio - 1;
-                }
-            }
-            if(offset_encontrado == -1)
+            // o auxiliar busca o id no vetor, acessa o offset e confere os demais campos
+            int posicao = buscar_registro_indexado(dados, indice, quantidade_indices,
+                                                   &criterios, &registro);
+            if (posicao != -1)
             {
-                printf("Registro inexistente.\n");
+                imprimir_registro(&registro);
+                liberar_registro(&registro);
+                encontrados++;
             }
-            else
-            {
-                fseek(binario,offset_encontrado,SEEK_SET);
-                Leitura_Registro2(binario,&reg);
-                if (reg.removido == '0' && verificar_encontro(&C, &reg) == 1)
-                {
-                    print_registro2(&reg);
-                    registro_encontrado = 1;
-                }
-                
-                if (registro_encontrado == 0) 
-                {
-                    printf("Registro inexistente.\n");
-                }
-               
-            }
-            
-
-
         }
         else
         {
-            fseek(binario,25,SEEK_SET);
-
-           while (Leitura_Registro2(binario, &reg) == 1)
+            // cada busca sequencial comeca no primeiro registro de dados
+            fseek(dados, TAM_CABECALHO, SEEK_SET);
+            while (ler_registro(dados, &registro))
             {
-                if (reg.removido == '1') continue;
-                
-                if (verificar_encontro(&C, &reg) == 1)
+                // um registro so e exibido quando satisfaz todos os criterios
+                if (registro.removido == '0' && verificar_criterios(&criterios, &registro))
                 {
-                    print_registro2(&reg);
-                    registro_encontrado = 1;
+                    imprimir_registro(&registro);
+                    encontrados++;
                 }
-            }
-
-            if (registro_encontrado == 0)
-            {
-                printf("Registro inexistente.\n");
+                liberar_registro(&registro);
             }
         }
+
+        if (encontrados == 0)
+            printf("Registro inexistente.\n");
+        // os criterios seguintes podem conter outros textos, entao libera os atuais
+        liberar_criterios(&criterios);
     }
 
+    free(indice);
+    fclose(dados);
+}
 
+// funcionalidade 12: remove os registros encontrados e atualiza o indice primario.
+// mantem a lista de removidos por tamanho decrescente para worst fit.
+// le as solicitacoes da entrada, altera e fecha os dois arquivos e nao retorna valor.
+void remover_registros(void)
+{
+    char nome_dados[100];
+    char nome_indice[100];
+    int quantidade_remocoes;
+    scanf("%s %s %d", nome_dados, nome_indice, &quantidade_remocoes);
 
+    FILE *dados = abrir_arquivo(nome_dados, "rb+");
+    if (dados == NULL)
+        return;
+    FILE *arquivo_indice = abrir_arquivo(nome_indice, "rb+");
+    if (arquivo_indice == NULL)
+    {
+        fclose(dados);
+        return;
+    }
 
+    CabecalhoPoPs cabecalho = ler_cabecalho(dados);
+    int quantidade_indices;
+    // as exclusoes mudam o vetor em memoria; o indice em disco sera salvo no final
+    IndicePoPs *indice = carregar_indice(arquivo_indice, &quantidade_indices);
+    if (indice == NULL)
+    {
+        fclose(dados);
+        fclose(arquivo_indice);
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    // apenas o status muda no inicio; o cabecalho completo fica para o final
+    alterar_status(dados, '0');
+    alterar_status(arquivo_indice, '0');
+    fclose(arquivo_indice);
+
+    for (int i = 0; i < quantidade_remocoes; i++)
+    {
+        int quantidade_campos;
+        scanf("%d", &quantidade_campos);
+        CriteriosPoPs criterios = ler_criterios(quantidade_campos);
+        RegistroPoP registro;
+
+        if (criterios.buscar_id)
+        {
+            // com id unico, no maximo um registro pode satisfazer esta solicitacao
+            int posicao_indice = buscar_registro_indexado(dados, indice, quantidade_indices, &criterios, &registro);
+            if (posicao_indice != -1)
+            {
+                // guarda o offset antes de retirar a entrada e deslocar o vetor
+                int64_t posicao = indice[posicao_indice].byteoffset;
+                remover_registro(dados, &cabecalho, &registro, posicao);
+                retirar_do_indice(indice, &quantidade_indices, posicao_indice);
+                liberar_registro(&registro);
+            }
+        }
+        else
+        {
+            // sem id, percorre os registros na ordem fisica e pode remover varios
+            int64_t posicao = TAM_CABECALHO;
+            fseek(dados, posicao, SEEK_SET);
+
+            while (ler_registro(dados, &registro))
+            {
+                if (registro.removido == '0' && verificar_criterios(&criterios, &registro))
+                {
+                    // o auxiliar preenche com lixo, encadeia por tamanho e atualiza os contadores
+                    remover_registro(dados, &cabecalho, &registro, posicao);
+                    // busca a chave para retirar a entrada correspondente do indice
+                    int posicao_indice = buscar_no_indice(indice, quantidade_indices, registro.idPoPs);
+                    retirar_do_indice(indice, &quantidade_indices, posicao_indice);
+                }
+
+                liberar_registro(&registro);
+                // a remocao restaura o cursor, permitindo continuar a varredura
+                posicao = ftell(dados);
+            }
+        }
+        // nenhuma mensagem e necessaria se nada foi removido; segue para a proxima busca
+        liberar_criterios(&criterios);
+    }
+
+    // salva o indice sem entradas antigas e grava o cabecalho final de uma vez
+    int sucesso = !ferror(dados) && fflush(dados) == 0;
+    if (sucesso)
+        sucesso = salvar_indice(nome_indice, indice, quantidade_indices);
+    if (sucesso)
+    {
+        // grava o cabecalho completo ja consistente, sem voltar depois apenas pelo status
+        cabecalho.status = '1';
+        escrever_cabecalho(dados, &cabecalho);
+        sucesso = !ferror(dados);
+    }
+
+    if (fclose(dados) != 0)
+        sucesso = 0;
+    free(indice);
+
+    if (sucesso)
+    {
+        // respeita a ordem de saida do enunciado: dados primeiro, indice depois
+        BinarioNaTela(nome_dados);
+        BinarioNaTela(nome_indice);
+    }
+    else
+        printf("Falha no processamento do arquivo.\n");
 }

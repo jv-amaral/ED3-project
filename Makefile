@@ -1,5 +1,5 @@
 all:
-	gcc -Wall -Wextra -g main.c funcionalidades2.c funcoes_base2.c -o programaTrab
+	gcc -Wall -Wextra -g *.c auxiliares/*.c -o programaTrab
 
 run:
 	./programaTrab
