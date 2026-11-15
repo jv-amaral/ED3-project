@@ -592,7 +592,7 @@ void inserir_registros(void)
 
 //funcionalidade 14
 
-void atualiza_registro()
+void atualiza_registro(void)
 {
     char arquivo_binario[50];
     char arquivo_index[50];

@@ -16,5 +16,6 @@ void listar_registros(void);
 void busca(void);
 void remover_registros(void);
 void inserir_registros(void);
+void atualiza_registro(void);
 
 #endif

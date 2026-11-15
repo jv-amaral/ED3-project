@@ -227,31 +227,35 @@ void modifica_registro(RegistroPoP *reg, CriteriosPoPs *NovosValores)
         reg->idPoPs = NovosValores->idPoPs;
     }
     
+    // Tratamento dinâmico para nomePoPs
     if (NovosValores->nomePoPs != NULL)
     {
-        free(reg->nomePoPs);
-        if (strcmp(NovosValores->nomePoPs, "") == 0)
+        free(reg->nomePoPs); // Liberta a memória antiga
+        if (strcmp(NovosValores->nomePoPs, "") == 0) // Tratamento para nulo
         {
             reg->nomePoPs = malloc(1);
             reg->nomePoPs[0] = '\0';
         }
         else
         {
+            // Aloca nova memória e copia
             reg->nomePoPs = malloc(strlen(NovosValores->nomePoPs) + 1);
             strcpy(reg->nomePoPs, NovosValores->nomePoPs);
         }
     }
 
+    // Tratamento dinâmico para nomePais
     if (NovosValores->nomePais != NULL)
     {
-        free(reg->nomePais);
-        if (strcmp(NovosValores->nomePais, "") == 0)
+        free(reg->nomePais); // Liberta a memória antiga
+        if (strcmp(NovosValores->nomePais, "") == 0) // Tratamento para nulo
         {
             reg->nomePais = malloc(1);
             reg->nomePais[0] = '\0';
         }
         else
         {
+            // Aloca nova memória e copia
             reg->nomePais = malloc(strlen(NovosValores->nomePais) + 1);
             strcpy(reg->nomePais, NovosValores->nomePais);
         }
@@ -271,30 +275,6 @@ void modifica_registro(RegistroPoP *reg, CriteriosPoPs *NovosValores)
         }
     }
 }
-void escreve_registro2(FILE *binario, Registro *Reg)
-{
-    char pipe = '|';
-    
-    // Grava os 19 bytes fixos
-    fwrite(&Reg->removido, sizeof(char), 1, binario);
-    fwrite(&Reg->tamanhoRegistro, sizeof(int), 1, binario);
-    fwrite(&Reg->encadeamentoLista, sizeof(int64_t), 1, binario);
-    fwrite(&Reg->idPoPs, sizeof(int), 1, binario);
-    fwrite(Reg->siglaPais, sizeof(char), 2, binario); 
-    
-    // Grava nomePoPs
-    int tamanho_pops = strlen(Reg->nomePoPs);
-    if (tamanho_pops > 0) {
-        fwrite(Reg->nomePoPs, sizeof(char), tamanho_pops, binario);
-    }
-    fwrite(&pipe, sizeof(char), 1, binario); // Escreve o '|' (mesmo se a string for vazia)
-    
-    // Grava nomePais
-    int tamanho_pais = strlen(Reg->nomePais);
-    if (tamanho_pais > 0) {
-        fwrite(Reg->nomePais, sizeof(char), tamanho_pais, binario);
-    }
-    fwrite(&pipe, sizeof(char), 1, binario); // Escreve o '|' (mesmo se a string for vazia)
-}
+
 
 
