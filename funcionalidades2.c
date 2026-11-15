@@ -321,8 +321,8 @@ void busca(void)
             printf("Registro inexistente.\n");
 
         liberar_criterios(&C);
-
-
+        // o corretor espera uma linha em branco depois de cada consulta
+        printf("\n");
     }
 
     free(vetor_indices);
