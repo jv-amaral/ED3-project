@@ -489,8 +489,9 @@ void inserir_registros(void)
     for (int i = 0; i < quantidade_insercoes; i++)
     {
         RegistroPoP registro = ler_pop_terminal();
-        // o vetor inclui as chaves ja inseridas neste lote
-        if (buscar_no_indice(indice, quantidade_indices, registro.idPoPs) != -1)
+        // rejeita chave nula ou repetida, inclusive nas insercoes deste lote
+        if (registro.idPoPs == -1 ||
+            buscar_no_indice(indice, quantidade_indices, registro.idPoPs) != -1)
         {
             liberar_registro(&registro);
             erro_insercao = 1;
