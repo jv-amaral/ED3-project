@@ -14,10 +14,10 @@ typedef struct
 typedef struct
 {
     char removido;
-    int tamanhoRegistro;
+    int tamanhoRegistro; // Tamanho total em disco, incluindo os campos de controle.
     int64_t encadeamentoLista;
     int idPoPs;
-    char siglaPais[3];
+    char siglaPais[3]; // Dois bytes no arquivo; o terceiro e '\0' apenas em memoria.
     char *nomePoPs;
     char *nomePais;
 } Registro;
@@ -31,7 +31,7 @@ typedef struct
 
 }RegIndex;
 
-void create_table();
+void create_table(void);
 void create_index();
 void busca();
 

@@ -2,6 +2,8 @@
 // depois ajustamos onde cada uma melhor se encaixa
 
 #include <ctype.h>
+#include <limits.h>
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,15 +12,17 @@
 
 // Funcionalidade 8
 
-void create_table()
+void create_table(void)
 {
-    char nome_arq_entrada[50];
-    char nome_arq_saida[50];
+    char nome_arq_entrada[256];
+    char nome_arq_saida[256];
 
-    scanf("%s %s", nome_arq_entrada, nome_arq_saida);
-
-    RegCabecalho cabecalho;
-    Registro registro;
+    if (scanf("%255s %255s", nome_arq_entrada, nome_arq_saida) != 2 ||
+        strcmp(nome_arq_entrada, nome_arq_saida) == 0)
+    {
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
 
     FILE *arq_csv = fopen(nome_arq_entrada, "r");
 
@@ -28,13 +32,52 @@ void create_table()
         return;
     }
 
-    FILE *arq_binario = fopen(nome_arq_saida, "wb");
-    if (arq_binario == NULL)
+    // A linha cresce conforme necessario, sem truncar nomes de tamanho variavel.
+    char *linha_csv = NULL;
+    size_t capacidade = 0;
+    char *campos[5]; // Quatro campos de dados e uma possivel coluna de numeracao.
+    const char *nomes_campos[] = {"idPoPs", "nomePoPs", "nomePais", "siglaPais"};
+    int colunas[4] = {-1, -1, -1, -1};
+    int qtd_colunas = 0;
+    int sucesso = ler_linha_csv(arq_csv, &linha_csv, &capacidade) == 1;
+
+    // Descobre a ordem pelo cabecalho, inclusive quando ha uma coluna inicial extra.
+    if (sucesso)
     {
+        qtd_colunas = separar_campos_csv(linha_csv, campos, 5);
+        for (int i = 0; i < qtd_colunas; i++)
+        {
+            for (int j = 0; j < 4; j++)
+            {
+                if (strcmp(campos[i], nomes_campos[j]) == 0)
+                    colunas[j] = i;
+            }
+        }
+        for (int i = 0; i < 4; i++)
+        {
+            if (colunas[i] == -1)
+                sucesso = 0;
+        }
+    }
+
+    if (!sucesso)
+    {
+        free(linha_csv);
+        fclose(arq_csv);
         printf("Falha no processamento do arquivo.\n");
         return;
     }
 
+    FILE *arq_binario = fopen(nome_arq_saida, "wb");
+    if (arq_binario == NULL)
+    {
+        free(linha_csv);
+        fclose(arq_csv);
+        printf("Falha no processamento do arquivo.\n");
+        return;
+    }
+
+    RegCabecalho cabecalho;
     cabecalho.status = '0';
     cabecalho.topoLista = -1;
     cabecalho.proxByteOffset = 0;
@@ -42,83 +85,95 @@ void create_table()
     cabecalho.nroPoPs = 0;
 
     escreve_cabecalho2(arq_binario, &cabecalho);
+    // O primeiro byte disponivel, depois do cabecalho, e o de offset 25.
+    cabecalho.proxByteOffset = 25;
+    sucesso = !ferror(arq_binario) && fflush(arq_binario) == 0;
 
-    //inicialização dos registros
-
-    registro.removido = 0;
-    registro.tamanhoRegistro = 0;
-    registro.encadeamentoLista = -1;
-
-    char linha_csv[200];
-
-    //ler e descartar primeira linha, a qual representa o título dos campos
-    fgets(linha_csv, sizeof(linha_csv), arq_csv);
-
-    //inicia o loop fazendo a verificação de nulo
-
-    while ((fgets(linha_csv, sizeof(linha_csv), arq_csv)) != NULL)
+    int leitura = 0;
+    while (sucesso && (leitura = ler_linha_csv(arq_csv, &linha_csv, &capacidade)) == 1)
     {
-         // atribui os valores do csv para os campos do registro
-        // strtok é usada para procurar a virgula, e atoi converte o texto para o numero inteiro correspondente
-        char *primeira_virgula = strchr(linha_csv, ',');
-        char *segunda_virgula = strchr(primeira_virgula + 1, ',');
-        char *terceira_virgula = strchr(segunda_virgula + 1, ',');
-        char *quarta_virgula = strchr(terceira_virgula + 1, ',');
-
-        Reg.idPoPs = atoi(strtok(linha_csv, ","));
-        Reg.idPoPsConectado = atoi(strtok(NULL, ","));
-
-        char *velocidade_ptr = segunda_virgula + 1;
-        *terceira_virgula = '\0';
-
-        // verifica se o campo velocidade é nulo e atribui -1 se for o caso, caso contrário, o valor lido do csv é copiado para a variável Reg.velocidade
-        if (velocidade_ptr[0] == '\0' || velocidade_ptr[0] == ' ')
+        if (separar_campos_csv(linha_csv, campos, 5) != qtd_colunas)
         {
-            Reg.velocidade = -1; // atribui -1 se o campo for nulo
-        }
-        else
-        {
-            Reg.velocidade = atoi(velocidade_ptr);
+            sucesso = 0;
+            break;
         }
 
-        char *unidade_medida_ptr = terceira_virgula + 1;
-        unidade_medida_ptr[strcspn(unidade_medida_ptr, "\n\r")] = '\0';
+        Registro registro;
+        registro.removido = '0';
+        registro.encadeamentoLista = -1;
 
-        // verifica se o campo de unidade de medida é nulo e atribui '$' para ser usado como lixo
-        if (unidade_medida_ptr[0] == '\0' || unidade_medida_ptr[0] == ' ')
+        // strtol permite verificar se o id realmente representa um inteiro de 4 bytes.
+        char *fim_id;
+        errno = 0;
+        long id = strtol(campos[colunas[0]], &fim_id, 10);
+        if (fim_id == campos[colunas[0]] || *fim_id != '\0' ||
+            errno == ERANGE || id < INT_MIN || id > INT_MAX || id == -1)
         {
-            Reg.unidade_medida = '$';
+            sucesso = 0;
+            break;
         }
-        else
+        registro.idPoPs = (int)id;
+
+        // Os nomes apontam para a linha e sao gravados antes da proxima leitura.
+        registro.nomePoPs = campos[colunas[1]];
+        registro.nomePais = campos[colunas[2]];
+        char *sigla = campos[colunas[3]];
+        if (sigla[0] != '\0' && strlen(sigla) != 2)
         {
-            Reg.unidade_medida = unidade_medida_ptr[0];
+            sucesso = 0;
+            break;
+        }
+        memcpy(registro.siglaPais, sigla[0] == '\0' ? "$$" : sigla, 2);
+        registro.siglaPais[2] = '\0'; // Terminador somente em memoria.
+
+        // 19 bytes fixos + dois delimitadores + os bytes dos dois nomes.
+        size_t tamanho = 21 + strlen(registro.nomePoPs) + strlen(registro.nomePais);
+        if (tamanho > INT_MAX || cabecalho.nroPoPs == INT_MAX)
+        {
+            sucesso = 0;
+            break;
+        }
+        registro.tamanhoRegistro = (int)tamanho;
+
+        if (!escreve_registro2(arq_binario, &registro))
+        {
+            sucesso = 0;
+            break;
         }
 
-        // escreve os campos do registro no arquivo binário
-        escreve_registro(binario, &Reg);
-
-        // atualiza os valores do cabeçalho do proxRRN e do numero de pares
-        cabecalho.proxRRN++;
-        cabecalho.nroPares++;
+        cabecalho.proxByteOffset += registro.tamanhoRegistro;
+        cabecalho.nroPoPs++;
     }
 
-    // escreve o cabecalho atualizado
-    fseek(binario, 0, SEEK_SET);
-    escreve_cabecalho(binario, &cabecalho);
+    if (leitura == -1)
+        sucesso = 0;
+    if (fclose(arq_csv) != 0)
+        sucesso = 0;
+    free(linha_csv);
 
-    // atualiza o status para 1, ou seja, consistente
-    cabecalho.status = '1';
-
-    // escreve o status por ultimo, para garantir a integridade do arquivo
-    fseek(binario, 0, SEEK_SET);
-    fwrite(&cabecalho.status, sizeof(char), 1, binario);
-
-    fclose(csv);
-    fclose(binario);
-
-    BinarioNaTela(arquivo_binario);
-}
+    // Atualiza o cabecalho ainda inconsistente e descarrega os dados antes do status 1.
+    if (sucesso)
+    {
+        sucesso = fseek(arq_binario, 0, SEEK_SET) == 0;
+        if (sucesso)
+        {
+            escreve_cabecalho2(arq_binario, &cabecalho);
+            sucesso = !ferror(arq_binario) && fflush(arq_binario) == 0;
+        }
     }
+    if (sucesso)
+    {
+        cabecalho.status = '1';
+        sucesso = fseek(arq_binario, 0, SEEK_SET) == 0 &&
+                  fwrite(&cabecalho.status, sizeof(char), 1, arq_binario) == 1;
+    }
+    if (fclose(arq_binario) != 0)
+        sucesso = 0;
+
+    if (sucesso)
+        BinarioNaTela(nome_arq_saida);
+    else
+        printf("Falha no processamento do arquivo.\n");
 }
 
 

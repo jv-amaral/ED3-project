@@ -19,7 +19,7 @@ int main() {
     {
        
         case 8:
-
+            create_table();
             break;
         case 9:
             create_index();

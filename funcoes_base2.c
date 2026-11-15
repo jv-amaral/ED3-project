@@ -5,6 +5,70 @@
 #include "funcionalidades2.h"
 #include "funcoes_base2.h"
 
+// Retorna 1 para uma linha, 0 no fim do arquivo e -1 em erro de leitura/alocacao.
+int ler_linha_csv(FILE *csv, char **linha, size_t *capacidade)
+{
+    size_t tamanho = 0;
+    int caractere;
+
+    while ((caractere = fgetc(csv)) != EOF)
+    {
+        // Reserva espaco tambem para o terminador '\0' usado em memoria.
+        if (tamanho + 1 >= *capacidade)
+        {
+            if (*capacidade > SIZE_MAX / 2)
+                return -1;
+            size_t nova_capacidade = *capacidade == 0 ? 128 : *capacidade * 2;
+            char *nova_linha = realloc(*linha, nova_capacidade);
+            if (nova_linha == NULL)
+                return -1;
+            *linha = nova_linha;
+            *capacidade = nova_capacidade;
+        }
+        if (caractere == '\n')
+            break;
+        (*linha)[tamanho++] = (char)caractere;
+    }
+
+    if (ferror(csv))
+        return -1;
+    if (caractere == EOF && tamanho == 0)
+        return 0;
+    // Aceita tanto a quebra de linha do Linux (LF) quanto a do Windows (CRLF).
+    if (tamanho > 0 && (*linha)[tamanho - 1] == '\r')
+        tamanho--;
+    (*linha)[tamanho] = '\0';
+    return 1;
+}
+
+// Separa o CSV simples da disciplina sem pular campos vazios, inclusive o ultimo.
+// Os ponteiros resultantes pertencem a linha; nao devem ser liberados separadamente.
+int separar_campos_csv(char *linha, char *campos[], int max_campos)
+{
+    int quantidade = 0;
+    char *inicio = linha;
+
+    while (quantidade < max_campos)
+    {
+        campos[quantidade++] = inicio;
+        char *virgula = strchr(inicio, ',');
+        if (virgula != NULL)
+            *virgula = '\0';
+
+        // Um campo vazio ou composto apenas de espacos representa um valor nulo.
+        char *caractere = inicio;
+        while (isspace((unsigned char)*caractere))
+            caractere++;
+        if (*caractere == '\0')
+            inicio[0] = '\0';
+
+        if (virgula == NULL)
+            return quantidade;
+        inicio = virgula + 1;
+    }
+    return -1; // Mais colunas do que o esperado.
+}
+
 FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura)
 {
 
@@ -191,16 +255,24 @@ int compara_index(const void *a, const void *b) {
     return regA->idPoPs - regB->idPoPs;
 }
 
-// funcao para escrever os registros
-/*void escreve_registro2(FILE *binario, Registro *Reg)
+// Grava campo a campo: nao inclui padding da struct nem terminadores '\0'.
+// Retorna 0 se alguma escrita falhar e 1 se o registro inteiro for gravado.
+int escreve_registro2(FILE *binario, const Registro *Reg)
 {
-    fwrite(&Reg->removido, sizeof(char), 1, binario);
-    fwrite(&Reg->encadeamento, sizeof(int), 1, binario);
-    fwrite(&Reg->idPoPs, sizeof(int), 1, binario);
-    fwrite(&Reg->idPoPsConectado, sizeof(int), 1, binario);
-    fwrite(&Reg->velocidade, sizeof(int), 1, binario);
-    fwrite(&Reg->unidade_medida, sizeof(char), 1, binario);
-}*/
+    char delimitador = '|';
+    size_t tamanho_nome = strlen(Reg->nomePoPs);
+    size_t tamanho_pais = strlen(Reg->nomePais);
+
+    return fwrite(&Reg->removido, sizeof(char), 1, binario) == 1 &&
+           fwrite(&Reg->tamanhoRegistro, sizeof(int), 1, binario) == 1 &&
+           fwrite(&Reg->encadeamentoLista, sizeof(int64_t), 1, binario) == 1 &&
+           fwrite(&Reg->idPoPs, sizeof(int), 1, binario) == 1 &&
+           fwrite(Reg->siglaPais, sizeof(char), 2, binario) == 2 &&
+           fwrite(Reg->nomePoPs, sizeof(char), tamanho_nome, binario) == tamanho_nome &&
+           fwrite(&delimitador, sizeof(char), 1, binario) == 1 &&
+           fwrite(Reg->nomePais, sizeof(char), tamanho_pais, binario) == tamanho_pais &&
+           fwrite(&delimitador, sizeof(char), 1, binario) == 1;
+}
 
 
 

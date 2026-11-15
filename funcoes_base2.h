@@ -14,6 +14,10 @@ typedef struct
 
 FILE *verificar_arquivo(char *arquivo_binario, char *modo_de_leitura);
 int Leitura_Registro2(FILE *binario, Registro *Reg);
+// CSV simples fornecido pela disciplina: preserva campos vazios e linhas longas.
+int ler_linha_csv(FILE *csv, char **linha, size_t *capacidade);
+int separar_campos_csv(char *linha, char *campos[], int max_campos);
+int escreve_registro2(FILE *binario, const Registro *Reg);
 void escreve_cabecalho2(FILE *binario, RegCabecalho *Cab);
 int verificar_encontro(Criterios *C, Registro *Reg);
 Criterios ler_criterios(int qtd_criterios);
