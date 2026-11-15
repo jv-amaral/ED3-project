@@ -10,6 +10,6 @@ void escrever_cabecalho(FILE *arquivo, CabecalhoPoPs *cabecalho);
 void alterar_status(FILE *arquivo, char status);
 CabecalhoConexoes ler_cabecalho_conexoes(FILE *arquivo);
 void escrever_cabecalho_conexoes(FILE *arquivo, CabecalhoConexoes *cabecalho);
-void BinarioNaTela(char *nome);
+void BinarioNaTela(char *arquivo);
 
 #endif

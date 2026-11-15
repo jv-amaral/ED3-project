@@ -9,6 +9,7 @@ int separar_campos_csv(char *linha, char *campos[], int max_campos);
 int ler_registro(FILE *arquivo, RegistroPoP *registro);
 void liberar_registro(RegistroPoP *registro);
 char *ler_valor(void);
+void ScanQuoteString(char *str);
 int ler_conexao(FILE *arquivo, RegistroConexao *registro);
 RegistroConexao ler_conexao_terminal(void);
 RegistroPoP ler_pop_terminal(void);

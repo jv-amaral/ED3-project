@@ -1,3 +1,4 @@
+#include <stdlib.h>
 #include "arquivos.h"
 
 // auxiliares compartilhadas pelos trabalhos 1 e 2
@@ -39,26 +40,36 @@ void alterar_status(FILE *arquivo, char status)
 }
 
 // soma os bytes do binario e mostra o resultado dividido por 100.
-void BinarioNaTela(char *nome)
+void BinarioNaTela(char *arquivo)
 {
-    FILE *arquivo = fopen(nome, "rb");
-    if (arquivo == NULL)
+    FILE *fs;
+    if (arquivo == NULL || !(fs = fopen(arquivo, "rb")))
     {
-        printf("Falha no processamento do arquivo.\n");
+        fprintf(stderr,
+                "ERRO AO ESCREVER O BINARIO NA TELA (função binarioNaTela): "
+                "não foi possível abrir o arquivo que me passou para leitura. "
+                "Ele existe e você tá passando o nome certo? Você lembrou de "
+                "fechar ele com fclose depois de usar?\n");
         return;
     }
 
-    // descobre quantos bytes serao somados e depois retorna ao inicio
-    fseek(arquivo, 0, SEEK_END);
-    long tamanho = ftell(arquivo);
-    rewind(arquivo);
-    unsigned long soma = 0;
-    // considera o valor de cada byte, inclusive os campos de controle e o lixo
-    for (long i = 0; i < tamanho; i++)
-        soma += (unsigned char)fgetc(arquivo);
+    fseek(fs, 0, SEEK_END);
+    size_t fl = ftell(fs);
 
-    printf("%lf\n", soma / 100.0);
-    fclose(arquivo);
+    fseek(fs, 0, SEEK_SET);
+    unsigned char *mb = (unsigned char *)malloc(fl);
+    fread(mb, 1, fl, fs);
+
+    unsigned long cs = 0;
+    for (unsigned long i = 0; i < fl; i++)
+    {
+        cs += (unsigned long)mb[i];
+    }
+
+    printf("%lf\n", (cs / (double)100));
+
+    free(mb);
+    fclose(fs);
 }
 
 // auxiliares trab. 1

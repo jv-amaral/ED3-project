@@ -5,6 +5,42 @@
 
 // auxiliares compartilhadas pelos trabalhos 1 e 2
 
+// le strings entre aspas ou nulo para um buffer reservado pelo chamador.
+void ScanQuoteString(char *str)
+{
+    char R;
+
+    while ((R = getchar()) != EOF && isspace(R))
+        ; // ignorar espaços, \r, \n...
+
+    if (R == 'N' || R == 'n')
+    { // campo NULO
+        getchar();
+        getchar();
+        getchar();       // ignorar o "ULO" de NULO.
+        strcpy(str, ""); // copia string vazia
+    }
+    else if (R == '\"')
+    {
+        if (scanf("%[^\"]", str) != 1)
+        { // ler até o fechamento das aspas
+            strcpy(str, "");
+        }
+        getchar(); // ignorar aspas fechando
+    }
+    else if (R != EOF)
+    { // vc tá tentando ler uma string que não tá entre
+      // aspas! Fazer leitura normal %s então, pois deve
+      // ser algum inteiro ou algo assim...
+        str[0] = R;
+        scanf("%s", &str[1]);
+    }
+    else
+    { // EOF
+        strcpy(str, "");
+    }
+}
+
 // le ate a quebra de linha, aumentando o espaco do buffer quando precisa.
 // devolve 1 para uma linha lida, 0 no fim do csv ou -1 se faltar memoria.
 int ler_linha_csv(FILE *csv, char **linha, size_t *capacidade)
@@ -152,15 +188,15 @@ RegistroConexao ler_conexao_terminal(void)
     registro.removido = '0';
     registro.encadeamento = -1;
     scanf("%d %d", &registro.idPoPs, &registro.idPoPsConectado);
-    // o leitor de valores reconhece as aspas e devolve string vazia para nulo
+    // a velocidade e lida como texto para aceitar o numero ou nulo
     char *velocidade = ler_valor();
-    char *unidade = ler_valor();
+    char unidade[2];
+    ScanQuoteString(unidade);
 
     registro.velocidade = velocidade[0] == '\0' ? -1 : atoi(velocidade);
     registro.unidade_medida = unidade[0] == '\0' ? '$' : unidade[0];
     // os valores ja foram copiados para os campos numericos e para a unidade
     free(velocidade);
-    free(unidade);
     return registro;
 }
 
@@ -252,12 +288,13 @@ RegistroPoP ler_pop_terminal(void)
     scanf("%d", &registro.idPoPs);
     registro.nomePoPs = ler_valor();
     registro.nomePais = ler_valor();
-    char *sigla = ler_valor();
+    // a sigla tem dois caracteres; o terceiro byte fica para o terminador
+    char sigla[3];
+    ScanQuoteString(sigla);
 
     // a sigla ocupa dois bytes; os nomes vazios serao gravados apenas com o delimitador
     memcpy(registro.siglaPais, sigla[0] == '\0' ? "$$" : sigla, 2);
     registro.siglaPais[2] = '\0';
-    free(sigla);
 
     registro.removido = '0';
     registro.encadeamentoLista = -1;
