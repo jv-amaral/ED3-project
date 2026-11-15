@@ -2,6 +2,9 @@
 #include "indice.h"
 #include "arquivos.h"
 
+
+// Auxiliares trab. 2
+
 // carrega o indice em memoria e devolve a quantidade pelo parametro.
 // retorna o vetor alocado ou null; move o cursor para o fim do arquivo.
 IndicePoPs *carregar_indice(FILE *arquivo, int *quantidade)

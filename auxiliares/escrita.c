@@ -1,40 +1,7 @@
 #include <string.h>
 #include "escrita.h"
 
-// grava um registro campo a campo a partir do cursor atual, sem terminadores nulos.
-// preenche a sobra com lixo e termina no proximo registro; retorna 1 ou 0 em falha.
-int escrever_registro(FILE *arquivo, const RegistroPoP *registro)
-{
-    char delimitador = '|';
-    int tamanho_nome = strlen(registro->nomePoPs);
-    int tamanho_pais = strlen(registro->nomePais);
-
-    fwrite(&registro->removido, sizeof(char), 1, arquivo);
-    fwrite(&registro->tamanhoRegistro, sizeof(int), 1, arquivo);
-    fwrite(&registro->encadeamentoLista, sizeof(int64_t), 1, arquivo);
-    fwrite(&registro->idPoPs, sizeof(int), 1, arquivo);
-    fwrite(registro->siglaPais, sizeof(char), 2, arquivo);
-    fwrite(registro->nomePoPs, sizeof(char), tamanho_nome, arquivo);
-    fwrite(&delimitador, sizeof(char), 1, arquivo);
-    fwrite(registro->nomePais, sizeof(char), tamanho_pais, arquivo);
-    fwrite(&delimitador, sizeof(char), 1, arquivo);
-
-    int utilizado = TAM_MINIMO_REGISTRO + tamanho_nome + tamanho_pais;
-    for (int i = utilizado; i < registro->tamanhoRegistro; i++)
-        fputc('$', arquivo);
-
-    return !ferror(arquivo);
-}
-
-// imprime os campos do registro na ordem do enunciado, com nulo quando necessario.
-// nao retorna valor, nao altera o registro e nao movimenta arquivos.
-void imprimir_registro(RegistroPoP *registro)
-{
-    printf("%d ", registro->idPoPs);
-    printf("%s ", registro->nomePoPs[0] == '\0' ? "NULO" : registro->nomePoPs);
-    printf("%s ", registro->nomePais[0] == '\0' ? "NULO" : registro->nomePais);
-    printf("%s\n", registro->siglaPais[0] == '$' ? "NULO" : registro->siglaPais);
-}
+// auxiliares trab. 1
 
 // grava os 18 bytes da conexao campo a campo e avanca para o proximo registro.
 // nao retorna valor e nao grava o preenchimento interno da estrutura.
@@ -62,54 +29,6 @@ void imprimir_conexao(RegistroConexao *registro)
         printf("NULO\n");
     else
         printf("\"%c\"\n", registro->unidade_medida);
-}
-
-// marca o registro, preenche seus dados com lixo e o inclui na lista worst fit.
-// atualiza os contadores e o topo em memoria; nao retorna valor.
-// usa fseek para percorrer a lista e volta ao cursor original antes de terminar.
-void remover_registro(FILE *arquivo, CabecalhoPoPs *cabecalho,
-                      RegistroPoP *registro, int64_t posicao)
-{
-    int64_t cursor = ftell(arquivo);
-    int64_t anterior = -1;
-    int64_t atual = cabecalho->topoLista;
-
-    // a lista fica do maior para o menor; em empate, o novo entra antes
-    while (atual != -1)
-    {
-        int tamanho;
-        int64_t proximo;
-        fseek(arquivo, atual + 1, SEEK_SET);
-        fread(&tamanho, sizeof(int), 1, arquivo);
-        fread(&proximo, sizeof(int64_t), 1, arquivo);
-
-        if (tamanho <= registro->tamanhoRegistro)
-            break;
-        anterior = atual;
-        atual = proximo;
-    }
-
-    // preserva tamanho e encadeamento; todo o restante vira lixo
-    char removido = '1';
-    fseek(arquivo, posicao, SEEK_SET);
-    fwrite(&removido, sizeof(char), 1, arquivo);
-    fwrite(&registro->tamanhoRegistro, sizeof(int), 1, arquivo);
-    fwrite(&atual, sizeof(int64_t), 1, arquivo);
-    for (int i = TAM_CONTROLE_REGISTRO; i < registro->tamanhoRegistro; i++)
-        fputc('$', arquivo);
-
-    // liga o anterior ao novo espaco, ou altera o topo quando ele for o maior
-    if (anterior == -1)
-        cabecalho->topoLista = posicao;
-    else
-    {
-        fseek(arquivo, anterior + TAM_CONTROLE_INICIAL, SEEK_SET);
-        fwrite(&posicao, sizeof(int64_t), 1, arquivo);
-    }
-
-    cabecalho->nroRegRem++;
-    cabecalho->nroPoPs--;
-    fseek(arquivo, cursor, SEEK_SET);
 }
 
 // marca a conexao como removida, apaga os dados com lixo e empilha seu rrn.
@@ -171,4 +90,89 @@ void aplicar_atualizacoes_conexao(RegistroConexao *registro, CriteriosConexoes *
         registro->velocidade = valores->velocidade;
     if (valores->unidadeMedida != -2)
         registro->unidade_medida = valores->unidadeMedida;
+}
+
+// Auxiliares trab. 2
+
+// grava um registro campo a campo a partir do cursor atual, sem terminadores nulos.
+// preenche a sobra com lixo e termina no proximo registro; retorna 1 ou 0 em falha.
+int escrever_registro(FILE *arquivo, const RegistroPoP *registro)
+{
+    char delimitador = '|';
+    int tamanho_nome = strlen(registro->nomePoPs);
+    int tamanho_pais = strlen(registro->nomePais);
+
+    fwrite(&registro->removido, sizeof(char), 1, arquivo);
+    fwrite(&registro->tamanhoRegistro, sizeof(int), 1, arquivo);
+    fwrite(&registro->encadeamentoLista, sizeof(int64_t), 1, arquivo);
+    fwrite(&registro->idPoPs, sizeof(int), 1, arquivo);
+    fwrite(registro->siglaPais, sizeof(char), 2, arquivo);
+    fwrite(registro->nomePoPs, sizeof(char), tamanho_nome, arquivo);
+    fwrite(&delimitador, sizeof(char), 1, arquivo);
+    fwrite(registro->nomePais, sizeof(char), tamanho_pais, arquivo);
+    fwrite(&delimitador, sizeof(char), 1, arquivo);
+
+    int utilizado = TAM_MINIMO_REGISTRO + tamanho_nome + tamanho_pais;
+    for (int i = utilizado; i < registro->tamanhoRegistro; i++)
+        fputc('$', arquivo);
+
+    return !ferror(arquivo);
+}
+
+// imprime os campos do registro na ordem do enunciado, com nulo quando necessario.
+// nao retorna valor, nao altera o registro e nao movimenta arquivos.
+void imprimir_registro(RegistroPoP *registro)
+{
+    printf("%d ", registro->idPoPs);
+    printf("%s ", registro->nomePoPs[0] == '\0' ? "NULO" : registro->nomePoPs);
+    printf("%s ", registro->nomePais[0] == '\0' ? "NULO" : registro->nomePais);
+    printf("%s\n", registro->siglaPais[0] == '$' ? "NULO" : registro->siglaPais);
+}
+
+// marca o registro, preenche seus dados com lixo e o inclui na lista worst fit.
+// atualiza os contadores e o topo em memoria; nao retorna valor.
+// usa fseek para percorrer a lista e volta ao cursor original antes de terminar.
+void remover_registro(FILE *arquivo, CabecalhoPoPs *cabecalho,
+                      RegistroPoP *registro, int64_t posicao)
+{
+    int64_t cursor = ftell(arquivo);
+    int64_t anterior = -1;
+    int64_t atual = cabecalho->topoLista;
+
+    // a lista fica do maior para o menor; em empate, o novo entra antes
+    while (atual != -1)
+    {
+        int tamanho;
+        int64_t proximo;
+        fseek(arquivo, atual + 1, SEEK_SET);
+        fread(&tamanho, sizeof(int), 1, arquivo);
+        fread(&proximo, sizeof(int64_t), 1, arquivo);
+
+        if (tamanho <= registro->tamanhoRegistro)
+            break;
+        anterior = atual;
+        atual = proximo;
+    }
+
+    // preserva tamanho e encadeamento; todo o restante vira lixo
+    char removido = '1';
+    fseek(arquivo, posicao, SEEK_SET);
+    fwrite(&removido, sizeof(char), 1, arquivo);
+    fwrite(&registro->tamanhoRegistro, sizeof(int), 1, arquivo);
+    fwrite(&atual, sizeof(int64_t), 1, arquivo);
+    for (int i = TAM_CONTROLE_REGISTRO; i < registro->tamanhoRegistro; i++)
+        fputc('$', arquivo);
+
+    // liga o anterior ao novo espaco, ou altera o topo quando ele for o maior
+    if (anterior == -1)
+        cabecalho->topoLista = posicao;
+    else
+    {
+        fseek(arquivo, anterior + TAM_CONTROLE_INICIAL, SEEK_SET);
+        fwrite(&posicao, sizeof(int64_t), 1, arquivo);
+    }
+
+    cabecalho->nroRegRem++;
+    cabecalho->nroPoPs--;
+    fseek(arquivo, cursor, SEEK_SET);
 }

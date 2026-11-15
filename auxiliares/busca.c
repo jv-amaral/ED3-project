@@ -4,6 +4,51 @@
 #include "leitura.h"
 #include "indice.h"
 
+// auxiliares trab. 1
+
+// le os pares de campos das conexoes e retorna criterios ou valores de atualizacao.
+// consome a entrada padrao, libera os textos lidos e nao movimenta arquivos.
+CriteriosConexoes ler_criterios_conexoes(int quantidade)
+{
+    CriteriosConexoes criterios = {-2, -2, -2, -2};
+
+    for (int i = 0; i < quantidade; i++)
+    {
+        char campo[30];
+        scanf("%29s", campo);
+        char *valor = ler_valor();
+        int numero = valor[0] == '\0' ? -1 : atoi(valor);
+
+        if (strcmp(campo, "idPoPs") == 0)
+            criterios.idPoPs = numero;
+        else if (strcmp(campo, "idPoPsConectado") == 0)
+            criterios.idPoPsConectado = numero;
+        else if (strcmp(campo, "velocidade") == 0)
+            criterios.velocidade = numero;
+        else if (strcmp(campo, "unidadeMedida") == 0)
+            criterios.unidadeMedida = valor[0] == '\0' ? '$' : valor[0];
+        free(valor);
+    }
+    return criterios;
+}
+
+// retorna 1 se a conexao satisfaz todos os campos informados, ou 0 caso contrario.
+// nao altera os parametros e nao movimenta arquivos.
+int verificar_conexao(CriteriosConexoes *criterios, RegistroConexao *registro)
+{
+    if (criterios->idPoPs != -2 && criterios->idPoPs != registro->idPoPs)
+        return 0;
+    if (criterios->idPoPsConectado != -2 && criterios->idPoPsConectado != registro->idPoPsConectado)
+        return 0;
+    if (criterios->velocidade != -2 && criterios->velocidade != registro->velocidade)
+        return 0;
+    if (criterios->unidadeMedida != -2 && criterios->unidadeMedida != registro->unidade_medida)
+        return 0;
+    return 1;
+}
+
+// Auxiliares trab. 2
+
 // le os pares campo e valor da entrada padrao e retorna os criterios preenchidos.
 // aloca os valores de texto; eles devem ser liberados com liberar_criterios.
 CriteriosPoPs ler_criterios(int quantidade)
@@ -90,45 +135,4 @@ void liberar_criterios(CriteriosPoPs *criterios)
     free(criterios->nomePoPs);
     free(criterios->nomePais);
     free(criterios->siglaPais);
-}
-
-// le os pares de campos das conexoes e retorna criterios ou valores de atualizacao.
-// consome a entrada padrao, libera os textos lidos e nao movimenta arquivos.
-CriteriosConexoes ler_criterios_conexoes(int quantidade)
-{
-    CriteriosConexoes criterios = {-2, -2, -2, -2};
-
-    for (int i = 0; i < quantidade; i++)
-    {
-        char campo[30];
-        scanf("%29s", campo);
-        char *valor = ler_valor();
-        int numero = valor[0] == '\0' ? -1 : atoi(valor);
-
-        if (strcmp(campo, "idPoPs") == 0)
-            criterios.idPoPs = numero;
-        else if (strcmp(campo, "idPoPsConectado") == 0)
-            criterios.idPoPsConectado = numero;
-        else if (strcmp(campo, "velocidade") == 0)
-            criterios.velocidade = numero;
-        else if (strcmp(campo, "unidadeMedida") == 0)
-            criterios.unidadeMedida = valor[0] == '\0' ? '$' : valor[0];
-        free(valor);
-    }
-    return criterios;
-}
-
-// retorna 1 se a conexao satisfaz todos os campos informados, ou 0 caso contrario.
-// nao altera os parametros e nao movimenta arquivos.
-int verificar_conexao(CriteriosConexoes *criterios, RegistroConexao *registro)
-{
-    if (criterios->idPoPs != -2 && criterios->idPoPs != registro->idPoPs)
-        return 0;
-    if (criterios->idPoPsConectado != -2 && criterios->idPoPsConectado != registro->idPoPsConectado)
-        return 0;
-    if (criterios->velocidade != -2 && criterios->velocidade != registro->velocidade)
-        return 0;
-    if (criterios->unidadeMedida != -2 && criterios->unidadeMedida != registro->unidade_medida)
-        return 0;
-    return 1;
 }
