@@ -5,7 +5,7 @@
 #include "../estruturas.h"
 #include "busca.h"
 
-int escrever_registro(FILE *arquivo, const RegistroPoP *registro);
+void escrever_registro(FILE *arquivo, const RegistroPoP *registro);
 void imprimir_registro(RegistroPoP *registro);
 void escrever_conexao(FILE *arquivo, RegistroConexao *registro);
 void imprimir_conexao(RegistroConexao *registro);

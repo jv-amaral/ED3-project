@@ -6,7 +6,7 @@ O programa reúne as funcionalidades de conexões entre pontos de presença (`co
 
 ## estado atual do trabalho
 
-As funcionalidades **1 a 12 estão implementadas**. As funcionalidades **13 e 14 ainda estão pendentes**; suas regras, exemplos e verificações finais estão documentados abaixo para orientar a conclusão. Esta atualização acrescenta comentários e documentação, sem implementar novas operações.
+As funcionalidades **1 a 12 estão implementadas**. As funcionalidades **13 e 14 ainda estão pendentes**; suas regras, exemplos e verificações finais estão documentados abaixo para orientar a conclusão. Esta atualização revê os comentários e simplifica as verificações, sem acrescentar novas operações.
 
 | Opção | Operação | Dados | Situação |
 | --- | --- | --- | --- |
@@ -69,6 +69,8 @@ Cada execução recebe **uma funcionalidade** pela entrada padrão. Para usar ou
 - As consultas sem resultado exibem `Registro inexistente.`. A remoção 12 exibe os binários finais mesmo se não houver registros correspondentes.
 - As operações que exigem saída binária fecham os arquivos antes de chamar `BinarioNaTela`.
 
+A leitura considera o CSV e os comandos nos formatos descritos. Os identificadores do CSV são convertidos com `atoi`, e os tamanhos são calculados diretamente. As verificações ficam na abertura, no status dos arquivos, na organização dos campos e na alocação de memória.
+
 Nos exemplos abaixo, cada bloco representa a entrada de uma execução separada. Os nomes de arquivos são exemplos e podem ser ajustados.
 
 ## funcionalidades 1 a 7: conexões
@@ -99,7 +101,7 @@ Exibe `idPoPs idPoPsConectado velocidade unidadeMedida`. Unidades preenchidas ap
 2 velocidade 100 unidadeMedida "G"
 ```
 
-O número após o arquivo indica a quantidade de buscas. Cada busca começa com a quantidade de pares campo/valor. A versão atual preserva uma linha em branco após cada busca, como na base original.
+O número após o arquivo indica a quantidade de buscas. Cada busca começa com a quantidade de pares campo/valor. Uma linha em branco separa a saída de cada busca.
 
 ### 4. buscar por RRN
 
@@ -242,7 +244,7 @@ Os registros removidos são pulados com `fseek`, sem carregar seus dados campo a
 
 No início de uma alteração, grava-se somente o status `'0'`. Na finalização dos dados, o status é alterado para `'1'` em memória **antes de gravar o cabeçalho completo uma única vez**. Não se grava o cabeçalho final para depois voltar e modificar apenas esse byte. Na criação, o cabeçalho inicial reserva o início do arquivo. No índice, o cabeçalho inteiro é apenas o próprio byte de status.
 
-A regra de `nroPares` das conexões foi preservada da base original: incrementa na criação e na reutilização de um espaço removido; não muda na remoção nem na inserção ao final. Não foi reinterpretado como contador de registros ativos.
+O campo `nroPares` das conexões aumenta na criação e na reutilização de um espaço removido; não muda na remoção nem na inserção ao final. Não foi reinterpretado como contador de registros ativos.
 
 Nos PoPs, a remoção diminui `nroPoPs`, aumenta `nroRegRem` e mantém `proxByteOffset`. A quantidade de removidos e o encadeamento precisam permanecer coerentes também após as futuras inserções e atualizações.
 
@@ -250,11 +252,11 @@ Nos PoPs, a remoção diminui `nroPoPs`, aumenta `nroRegRem` e mantém `proxByte
 
 A última bateria de testes de implementação registrou:
 
-- 47 operações das funções 1 a 7 comparadas à base original, conferindo saída e bytes dos arquivos; mais cinco consultas de RRN negativo e 12 casos de arquivo ausente ou inconsistente.
+- 47 operações das funções 1 a 7, com conferência da saída e dos bytes dos arquivos; mais cinco consultas de RRN negativo e 12 casos de arquivo ausente ou inconsistente.
 - 28 cenários das funções 8 a 12, cobrindo CSV real, consultas, nulos, nomes longos, índice, remoção, lista Worst Fit, empates e espaços com sobra.
 - Execução normal e com sanitizadores de endereço e comportamento indefinido; não foi executada a detecção de vazamentos.
 
-Nesta revisão de documentação, foi verificado que o conteúdo executável de `funcionalidades2.c` permaneceu igual e foi feita verificação sintática com `-Wall -Wextra -Wpedantic`, sem avisos. Não houve nova implementação de funcionalidades, nem submissão ao run.codes.
+Após simplificar as verificações e rever os comentários, a compilação passou sem avisos e as duas baterias acima foram executadas novamente, com sucesso. Não houve submissão ao run.codes.
 
 Depois de implementar 13 e 14, verificar:
 

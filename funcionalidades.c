@@ -7,9 +7,8 @@
 #include "auxiliares/escrita.h"
 #include "auxiliares/busca.h"
 
-// funcionalidade 1: cria o binario de conexoes a partir das quatro colunas do csv.
-// le os nomes pela entrada, grava cabecalho e registros, fecha e exibe o binario.
-// nao retorna valor; usa os mesmos auxiliares csv da funcionalidade 8.
+// cria o binario de conexoes com as linhas do csv.
+// o cabecalho acompanha a quantidade de registros importados.
 void leitura_e_gravacao(void)
 {
     char nome_entrada[100];
@@ -61,14 +60,14 @@ void leitura_e_gravacao(void)
 
     free(linha);
     fclose(csv);
-    sucesso = sucesso && leitura != -1 && !ferror(arquivo);
+    if (leitura == -1)
+        sucesso = 0;
     if (sucesso)
     {
         cabecalho.status = '1';
         escrever_cabecalho_conexoes(arquivo, &cabecalho);
     }
-    if (fclose(arquivo) != 0)
-        sucesso = 0;
+    fclose(arquivo);
 
     if (sucesso)
         BinarioNaTela(nome_saida);
@@ -76,8 +75,7 @@ void leitura_e_gravacao(void)
         printf("Falha no processamento do arquivo.\n");
 }
 
-// funcionalidade 2: percorre as conexoes e mostra apenas os registros ativos.
-// le o nome pela entrada, avanca do byte 17 ate o fim e fecha o arquivo; nao retorna valor.
+// mostra as conexoes ativas, comecando a leitura depois do cabecalho.
 void recuperacao_dados(void)
 {
     char nome[100];
@@ -103,9 +101,8 @@ void recuperacao_dados(void)
     fclose(arquivo);
 }
 
-// funcionalidade 3: realiza as buscas sequenciais nos registros de conexoes.
-// consome os criterios da entrada e reinicia o cursor no byte 17 a cada busca.
-// imprime os resultados, fecha o arquivo e nao retorna valor.
+// repete a busca no arquivo de conexoes para cada conjunto de criterios.
+// cada consulta percorre os registros desde o byte 17.
 void busca_condicional(void)
 {
     char nome[100];
@@ -134,15 +131,13 @@ void busca_condicional(void)
         }
         if (encontrados == 0)
             printf("Registro inexistente.\n");
-        // preserva a linha em branco entre as buscas da implementacao original
+        // separa a saida de uma busca da seguinte
         printf("\n");
     }
     fclose(arquivo);
 }
 
-// funcionalidade 4: acessa uma conexao diretamente pelo rrn usando fseek.
-// le o nome e o rrn pela entrada, imprime o resultado e fecha o arquivo.
-// nao retorna valor; rrn negativo, fora do arquivo ou removido nao e exibido.
+// calcula a posicao pelo rrn e mostra a conexao, se ela estiver ativa.
 void busca_RRN(void)
 {
     char nome[100];
@@ -167,9 +162,8 @@ void busca_RRN(void)
     fclose(arquivo);
 }
 
-// funcionalidade 5: remove conexoes que atendem aos criterios e empilha os rrns.
-// le as solicitacoes pela entrada, altera o arquivo e grava o cabecalho final.
-// fecha o binario antes de exibi-lo e nao retorna valor.
+// procura as conexoes que devem ser removidas e coloca seus rrns na pilha.
+// a saida mostra o arquivo depois das alteracoes.
 void remocao_logica(void)
 {
     char nome[100];
@@ -206,8 +200,7 @@ void remocao_logica(void)
     BinarioNaTela(nome);
 }
 
-// funcionalidade 6: le novas conexoes e reaproveita a pilha antes de crescer o arquivo.
-// altera o binario e seus contadores, fecha antes da exibicao e nao retorna valor.
+// le as novas conexoes do terminal e usa os espacos livres antes de aumentar o arquivo.
 void insercao(void)
 {
     char nome[100];
@@ -231,9 +224,8 @@ void insercao(void)
     BinarioNaTela(nome);
 }
 
-// funcionalidade 7: busca conexoes e sobrescreve apenas os campos solicitados.
-// le criterios e valores pela entrada, percorre o arquivo e grava o cabecalho final.
-// fecha antes da exibicao e nao retorna valor; os registros continuam com 18 bytes.
+// atualiza os campos pedidos nas conexoes que atendem a busca.
+// a escrita e feita sobre o registro, que continua ocupando 18 bytes.
 void atualizacao_registros(void)
 {
     char nome[100];

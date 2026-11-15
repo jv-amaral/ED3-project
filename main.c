@@ -4,7 +4,7 @@
 
 #include <stdio.h>
 #include "funcionalidades.h"
-// le o numero da funcionalidade e chama sua implementacao; retorna 0 ao terminar.
+// le a opcao e encaminha a execucao para a funcionalidade escolhida.
 int main(void)
 {
     int funcionalidade;

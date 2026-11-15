@@ -3,8 +3,7 @@
 
 // auxiliares trab. 1
 
-// grava os 18 bytes da conexao campo a campo e avanca para o proximo registro.
-// nao retorna valor e nao grava o preenchimento interno da estrutura.
+// grava os seis campos da conexao na posicao atual, avancando 18 bytes.
 void escrever_conexao(FILE *arquivo, RegistroConexao *registro)
 {
     fwrite(&registro->removido, sizeof(char), 1, arquivo);
@@ -15,8 +14,7 @@ void escrever_conexao(FILE *arquivo, RegistroConexao *registro)
     fwrite(&registro->unidade_medida, sizeof(char), 1, arquivo);
 }
 
-// exibe uma conexao com nulos e unidade entre aspas, no formato das opcoes 2 a 4.
-// nao retorna valor, nao modifica o registro e nao movimenta arquivos.
+// mostra os campos da conexao, usando nulo e aspas na unidade quando necessario.
 void imprimir_conexao(RegistroConexao *registro)
 {
     printf("%d %d ", registro->idPoPs, registro->idPoPsConectado);
@@ -31,9 +29,8 @@ void imprimir_conexao(RegistroConexao *registro)
         printf("\"%c\"\n", registro->unidade_medida);
 }
 
-// marca a conexao como removida, apaga os dados com lixo e empilha seu rrn.
-// atualiza topo e quantidade de removidos; preserva nropares como na base original.
-// nao retorna valor; grava com fseek e restaura o cursor para continuar a leitura.
+// troca os dados por lixo e liga o rrn ao topo da pilha de removidos.
+// atualiza o cabecalho em memoria e volta a posicao de leitura que estava em uso.
 void remover_conexao(FILE *arquivo, CabecalhoConexoes *cabecalho,
                      RegistroConexao *registro, int rrn)
 {
@@ -52,9 +49,8 @@ void remover_conexao(FILE *arquivo, CabecalhoConexoes *cabecalho,
     fseek(arquivo, cursor, SEEK_SET);
 }
 
-// insere uma conexao no topo livre da pilha ou no fim do arquivo.
-// atualiza o cabecalho em memoria e deixa o cursor apos o registro gravado.
-// nao retorna valor; mantem a regra original de nropares ao reaproveitar espaco.
+// usa o rrn do topo da pilha, ou o proximo rrn se nao houver espaco livre.
+// ajusta os contadores e deixa o cursor depois da conexao gravada.
 void inserir_conexao(FILE *arquivo, CabecalhoConexoes *cabecalho, RegistroConexao *registro)
 {
     int rrn;
@@ -78,8 +74,7 @@ void inserir_conexao(FILE *arquivo, CabecalhoConexoes *cabecalho, RegistroConexa
     escrever_conexao(arquivo, registro);
 }
 
-// altera apenas os campos informados da conexao recebida, preservando os demais.
-// nao retorna valor e modifica somente a memoria, sem movimentar arquivos.
+// copia os valores informados para a conexao. o marcador -2 deixa o campo como esta.
 void aplicar_atualizacoes_conexao(RegistroConexao *registro, CriteriosConexoes *valores)
 {
     if (valores->idPoPs != -2)
@@ -92,11 +87,11 @@ void aplicar_atualizacoes_conexao(RegistroConexao *registro, CriteriosConexoes *
         registro->unidade_medida = valores->unidadeMedida;
 }
 
-// Auxiliares trab. 2
+// auxiliares trab. 2
 
-// grava um registro campo a campo a partir do cursor atual, sem terminadores nulos.
-// preenche a sobra com lixo e termina no proximo registro; retorna 1 ou 0 em falha.
-int escrever_registro(FILE *arquivo, const RegistroPoP *registro)
+// escreve o pop na posicao atual, sem gravar os terminadores de string.
+// se o espaco reservado for maior, preenche o final com lixo e avanca ate o proximo registro.
+void escrever_registro(FILE *arquivo, const RegistroPoP *registro)
 {
     char delimitador = '|';
     int tamanho_nome = strlen(registro->nomePoPs);
@@ -116,11 +111,9 @@ int escrever_registro(FILE *arquivo, const RegistroPoP *registro)
     for (int i = utilizado; i < registro->tamanhoRegistro; i++)
         fputc('$', arquivo);
 
-    return !ferror(arquivo);
 }
 
-// imprime os campos do registro na ordem do enunciado, com nulo quando necessario.
-// nao retorna valor, nao altera o registro e nao movimenta arquivos.
+// imprime id, nome do pop, pais e sigla em uma linha, tratando os campos nulos.
 void imprimir_registro(RegistroPoP *registro)
 {
     printf("%d ", registro->idPoPs);
@@ -129,9 +122,8 @@ void imprimir_registro(RegistroPoP *registro)
     printf("%s\n", registro->siglaPais[0] == '$' ? "NULO" : registro->siglaPais);
 }
 
-// marca o registro, preenche seus dados com lixo e o inclui na lista worst fit.
-// atualiza os contadores e o topo em memoria; nao retorna valor.
-// usa fseek para percorrer a lista e volta ao cursor original antes de terminar.
+// encaixa o espaco removido na lista ordenada por tamanho e apaga seus dados.
+// ao muda o tamanho do registro e restaura o cursor para a varredura continuar.
 void remover_registro(FILE *arquivo, CabecalhoPoPs *cabecalho,
                       RegistroPoP *registro, int64_t posicao)
 {

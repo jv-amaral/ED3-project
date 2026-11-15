@@ -3,10 +3,10 @@
 #include "arquivos.h"
 
 
-// Auxiliares trab. 2
+// auxiliares trab. 2
 
-// carrega o indice em memoria e devolve a quantidade pelo parametro.
-// retorna o vetor alocado ou null; move o cursor para o fim do arquivo.
+// calcula quantas entradas existem e devolve o vetor preenchido.
+// a quantidade sai pelo parametro e o cursor termina no fim do indice.
 IndicePoPs *carregar_indice(FILE *arquivo, int *quantidade)
 {
     fseek(arquivo, 0, SEEK_END);
@@ -24,8 +24,8 @@ IndicePoPs *carregar_indice(FILE *arquivo, int *quantidade)
     return indice;
 }
 
-// faz busca binaria no vetor ordenado; retorna a posicao encontrada ou -1.
-// nao altera o vetor e nao movimenta o cursor de nenhum arquivo.
+// procura o id por busca binaria no vetor ja ordenado.
+// o resultado e a posicao encontrada, ou -1 se a chave nao estiver no indice.
 int buscar_no_indice(IndicePoPs *indice, int quantidade, int id)
 {
     int inicio = 0;
@@ -44,8 +44,7 @@ int buscar_no_indice(IndicePoPs *indice, int quantidade, int id)
     return -1;
 }
 
-// compara duas chaves para o qsort, retornando negativo, zero ou positivo.
-// nao altera os registros e nao acessa arquivos.
+// compara os ids para o qsort: menor vem antes, maior vem depois.
 int comparar_indices(const void *primeiro, const void *segundo)
 {
     const IndicePoPs *indice_a = primeiro;
@@ -53,8 +52,8 @@ int comparar_indices(const void *primeiro, const void *segundo)
     return (indice_a->idPoPs > indice_b->idPoPs) - (indice_a->idPoPs < indice_b->idPoPs);
 }
 
-// retira uma entrada deslocando as seguintes e diminuindo a quantidade.
-// nao retorna valor; preserva a ordem crescente e nao acessa arquivos.
+// fecha o espaco da entrada retirada, deslocando as seguintes para a esquerda.
+// a quantidade diminui, mas a ordem do vetor continua a mesma.
 void retirar_do_indice(IndicePoPs *indice, int *quantidade, int posicao)
 {
     if (posicao == -1)
@@ -65,8 +64,8 @@ void retirar_do_indice(IndicePoPs *indice, int *quantidade, int posicao)
     (*quantidade)--;
 }
 
-// recria o indice somente com as entradas ativas, eliminando a sobra do arquivo.
-// abre e fecha o binario internamente; retorna 1 em sucesso ou 0 em falha.
+// recria o arquivo com as entradas que ficaram no vetor e o fecha ao terminar.
+// devolve 0 se nao conseguir abrir a saida e 1 depois de gravar o indice.
 int salvar_indice(char *nome, IndicePoPs *indice, int quantidade)
 {
     FILE *arquivo = fopen(nome, "wb");
@@ -81,10 +80,7 @@ int salvar_indice(char *nome, IndicePoPs *indice, int quantidade)
         fwrite(&indice[i].byteoffset, sizeof(int64_t), 1, arquivo);
     }
 
-    int sucesso = !ferror(arquivo) && fflush(arquivo) == 0;
-    if (sucesso)
-        alterar_status(arquivo, '1');
-    if (fclose(arquivo) != 0)
-        sucesso = 0;
-    return sucesso;
+    alterar_status(arquivo, '1');
+    fclose(arquivo);
+    return 1;
 }

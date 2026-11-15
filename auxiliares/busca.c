@@ -6,8 +6,8 @@
 
 // auxiliares trab. 1
 
-// le os pares de campos das conexoes e retorna criterios ou valores de atualizacao.
-// consome a entrada padrao, libera os textos lidos e nao movimenta arquivos.
+// le os campos usados na busca ou na atualizacao de conexoes.
+// os valores devolvidos ficam com -2 nos campos que nao foram informados.
 CriteriosConexoes ler_criterios_conexoes(int quantidade)
 {
     CriteriosConexoes criterios = {-2, -2, -2, -2};
@@ -32,8 +32,8 @@ CriteriosConexoes ler_criterios_conexoes(int quantidade)
     return criterios;
 }
 
-// retorna 1 se a conexao satisfaz todos os campos informados, ou 0 caso contrario.
-// nao altera os parametros e nao movimenta arquivos.
+// confere os criterios da conexao; basta um campo diferente para devolver 0.
+// quando todos coincidem, o resultado e 1.
 int verificar_conexao(CriteriosConexoes *criterios, RegistroConexao *registro)
 {
     if (criterios->idPoPs != -2 && criterios->idPoPs != registro->idPoPs)
@@ -47,13 +47,18 @@ int verificar_conexao(CriteriosConexoes *criterios, RegistroConexao *registro)
     return 1;
 }
 
-// Auxiliares trab. 2
+// auxiliares trab. 2
 
-// le os pares campo e valor da entrada padrao e retorna os criterios preenchidos.
-// aloca os valores de texto; eles devem ser liberados com liberar_criterios.
+// guarda os pares campo e valor de uma busca de pops.
+// os textos ficam alocados nos criterios devolvidos e sao liberados apos a busca.
 CriteriosPoPs ler_criterios(int quantidade)
 {
-    CriteriosPoPs criterios = {0};
+    CriteriosPoPs criterios;
+    criterios.buscar_id = 0;
+    criterios.idPoPs = -1;
+    criterios.nomePoPs = NULL;
+    criterios.nomePais = NULL;
+    criterios.siglaPais = NULL;
 
     for (int i = 0; i < quantidade; i++)
     {
@@ -90,8 +95,8 @@ CriteriosPoPs ler_criterios(int quantidade)
     return criterios;
 }
 
-// retorna 1 quando o registro atende a todos os criterios, ou 0 caso contrario.
-// nao altera o registro nem o cursor; diferencia campo ausente de busca por nulo.
+// confere os campos informados e devolve 1 se todos coincidirem com o pop.
+// ponteiro nulo indica campo nao pedido; texto vazio indica busca por valor nulo.
 int verificar_criterios(CriteriosPoPs *criterios, RegistroPoP *registro)
 {
     if (criterios->buscar_id && criterios->idPoPs != registro->idPoPs)
@@ -109,9 +114,8 @@ int verificar_criterios(CriteriosPoPs *criterios, RegistroPoP *registro)
     return 1;
 }
 
-// busca o id no vetor e le seu registro por acesso direto com fseek.
-// retorna a posicao no indice ou -1 se nao atender a todos os criterios.
-// em sucesso, deixa o cursor apos o registro e os nomes devem ser liberados.
+// localiza o id no indice, vai ate seu offset e confere os outros criterios.
+// devolve a posicao no vetor, ou -1 quando nao encontra; na leitura, o cursor passa pelo registro.
 int buscar_registro_indexado(FILE *arquivo, IndicePoPs *indice, int quantidade,
                             CriteriosPoPs *criterios, RegistroPoP *registro)
 {
@@ -129,7 +133,7 @@ int buscar_registro_indexado(FILE *arquivo, IndicePoPs *indice, int quantidade,
     return -1;
 }
 
-// libera os textos dos criterios; nao retorna valor e nao acessa arquivos.
+// descarta os textos que foram lidos para a consulta dos pops.
 void liberar_criterios(CriteriosPoPs *criterios)
 {
     free(criterios->nomePoPs);

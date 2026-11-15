@@ -2,8 +2,8 @@
 
 // auxiliares compartilhadas pelos trabalhos 1 e 2
 
-// abre um binario consistente e retorna seu ponteiro, posicionado no inicio.
-// em caso de falha, exibe a mensagem do enunciado e retorna null.
+// abre o binario e confere o status. se falhar, mostra a mensagem e devolve null.
+// quando o arquivo esta consistente, devolve o ponteiro no inicio.
 FILE *abrir_arquivo(char *nome, char *modo)
 {
     FILE *arquivo = fopen(nome, modo);
@@ -26,8 +26,8 @@ FILE *abrir_arquivo(char *nome, char *modo)
     return arquivo;
 }
 
-// altera somente o status e envia a escrita ao arquivo; nao retorna valor.
-// o cursor fica no byte 1, servindo tanto para dados quanto para indice.
+// muda o primeiro byte e deixa o cursor logo depois dele.
+// o fflush envia essa marcacao ao arquivo antes das outras alteracoes.
 void alterar_status(FILE *arquivo, char status)
 {
     fseek(arquivo, 0, SEEK_SET);
@@ -35,8 +35,7 @@ void alterar_status(FILE *arquivo, char status)
     fflush(arquivo);
 }
 
-// exibe a soma dos bytes dividida por 100, como a rotina fornecida pela disciplina.
-// abre e fecha o binario internamente; nao retorna valor nem altera seu conteudo.
+// soma os bytes do binario e mostra o resultado dividido por 100.
 void BinarioNaTela(char *nome)
 {
     FILE *arquivo = fopen(nome, "rb");
@@ -59,7 +58,8 @@ void BinarioNaTela(char *nome)
 
 // auxiliares trab. 1
 
-// le e retorna o cabecalho das conexoes, movendo o cursor do inicio ate o byte 17.
+// le os campos do cabecalho de conexoes e devolve a estrutura preenchida.
+// depois da leitura, o cursor fica no byte 17.
 CabecalhoConexoes ler_cabecalho_conexoes(FILE *arquivo)
 {
     CabecalhoConexoes cabecalho;
@@ -72,8 +72,8 @@ CabecalhoConexoes ler_cabecalho_conexoes(FILE *arquivo)
     return cabecalho;
 }
 
-// grava o cabecalho das conexoes desde o inicio e deixa o cursor no byte 17.
-// nao retorna valor; o status recebido ja deve ser o desejado para a gravacao.
+// volta ao inicio para gravar o cabecalho das conexoes.
+// o cursor termina no comeco dos registros de dados.
 void escrever_cabecalho_conexoes(FILE *arquivo, CabecalhoConexoes *cabecalho)
 {
     fseek(arquivo, 0, SEEK_SET);
@@ -84,9 +84,10 @@ void escrever_cabecalho_conexoes(FILE *arquivo, CabecalhoConexoes *cabecalho)
     fwrite(&cabecalho->nroPares, sizeof(int), 1, arquivo);
 }
 
-// Auxiliares trab. 2
+// auxiliares trab. 2
 
-// retorna o cabecalho lido campo a campo; move o cursor para o byte 25.
+// busca o cabecalho dos pops no inicio do arquivo e devolve seus valores.
+// a leitura termina no byte 25.
 CabecalhoPoPs ler_cabecalho(FILE *arquivo)
 {
     CabecalhoPoPs cabecalho;
@@ -100,8 +101,8 @@ CabecalhoPoPs ler_cabecalho(FILE *arquivo)
     return cabecalho;
 }
 
-// grava o cabecalho desde o inicio do arquivo e deixa o cursor no byte 25.
-// nao retorna valor e grava campo a campo, evitando bytes de padding.
+// grava os campos do cabecalho dos pops a partir do inicio do arquivo.
+// o status usado e o que ja esta na estrutura; o cursor fica no byte 25.
 void escrever_cabecalho(FILE *arquivo, CabecalhoPoPs *cabecalho)
 {
     fseek(arquivo, 0, SEEK_SET);
