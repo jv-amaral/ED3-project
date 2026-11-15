@@ -596,7 +596,10 @@ void inserir_registros(void)
     BinarioNaTela(nome_indice);
 }
 
-//funcionalidade 14
+// func 14
+// busca os pops pelos criterios e aplica os novos valores aos campos informados.
+// sobrescreve no mesmo espaco quando cabe; se crescer, remove e reinsere por worst fit.
+// movimenta o cursor durante as buscas e escritas, e grava os arquivos ao finalizar.
 
 void atualiza_registro()
 {
@@ -606,10 +609,12 @@ void atualiza_registro()
     scanf("%s", arquivo_binario);
     scanf("%s", arquivo_index);
 
+    // os dois arquivos precisam permitir leitura e escrita durante a atualizacao
     FILE *binario = abrir_arquivo(arquivo_binario, "rb+");
     FILE *index = abrir_arquivo(arquivo_index, "rb+");
     if (binario == NULL || index == NULL)
     {
+        // se apenas um arquivo abriu, fecha esse arquivo antes de encerrar a operacao
         if (binario) fclose(binario);
         if (index) fclose(index);
         return;
@@ -618,6 +623,7 @@ void atualiza_registro()
     CabecalhoPoPs cab = ler_cabecalho(binario);
     RegistroPoP reg;
     
+    // marca apenas o status no inicio; o cabecalho completo sera gravado no final
     char status_index = '0';
     cab.status = '0';
 
@@ -626,6 +632,7 @@ void atualiza_registro()
     fwrite(&cab.status, sizeof(char), 1, binario);
     fwrite(&status_index, sizeof(char), 1, index);
     
+    // o vetor fica em memoria enquanto as solicitacoes alteram os registros
     int total_indices = 0;
     IndicePoPs *vetor_indices = carregar_indice(index, &total_indices);
     fclose(index); 
@@ -634,18 +641,22 @@ void atualiza_registro()
     scanf("%d", &n);
     for (int i = 0; i < n; i++)
     {
+        // primeiro le os criterios que selecionam os registros desta solicitacao
         int m;
         scanf("%d", &m);
         CriteriosPoPs C = ler_criterios(m);
         
+        // a segunda lista informa os campos que vao receber novos valores
         int p;
         scanf("%d", &p);
         CriteriosPoPs NovosValores = ler_criterios(p);
         
+        // esse indicador marca se algum registro atendeu a busca desta solicitacao
         int registro_encontrado = 0;
         
         if (C.buscar_id)
         {
+            // procura a chave no vetor ordenado e guarda tambem sua posicao no indice
             int inicio = 0;
             int fim = total_indices - 1;
             int64_t offset_encontrado = -1;
@@ -656,6 +667,7 @@ void atualiza_registro()
 
                 if (vetor_indices[meio].idPoPs == C.idPoPs) 
                 {
+                    // guarda o offset nos dados e a posicao da entrada para uma possivel retirada
                     offset_encontrado = vetor_indices[meio].byteoffset; 
                     posicao_indice = meio;
                     break;
@@ -676,20 +688,26 @@ void atualiza_registro()
             }
             else
             {
+                // acessa o registro diretamente pelo offset, sem percorrer os anteriores
                 fseek(binario, offset_encontrado, SEEK_SET);
                 ler_registro(binario, &reg);
                 
+                // encontrar o id nao basta: os outros campos da busca tambem precisam coincidir
                 if (reg.removido == '0' && verificar_criterios(&C, &reg))
                 {
+                    // guarda a chave anterior para atualizar o indice se o id mudar
                     int id_antigo = reg.idPoPs;
+                    // altera os campos em memoria antes de calcular o tamanho resultante
                     modifica_registro(&reg, &NovosValores);
                     
                     int tamanho_nome = strlen(reg.nomePoPs);
                     int tamanho_pais = strlen(reg.nomePais);
                     int tamanho_novo = TAM_MINIMO_REGISTRO + tamanho_nome + tamanho_pais;
                     
+                    // compara o novo conteudo com a capacidade ja reservada no arquivo
                     if (tamanho_novo <= reg.tamanhoRegistro)
                     {
+                        // conserva o tamanho do espaco; o escritor completa a sobra com lixo
                         fseek(binario, offset_encontrado, SEEK_SET);
                         escrever_registro(binario, &reg);
                         
@@ -700,15 +718,18 @@ void atualiza_registro()
                     } 
                     else
                     {
+                        // libera o espaco antigo e retira sua entrada antes da reinsercao
                         remover_registro(binario, &cab, &reg, offset_encontrado);
                         retirar_do_indice(vetor_indices, &total_indices, posicao_indice);
                         
+                        // a insercao escolhe outro espaco e devolve o offset para o indice
                         reg.tamanhoRegistro = tamanho_novo;
                         int64_t nova_pos = inserir_pop(binario, &cab, &reg);
                         inserir_no_indice(vetor_indices, &total_indices, reg.idPoPs, nova_pos);
                     }
                     registro_encontrado = 1;
                 }
+                // os nomes lidos ou substituidos nao serao mais usados nesta consulta
                 liberar_registro(&reg);
                 
                 if (registro_encontrado == 0) 
@@ -719,13 +740,16 @@ void atualiza_registro()
         }
         else
         {
+            // sem id na busca, comeca no primeiro registro de dados e percorre o arquivo
             int64_t offset_atual = TAM_CABECALHO;
             fseek(binario, offset_atual, SEEK_SET);
 
             while (ler_registro(binario, &reg))
             {
+                // guarda a capacidade do bloco antes de uma possivel reinsercao em outro local
                 int tamanho_bloco = reg.tamanhoRegistro;
 
+                // os removidos sao pulados pelo leitor; so os ativos podem ser atualizados
                 if (reg.removido == '0' && verificar_criterios(&C, &reg))
                 {
                     registro_encontrado = 1;
@@ -733,12 +757,14 @@ void atualiza_registro()
                     int id_antigo = reg.idPoPs;
                     modifica_registro(&reg, &NovosValores);
                     
+                    // os campos fixos nao mudam de tamanho, apenas os nomes variaveis
                     int tamanho_nome = strlen(reg.nomePoPs);
                     int tamanho_pais = strlen(reg.nomePais);
                     int tamanho_novo = TAM_MINIMO_REGISTRO + tamanho_nome + tamanho_pais;
                     
                     if (tamanho_novo <= reg.tamanhoRegistro)
                     {
+                        // volta ao inicio do espaco atual para sobrescrever o registro
                         fseek(binario, offset_atual, SEEK_SET);
                         escrever_registro(binario, &reg);
                         
@@ -750,6 +776,7 @@ void atualiza_registro()
                     } 
                     else
                     {
+                        // o registro maior passa pela lista de removidos e pela insercao worst fit
                         remover_registro(binario, &cab, &reg, offset_atual);
                         
                         int pos_idx = buscar_no_indice(vetor_indices, total_indices, id_antigo);
@@ -762,6 +789,7 @@ void atualiza_registro()
                 }
                 liberar_registro(&reg);
                 
+                // segue para o bloco seguinte na origem, mesmo se o registro foi movido
                 offset_atual += tamanho_bloco;
                 fseek(binario, offset_atual, SEEK_SET); 
             }
@@ -771,18 +799,23 @@ void atualiza_registro()
                 printf("Registro inexistente.\n");
             }
         }
+        // descarta tanto os textos da busca quanto os novos valores desta solicitacao
         liberar_criterios(&C);
+        // os nomes do registro recebem copias, entao os textos dos novos valores podem ser liberados
         liberar_criterios(&NovosValores);
     }
 
+    // grava o cabecalho completo ja com o status consistente e os contadores atuais
     cab.status = '1';
     escrever_cabecalho(binario, &cab);
 
+    // o vetor mantido em memoria volta para o arquivo de indice
     salvar_indice(arquivo_index, vetor_indices, total_indices);
 
     fclose(binario);
     free(vetor_indices);
 
+    // a exibicao acontece depois do fechamento, com dados primeiro e indice depois
     BinarioNaTela(arquivo_binario);
     BinarioNaTela(arquivo_index);
 }

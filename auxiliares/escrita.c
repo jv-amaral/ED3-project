@@ -221,47 +221,52 @@ int64_t inserir_pop(FILE *arquivo, CabecalhoPoPs *cabecalho, RegistroPoP *regist
     cabecalho->nroPoPs++;
     return posicao;
 }
+// substitui em memoria apenas os campos informados nos novos valores.
+// os nomes recebem copias alocadas; nao grava no arquivo nem move seu cursor.
 void modifica_registro(RegistroPoP *reg, CriteriosPoPs *NovosValores)
 {
+    // o indicador de busca tambem informa se um novo identificador foi fornecido
     if (NovosValores->buscar_id)
     {
         reg->idPoPs = NovosValores->idPoPs;
     }
     
-    // Tratamento dinâmico para nomePoPs
+    // um ponteiro nulo indica que o nome nao foi pedido na atualizacao
     if (NovosValores->nomePoPs != NULL)
     {
-        free(reg->nomePoPs); // Liberta a memória antiga
-        if (strcmp(NovosValores->nomePoPs, "") == 0) // Tratamento para nulo
+        free(reg->nomePoPs); // libera o nome que veio da leitura do registro
+        if (strcmp(NovosValores->nomePoPs, "") == 0) // texto vazio representa o valor nulo
         {
+            // mesmo um nome vazio precisa de espaco para o terminador na memoria
             reg->nomePoPs = malloc(1);
             reg->nomePoPs[0] = '\0';
         }
         else
         {
-            // Aloca nova memória e copia
+            // copia o texto para que o registro nao dependa da memoria dos criterios
             reg->nomePoPs = malloc(strlen(NovosValores->nomePoPs) + 1);
             strcpy(reg->nomePoPs, NovosValores->nomePoPs);
         }
     }
 
-    // Tratamento dinâmico para nomePais
+    // o pais segue o mesmo tratamento: mantem o anterior se nao foi informado
     if (NovosValores->nomePais != NULL)
     {
-        free(reg->nomePais); // Liberta a memória antiga
-        if (strcmp(NovosValores->nomePais, "") == 0) // Tratamento para nulo
+        free(reg->nomePais); // descarta o pais anterior antes de guardar o novo
+        if (strcmp(NovosValores->nomePais, "") == 0) // pais nulo fica como string vazia
         {
             reg->nomePais = malloc(1);
             reg->nomePais[0] = '\0';
         }
         else
         {
-            // Aloca nova memória e copia
+            // reserva os caracteres do novo pais mais o terminador de string
             reg->nomePais = malloc(strlen(NovosValores->nomePais) + 1);
             strcpy(reg->nomePais, NovosValores->nomePais);
         }
     }
     
+    // a sigla e um vetor fixo: nao precisa de alocacao, e o nulo e representado por lixo
     if (NovosValores->siglaPais != NULL)
     {
         if (strcmp(NovosValores->siglaPais, "") == 0)
@@ -272,6 +277,7 @@ void modifica_registro(RegistroPoP *reg, CriteriosPoPs *NovosValores)
         } 
         else 
         {
+            // o terminador fica na memoria; a gravacao usa apenas os dois bytes da sigla
             strcpy(reg->siglaPais, NovosValores->siglaPais);
         }
     }
