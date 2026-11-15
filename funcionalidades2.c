@@ -330,7 +330,7 @@ void busca(void)
 }
 
 // func 12
-// remove os pops selecionados e suas chaves, mantendo a lista de espacos por tamanho.
+// remove os pops selecionados e suas chaves, encadeando os espacos livres no topo.
 // salva dados e indice e exibe os dois arquivos depois de fecha-los.
 void remover_registros(void)
 {
@@ -401,7 +401,7 @@ void remover_registros(void)
                 // removidos anteriores ja foram pulados pelo leitor e nao devem entrar na lista outra vez
                 if (registro.removido == '0' && verificar_criterios(&criterios, &registro))
                 {
-                    // o auxiliar preenche com lixo, encadeia por tamanho e atualiza os contadores
+                    // o auxiliar preenche com lixo, liga ao topo e atualiza os contadores
                     remover_registro(dados, &cabecalho, &registro, posicao);
                     // busca a chave para retirar a entrada correspondente do indice
                     int posicao_indice = buscar_no_indice(indice, quantidade_indices, registro.idPoPs);
@@ -485,9 +485,17 @@ void inserir_registros(void)
     alterar_status(arquivo_indice, '0');
     fclose(arquivo_indice);
 
+    int erro_insercao = 0;
     for (int i = 0; i < quantidade_insercoes; i++)
     {
         RegistroPoP registro = ler_pop_terminal();
+        // o vetor inclui as chaves ja inseridas neste lote
+        if (buscar_no_indice(indice, quantidade_indices, registro.idPoPs) != -1)
+        {
+            liberar_registro(&registro);
+            erro_insercao = 1;
+            break;
+        }
         int64_t posicao = inserir_pop(dados, &cabecalho, &registro);
         // a chave precisa apontar para o espaco realmente usado, inclusive quando reaproveitado
         inserir_no_indice(indice, &quantidade_indices, registro.idPoPs, posicao);
@@ -508,8 +516,14 @@ void inserir_registros(void)
     fclose(dados);
     free(indice);
 
-    BinarioNaTela(nome_dados);
-    BinarioNaTela(nome_indice);
+    // as insercoes anteriores ficam salvas mesmo se a proxima chave foi rejeitada
+    if (erro_insercao)
+        printf("Falha no processamento do arquivo.\n");
+    else
+    {
+        BinarioNaTela(nome_dados);
+        BinarioNaTela(nome_indice);
+    }
 }
 
 // func 14

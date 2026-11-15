@@ -133,81 +133,74 @@ void imprimir_registro(RegistroPoP *registro)
     printf("%s\n", registro->siglaPais[0] == '$' ? "NULO" : registro->siglaPais);
 }
 
-// encaixa o espaco removido na lista ordenada por tamanho e apaga seus dados.
-// mantem o tamanho do registro e restaura o cursor para a varredura continuar.
+// coloca o espaco removido no topo da lista e apaga seus dados.
+// mantem o tamanho e restaura o cursor para a varredura continuar.
 void remover_registro(FILE *arquivo, CabecalhoPoPs *cabecalho,
                       RegistroPoP *registro, int64_t posicao)
 {
-    // guarda onde a leitura parou antes de percorrer e alterar a lista de espacos livres
     int64_t cursor = ftell(arquivo);
-    int64_t anterior = -1;
-    int64_t atual = cabecalho->topoLista;
+    int64_t proximo = cabecalho->topoLista;
 
-    // a lista fica do maior para o menor; em empate, o novo entra antes
-    while (atual != -1)
-    {
-        int tamanho;
-        int64_t proximo;
-        // pula a marca e le apenas o tamanho e o proximo elo da lista
-        fseek(arquivo, atual + 1, SEEK_SET);
-        fread(&tamanho, sizeof(int), 1, arquivo);
-        fread(&proximo, sizeof(int64_t), 1, arquivo);
-
-        if (tamanho <= registro->tamanhoRegistro)
-            break;
-        // continua enquanto os espacos encontrados forem maiores que o novo removido
-        anterior = atual;
-        atual = proximo;
-    }
-
-    // preserva tamanho e encadeamento; todo o restante vira lixo
+    // o novo removido aponta para o antigo topo, sem ordenar por tamanho
     char removido = '1';
     fseek(arquivo, posicao, SEEK_SET);
     fwrite(&removido, sizeof(char), 1, arquivo);
     fwrite(&registro->tamanhoRegistro, sizeof(int), 1, arquivo);
-    fwrite(&atual, sizeof(int64_t), 1, arquivo);
+    fwrite(&proximo, sizeof(int64_t), 1, arquivo);
     for (int i = TAM_CONTROLE_REGISTRO; i < registro->tamanhoRegistro; i++)
         fputc('$', arquivo);
 
-    // liga o anterior ao novo espaco, ou altera o topo quando ele for o maior
-    if (anterior == -1)
-        cabecalho->topoLista = posicao;
-    else
-    {
-        fseek(arquivo, anterior + TAM_CONTROLE_INICIAL, SEEK_SET);
-        fwrite(&posicao, sizeof(int64_t), 1, arquivo);
-    }
-
-    // o registro deixa de ser ativo, mas o arquivo nao diminui de tamanho
+    cabecalho->topoLista = posicao;
     cabecalho->nroRegRem++;
     cabecalho->nroPoPs--;
     fseek(arquivo, cursor, SEEK_SET);
 }
 
-// escolhe um espaco por worst fit, grava o pop e devolve o offset utilizado.
-// modifica o cabecalho em memoria e deixa o cursor depois do registro gravado.
+// procura o maior espaco livre, grava o pop e devolve o offset usado.
+// ajusta o cabecalho em memoria e termina depois do registro gravado.
 int64_t inserir_pop(FILE *arquivo, CabecalhoPoPs *cabecalho, RegistroPoP *registro)
 {
     int64_t posicao = -1;
+    int64_t atual = cabecalho->topoLista;
+    int64_t anterior = -1;
+    int64_t anterior_maior = -1;
+    int64_t proximo_maior = -1;
+    int tamanho_maior = 0;
 
-    // o topo guarda o maior espaco: se ele nao servir, nenhum outro da lista serve
-    if (cabecalho->topoLista != -1)
+    // percorre todos os elos; em empate, conserva o primeiro maior encontrado
+    while (atual != -1)
     {
-        int tamanho_livre;
-        fseek(arquivo, cabecalho->topoLista + 1, SEEK_SET);
-        fread(&tamanho_livre, sizeof(int), 1, arquivo);
-
-        if (tamanho_livre >= registro->tamanhoRegistro)
+        int tamanho;
+        int64_t proximo;
+        fseek(arquivo, atual + 1, SEEK_SET);
+        fread(&tamanho, sizeof(int), 1, arquivo);
+        fread(&proximo, sizeof(int64_t), 1, arquivo);
+        if (tamanho > tamanho_maior)
         {
-            posicao = cabecalho->topoLista;
-            fread(&cabecalho->topoLista, sizeof(int64_t), 1, arquivo);
-            cabecalho->nroRegRem--;
-            // conserva a capacidade do espaco; escrever_registro completa a sobra com lixo
-            registro->tamanhoRegistro = tamanho_livre;
+            tamanho_maior = tamanho;
+            posicao = atual;
+            anterior_maior = anterior;
+            proximo_maior = proximo;
         }
+        anterior = atual;
+        atual = proximo;
     }
 
-    if (posicao == -1)
+    if (posicao != -1 && tamanho_maior >= registro->tamanhoRegistro)
+    {
+        // desencaixa somente o escolhido, preservando a ordem dos outros blocos
+        if (anterior_maior == -1)
+            cabecalho->topoLista = proximo_maior;
+        else
+        {
+            fseek(arquivo, anterior_maior + TAM_CONTROLE_INICIAL, SEEK_SET);
+            fwrite(&proximo_maior, sizeof(int64_t), 1, arquivo);
+        }
+        cabecalho->nroRegRem--;
+        // conserva a capacidade; o escritor preenche a sobra com lixo
+        registro->tamanhoRegistro = tamanho_maior;
+    }
+    else
     {
         posicao = cabecalho->proxByteOffset;
         cabecalho->proxByteOffset += registro->tamanhoRegistro;
