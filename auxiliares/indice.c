@@ -6,7 +6,8 @@
 // auxiliares trab. 2
 
 // calcula quantas entradas existem e devolve o vetor preenchido.
-// a quantidade sai pelo parametro e o cursor termina no fim do indice.
+// a quantidade sai pelo parametro e o cursor termina no fim do arquivo.
+// quem chama libera o vetor; devolve null se faltar memoria.
 IndicePoPs *carregar_indice(FILE *arquivo, int *quantidade)
 {
     fseek(arquivo, 0, SEEK_END);
@@ -70,7 +71,7 @@ void retirar_do_indice(IndicePoPs *indice, int *quantidade, int posicao)
 }
 
 // recria o arquivo com as entradas que ficaram no vetor e o fecha ao terminar.
-// devolve 0 se nao conseguir abrir a saida e 1 depois de gravar o indice.
+// devolve 1 se gravou e fechou com sucesso, ou 0 em falha de abertura ou escrita.
 int salvar_indice(char *nome, IndicePoPs *indice, int quantidade)
 {
     // wb elimina a versao anterior, incluindo entradas que foram removidas do vetor
@@ -86,10 +87,16 @@ int salvar_indice(char *nome, IndicePoPs *indice, int quantidade)
         fwrite(&indice[i].byteoffset, sizeof(int64_t), 1, arquivo);
     }
 
-    // como o cabecalho do indice tem um byte, sua finalizacao altera so o status
-    alterar_status(arquivo, '1');
-    fclose(arquivo);
-    return 1;
+    // so marca consistente depois de enviar as entradas ao arquivo
+    int sucesso = !ferror(arquivo) && fflush(arquivo) == 0;
+    if (sucesso)
+    {
+        alterar_status(arquivo, '1');
+        sucesso = !ferror(arquivo);
+    }
+    if (fclose(arquivo) != 0)
+        sucesso = 0;
+    return sucesso;
 }
 
 // inclui a chave no vetor mantendo a ordem crescente, sem acessar arquivos.

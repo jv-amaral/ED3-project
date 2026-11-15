@@ -126,7 +126,6 @@ void busca_condicional(void)
     {
         int quantidade_campos;
         scanf("%d", &quantidade_campos);
-        // cada busca recebe sua propria quantidade de campos e seus valores
         CriteriosConexoes criterios = ler_criterios_conexoes(quantidade_campos);
         RegistroConexao registro;
         int encontrados = 0;
@@ -200,7 +199,6 @@ void remocao_logica(void)
         scanf("%d", &quantidade_campos);
         CriteriosConexoes criterios = ler_criterios_conexoes(quantidade_campos);
         RegistroConexao registro;
-        // o contador acompanha a posicao fisica para empilhar o rrn correto
         int rrn = 0;
         fseek(arquivo, TAM_CABECALHO_CONEXOES, SEEK_SET);
 
@@ -235,9 +233,7 @@ void insercao(void)
     alterar_status(arquivo, '0');
     for (int i = 0; i < quantidade; i++)
     {
-        // o auxiliar le a entrada e prepara os controles de uma conexao ativa
         RegistroConexao registro = ler_conexao_terminal();
-        // a escolha entre reaproveitar um rrn e usar o final fica no auxiliar de insercao
         inserir_conexao(arquivo, &cabecalho, &registro);
     }
 

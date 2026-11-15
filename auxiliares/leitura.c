@@ -43,6 +43,7 @@ void ScanQuoteString(char *str)
 
 // le ate a quebra de linha, aumentando o espaco do buffer quando precisa.
 // devolve 1 para uma linha lida, 0 no fim do csv ou -1 se faltar memoria.
+// atualiza linha e capacidade; quem chama libera o buffer ao terminar as leituras.
 int ler_linha_csv(FILE *csv, char **linha, size_t *capacidade)
 {
     size_t tamanho = 0;
@@ -71,7 +72,6 @@ int ler_linha_csv(FILE *csv, char **linha, size_t *capacidade)
     // aceita tanto a quebra de linha do linux (lf) quanto a do windows (crlf).
     if (tamanho > 0 && (*linha)[tamanho - 1] == '\r')
         tamanho--;
-    // o terminador permite tratar a linha como string, mas nao pertence ao conteudo do csv
     (*linha)[tamanho] = '\0';
     return 1;
 }
@@ -86,7 +86,6 @@ int separar_campos_csv(char *linha, char *campos[], int max_campos)
     while (quantidade < max_campos)
     {
         campos[quantidade++] = inicio;
-        // guarda o inicio antes de cortar a linha na proxima virgula
         char *virgula = strchr(inicio, ',');
         if (virgula != NULL)
             *virgula = '\0';
@@ -107,7 +106,7 @@ int separar_campos_csv(char *linha, char *campos[], int max_campos)
 }
 
 // le um valor do terminal, com ou sem aspas. nulo sem aspas vira string vazia.
-// a string devolvida usa memoria alocada e deve ser liberada depois.
+// quem chama libera a string devolvida; retorna null se faltar memoria.
 char *ler_valor(void)
 {
     int caractere;
@@ -171,7 +170,6 @@ int ler_conexao(FILE *arquivo, RegistroConexao *registro)
         return 1;
     }
 
-    // nos ativos, os campos restantes completam os 18 bytes do registro fixo
     fread(&registro->encadeamento, sizeof(int), 1, arquivo);
     fread(&registro->idPoPs, sizeof(int), 1, arquivo);
     fread(&registro->idPoPsConectado, sizeof(int), 1, arquivo);
@@ -203,7 +201,7 @@ RegistroConexao ler_conexao_terminal(void)
 // auxiliares trab. 2
 
 // junta os caracteres ate encontrar a barra vertical e devolve o texto.
-// o cursor passa pelo delimitador; o texto precisa ser liberado depois do uso.
+// o cursor passa pelo delimitador; quem chama libera o texto. retorna null se a leitura falhar.
 static char *ler_campo_variavel(FILE *arquivo, int limite)
 {
     char *texto = malloc(limite + 1);
@@ -228,8 +226,8 @@ static char *ler_campo_variavel(FILE *arquivo, int limite)
     return NULL;
 }
 
-// le um pop da posicao atual; o resultado e 1 quando ha registro e 0 no fim.
-// se estiver removido, pula pelo tamanho. nos ativos, aloca os nomes e avanca para o proximo.
+// le um pop da posicao atual; devolve 1 se leu ou pulou um registro e 0 no fim ou em falha.
+// pula removidos pelo tamanho e termina no proximo registro; liberar_registro descarta os nomes lidos.
 int ler_registro(FILE *arquivo, RegistroPoP *registro)
 {
     // guarda o inicio para calcular o proximo registro, mesmo que exista sobra de lixo

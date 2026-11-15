@@ -33,7 +33,6 @@ FILE *abrir_arquivo(char *nome, char *modo)
 // o fflush envia essa marcacao ao arquivo antes das outras alteracoes.
 void alterar_status(FILE *arquivo, char status)
 {
-    // o status ocupa o mesmo primeiro byte nos arquivos de dados e no indice
     fseek(arquivo, 0, SEEK_SET);
     fwrite(&status, sizeof(char), 1, arquivo);
     fflush(arquivo);
@@ -80,7 +79,6 @@ CabecalhoConexoes ler_cabecalho_conexoes(FILE *arquivo)
 {
     CabecalhoConexoes cabecalho;
     fseek(arquivo, 0, SEEK_SET);
-    // a leitura segue a ordem dos campos nos 17 bytes iniciais
     fread(&cabecalho.status, sizeof(char), 1, arquivo);
     fread(&cabecalho.topo_pilha, sizeof(int), 1, arquivo);
     fread(&cabecalho.proxRRN, sizeof(int), 1, arquivo);

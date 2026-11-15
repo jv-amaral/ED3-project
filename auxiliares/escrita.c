@@ -7,7 +7,6 @@
 // grava os seis campos da conexao na posicao atual, avancando 18 bytes.
 void escrever_conexao(FILE *arquivo, RegistroConexao *registro)
 {
-    // os controles ficam antes dos dados e fazem parte dos 18 bytes gravados
     fwrite(&registro->removido, sizeof(char), 1, arquivo);
     fwrite(&registro->encadeamento, sizeof(int), 1, arquivo);
     fwrite(&registro->idPoPs, sizeof(int), 1, arquivo);
@@ -86,7 +85,6 @@ void inserir_conexao(FILE *arquivo, CabecalhoConexoes *cabecalho, RegistroConexa
 // copia os valores informados para a conexao. o marcador -2 deixa o campo como esta.
 void aplicar_atualizacoes_conexao(RegistroConexao *registro, CriteriosConexoes *valores)
 {
-    // essa etapa muda somente a memoria; quem chamou decide onde gravar a conexao
     if (valores->idPoPs != -2)
         registro->idPoPs = valores->idPoPs;
     if (valores->idPoPsConectado != -2)
@@ -107,7 +105,6 @@ void escrever_registro(FILE *arquivo, const RegistroPoP *registro)
     int tamanho_nome = strlen(registro->nomePoPs);
     int tamanho_pais = strlen(registro->nomePais);
 
-    // primeiro vao os controles e os campos fixos, sempre na ordem do formato binario
     fwrite(&registro->removido, sizeof(char), 1, arquivo);
     fwrite(&registro->tamanhoRegistro, sizeof(int), 1, arquivo);
     fwrite(&registro->encadeamentoLista, sizeof(int64_t), 1, arquivo);
@@ -222,7 +219,7 @@ int64_t inserir_pop(FILE *arquivo, CabecalhoPoPs *cabecalho, RegistroPoP *regist
     return posicao;
 }
 // substitui em memoria apenas os campos informados nos novos valores.
-// os nomes recebem copias alocadas; nao grava no arquivo nem move seu cursor.
+// os nomes recebem copias alocadas, liberadas com liberar_registro; nao acessa o arquivo.
 void modifica_registro(RegistroPoP *reg, CriteriosPoPs *NovosValores)
 {
     // o indicador de busca tambem informa se um novo identificador foi fornecido

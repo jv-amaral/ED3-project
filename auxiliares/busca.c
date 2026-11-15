@@ -53,7 +53,7 @@ int verificar_conexao(CriteriosConexoes *criterios, RegistroConexao *registro)
 // auxiliares trab. 2
 
 // guarda os pares campo e valor de uma busca de pops.
-// os textos ficam alocados nos criterios devolvidos e sao liberados apos a busca.
+// os textos ficam alocados nos criterios devolvidos; quem chama usa liberar_criterios apos a busca.
 CriteriosPoPs ler_criterios(int quantidade)
 {
     CriteriosPoPs criterios;
@@ -72,7 +72,6 @@ CriteriosPoPs ler_criterios(int quantidade)
         if (valor == NULL)
             break;
 
-        // o id vira inteiro; os demais valores ficam como textos alocados
         if (strcmp(campo, "idPoPs") == 0)
         {
             criterios.buscar_id = 1;
@@ -124,6 +123,7 @@ int verificar_criterios(CriteriosPoPs *criterios, RegistroPoP *registro)
 
 // localiza o id no indice, vai ate seu offset e confere os outros criterios.
 // devolve a posicao no vetor, ou -1 quando nao encontra; na leitura, o cursor passa pelo registro.
+// quando encontra, o chamador usa liberar_registro para descartar os nomes devolvidos.
 int buscar_registro_indexado(FILE *arquivo, IndicePoPs *indice, int quantidade,
                             CriteriosPoPs *criterios, RegistroPoP *registro)
 {
