@@ -1,6 +1,6 @@
-// alunos:
-// joao vitor amaral santos - 16812120
-// victor hugo albertino e silva - 16903448
+// Alunos:
+// João Vitor Amaral Santos - 16812120
+// Victor Hugo Albertino e Silva - 16903448
 
 #include <stdio.h>
 #include "funcionalidades.h"
