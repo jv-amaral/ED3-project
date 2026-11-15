@@ -598,7 +598,7 @@ void inserir_registros(void)
 
 //funcionalidade 14
 
-void atualiza_registro(void)
+void atualiza_registro()
 {
     char arquivo_binario[50];
     char arquivo_index[50];
@@ -628,7 +628,7 @@ void atualiza_registro(void)
     
     int total_indices = 0;
     IndicePoPs *vetor_indices = carregar_indice(index, &total_indices);
-    fclose(index);
+    fclose(index); 
     
     int n;
     scanf("%d", &n);
@@ -681,6 +681,7 @@ void atualiza_registro(void)
                 
                 if (reg.removido == '0' && verificar_criterios(&C, &reg))
                 {
+                    int id_antigo = reg.idPoPs;
                     modifica_registro(&reg, &NovosValores);
                     
                     int tamanho_nome = strlen(reg.nomePoPs);
@@ -691,6 +692,11 @@ void atualiza_registro(void)
                     {
                         fseek(binario, offset_encontrado, SEEK_SET);
                         escrever_registro(binario, &reg);
+                        
+                        if (id_antigo != reg.idPoPs) {
+                            retirar_do_indice(vetor_indices, &total_indices, posicao_indice);
+                            inserir_no_indice(vetor_indices, &total_indices, reg.idPoPs, offset_encontrado);
+                        }
                     } 
                     else
                     {
@@ -718,9 +724,13 @@ void atualiza_registro(void)
 
             while (ler_registro(binario, &reg))
             {
+                int tamanho_bloco = reg.tamanhoRegistro;
+
                 if (reg.removido == '0' && verificar_criterios(&C, &reg))
                 {
                     registro_encontrado = 1;
+                    
+                    int id_antigo = reg.idPoPs;
                     modifica_registro(&reg, &NovosValores);
                     
                     int tamanho_nome = strlen(reg.nomePoPs);
@@ -731,11 +741,18 @@ void atualiza_registro(void)
                     {
                         fseek(binario, offset_atual, SEEK_SET);
                         escrever_registro(binario, &reg);
+                        
+                        if (id_antigo != reg.idPoPs) {
+                            int pos_idx = buscar_no_indice(vetor_indices, total_indices, id_antigo);
+                            retirar_do_indice(vetor_indices, &total_indices, pos_idx);
+                            inserir_no_indice(vetor_indices, &total_indices, reg.idPoPs, offset_atual);
+                        }
                     } 
                     else
                     {
                         remover_registro(binario, &cab, &reg, offset_atual);
-                        int pos_idx = buscar_no_indice(vetor_indices, total_indices, reg.idPoPs);
+                        
+                        int pos_idx = buscar_no_indice(vetor_indices, total_indices, id_antigo);
                         retirar_do_indice(vetor_indices, &total_indices, pos_idx);
                         
                         reg.tamanhoRegistro = tamanho_novo;
@@ -745,7 +762,7 @@ void atualiza_registro(void)
                 }
                 liberar_registro(&reg);
                 
-                offset_atual = ftell(binario);
+                offset_atual += tamanho_bloco;
                 fseek(binario, offset_atual, SEEK_SET); 
             }
 
