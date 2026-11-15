@@ -107,21 +107,3 @@ void inserir_no_indice(IndicePoPs *indice, int *quantidade, int id, int64_t posi
     indice[i].byteoffset = posicao;
     (*quantidade)++;
 }
-RegIndex *criar_vetor(FILE *index, int *total_indices)
-{
-    int max_indices = 2000;
-    RegIndex *vetor_indices = (RegIndex *) malloc(max_indices * sizeof(RegIndex));
-    *total_indices = 0;
-
-    // Garante que o cursor está logo após o byte de status (posição 1)
-    fseek(index, 1, SEEK_SET);
-
-    // Enquanto conseguir ler um idPoPs (4 bytes), é porque tem um registro
-    while (fread(&vetor_indices[*total_indices].idPoPs, sizeof(int), 1, index) == 1)
-    {
-        fread(&vetor_indices[*total_indices].byteoffset, sizeof(int64_t), 1, index);
-        (*total_indices)++;
-    }
-
-    return vetor_indices;
-}

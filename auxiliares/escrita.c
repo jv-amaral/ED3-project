@@ -1,4 +1,5 @@
 #include <string.h>
+#include <stdlib.h>
 #include "escrita.h"
 
 // auxiliares trab. 1
