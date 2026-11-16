@@ -47,8 +47,11 @@ void ScanQuoteString(char *str)
 int ler_linha_csv(FILE *csv, char **linha, size_t *capacidade)
 {
     size_t tamanho = 0;
+    // quando da linha atual eu ja li
+    // capacidade vai ser o espaco do buffer
     int caractere;
 
+    // primeira chamada vai alocar espaco
     while ((caractere = fgetc(csv)) != EOF)
     {
         // reserva espaco tambem para o terminador '\0' usado em memoria.
@@ -107,6 +110,7 @@ int separar_campos_csv(char *linha, char *campos[], int max_campos)
 
 // le um valor do terminal, com ou sem aspas. nulo sem aspas vira string vazia.
 // quem chama libera a string devolvida; retorna null se faltar memoria.
+// usado na funcao 12 e 13
 char *ler_valor(void)
 {
     int caractere;
@@ -230,8 +234,8 @@ static char *ler_campo_variavel(FILE *arquivo, int limite)
 // pula removidos pelo tamanho e termina no proximo registro; liberar_registro descarta os nomes lidos.
 int ler_registro(FILE *arquivo, RegistroPoP *registro)
 {
-    // guarda o inicio para calcular o proximo registro, mesmo que exista sobra de lixo
-    int64_t inicio = ftell(arquivo);
+    // vai comecar na posicao atual do cursor
+
     // removidos nao recebem nomes alocados, mas podem passar pela rotina de liberacao
     registro->nomePoPs = NULL;
     registro->nomePais = NULL;
@@ -264,7 +268,8 @@ int ler_registro(FILE *arquivo, RegistroPoP *registro)
     }
 
     // pula tambem o lixo que possa existir no fim de um espaco reaproveitado
-    fseek(arquivo, inicio + registro->tamanhoRegistro, SEEK_SET);
+    int tamanho_lido = TAM_MINIMO_REGISTRO + strlen(registro->nomePoPs) + strlen(registro->nomePais);
+    fseek(arquivo, registro->tamanhoRegistro - tamanho_lido, SEEK_CUR);
     return 1;
 }
 

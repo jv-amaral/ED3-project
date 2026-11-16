@@ -10,9 +10,13 @@
 // quem chama libera o vetor; devolve null se faltar memoria.
 IndicePoPs *carregar_indice(FILE *arquivo, int *quantidade)
 {
-    fseek(arquivo, 0, SEEK_END);
-    // desconta o byte de status e divide pelos 12 bytes de cada entrada
-    *quantidade = (ftell(arquivo) - TAM_CABECALHO_INDICE) / TAM_REGISTRO_INDICE;
+    fseek(arquivo, TAM_CABECALHO_INDICE, SEEK_SET);
+    *quantidade = 0;
+    IndicePoPs entrada;
+    // conta os pares completos antes de reservar o vetor
+    while (fread(&entrada.idPoPs, sizeof(int), 1, arquivo) == 1 &&
+           fread(&entrada.byteoffset, sizeof(int64_t), 1, arquivo) == 1)
+        (*quantidade)++;
     IndicePoPs *indice = malloc((*quantidade + 1) * sizeof(IndicePoPs));
     if (indice == NULL)
         return NULL;

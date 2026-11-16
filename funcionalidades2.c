@@ -409,8 +409,8 @@ void remover_registros(void)
                 }
 
                 liberar_registro(&registro);
-                // a remocao restaura o cursor, permitindo continuar a varredura
-                posicao = ftell(dados);
+                // o tamanho inclui a sobra do bloco, mesmo quando foi reaproveitado
+                posicao += registro.tamanhoRegistro;
             }
         }
         // nenhuma mensagem e necessaria se nada foi removido; segue para a proxima busca
@@ -672,7 +672,7 @@ void atualiza_registro()
                 if (reg.removido == '0' && verificar_criterios(&C, &reg))
                     posicoes[quantidade_posicoes++] = offset_atual;
                 liberar_registro(&reg);
-                offset_atual = ftell(binario);
+                offset_atual += reg.tamanhoRegistro;
             }
 
             // uma unica chave nova nao pode ser atribuida a varios registros

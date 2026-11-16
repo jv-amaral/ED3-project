@@ -32,12 +32,12 @@ void imprimir_conexao(RegistroConexao *registro)
 }
 
 // troca os dados por lixo e liga o rrn ao topo da pilha de removidos.
-// atualiza o cabecalho em memoria e volta a posicao de leitura que estava em uso.
+// atualiza o cabecalho em memoria e termina depois da conexao removida.
 void remover_conexao(FILE *arquivo, CabecalhoConexoes *cabecalho,
                      RegistroConexao *registro, int rrn)
 {
     // salva a posicao seguinte ao registro para retomar a varredura depois da escrita
-    long cursor = ftell(arquivo);
+    long cursor = TAM_CABECALHO_CONEXOES + ((long)rrn + 1) * TAM_REGISTRO_CONEXAO;
     registro->removido = '1';
     // o novo topo aponta para quem estava no topo antes da remocao
     registro->encadeamento = cabecalho->topo_pilha;
@@ -134,11 +134,11 @@ void imprimir_registro(RegistroPoP *registro)
 }
 
 // coloca o espaco removido no topo da lista e apaga seus dados.
-// mantem o tamanho e restaura o cursor para a varredura continuar.
+// mantem o tamanho e termina depois do bloco removido para continuar a varredura.
 void remover_registro(FILE *arquivo, CabecalhoPoPs *cabecalho,
                       RegistroPoP *registro, int64_t posicao)
 {
-    int64_t cursor = ftell(arquivo);
+    int64_t cursor = posicao + registro->tamanhoRegistro;
     int64_t proximo = cabecalho->topoLista;
 
     // o novo removido aponta para o antigo topo, sem ordenar por tamanho
